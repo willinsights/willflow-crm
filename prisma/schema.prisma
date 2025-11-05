@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String    @id @default(uuid())
+  name               String
+  email              String    @unique
+  role               String
+  avatar             String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  canViewFinance     Boolean   @default(false)
+  canEditProjects    Boolean   @default(false)
+  canViewAllProjects Boolean   @default(false)
+  projectsCaptacao   Project[] @relation("ProjectCaptacao")
+  projectsEdicao     Project[] @relation("ProjectEdicao")
+
+  @@index([email])
+  @@map("users")
+}
+
+model Client {
+  id           String    @id @default(uuid())
+  name         String
+  email        String
+  phone        String?
+  company      String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  totalRevenue Int       @default(0)
+  totalCosts   Int       @default(0)
+  totalMargin  Int       @default(0)
+  projectCount Int       @default(0)
+  projects     Project[]
+
+  @@index([email])
+  @@index([name])
+  @@map("clients")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  color       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  projects    Project[]
+
+  @@map("categories")
+}
+
+model Project {
+  id                      String    @id @default(uuid())
+  title                   String
+  clientId                String
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  phase                   String
+  statusCaptacao          String?
+  statusEdicao            String?
+  videoType               String
+  categoryId              String?
+  location                String?
+  description             String?
+  nasLink                 String?
+  frameIoLink             String?
+  responsavelCaptacaoId   String?
+  responsavelEdicaoId     String?
+  clientPrice             Int       @default(0)
+  captationCost           Int       @default(0)
+  editionCost             Int       @default(0)
+  margin                  Int       @default(0)
+  paymentStatus           String
+  freelancerPaymentStatus String
+  clientDueDate           DateTime?
+  clientReceivedDate      DateTime?
+  freelancerDueDate       DateTime?
+  freelancerPaidDate      DateTime?
+  category                Category? @relation(fields: [categoryId], references: [id])
+  client                  Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  responsavelCaptacao     User?     @relation("ProjectCaptacao", fields: [responsavelCaptacaoId], references: [id])
+  responsavelEdicao       User?     @relation("ProjectEdicao", fields: [responsavelEdicaoId], references: [id])
+  subtasks                Subtask[]
+
+  @@index([clientId])
+  @@index([categoryId])
+  @@index([phase])
+  @@index([statusCaptacao])
+  @@index([statusEdicao])
+  @@index([responsavelCaptacaoId])
+  @@index([responsavelEdicaoId])
+  @@map("projects")
+}
+
+model Subtask {
+  id          String    @id @default(uuid())
+  projectId   String
+  title       String
+  completed   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("subtasks")
+}
