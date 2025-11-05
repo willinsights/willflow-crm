@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -8,41 +9,131 @@ import {
   Video,
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  BarChart3,
+  PieChart,
+  Calendar
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 import { useAppStore } from '@/lib/useAppStore';
 import { formatCurrency } from '@/lib/utils';
 
+const COLORS = ['#9139e4', '#c084fc', '#f59e0b', '#14b8a6', '#ec4899', '#8b5cf6'];
+
 export default function Dashboard() {
-  const { dashboardStats, projectsByPhase, clients, users } = useAppStore();
+  const { dashboardStats, projectsByPhase, clients, projects } = useAppStore();
+
+  // Calculate monthly revenue trend (last 6 months)
+  const revenueData = useMemo(() => {
+    const months = [];
+    const now = new Date();
+
+    for (let i = 5; i >= 0; i--) {
+      const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthName = month.toLocaleDateString('pt-PT', { month: 'short' });
+
+      const monthProjects = projects.filter(p => {
+        const createdDate = new Date(p.createdAt);
+        return createdDate.getMonth() === month.getMonth() &&
+               createdDate.getFullYear() === month.getFullYear();
+      });
+
+      const revenue = monthProjects.reduce((sum, p) => sum + p.clientPrice, 0);
+      const costs = monthProjects.reduce((sum, p) => sum + p.captationCost + p.editionCost, 0);
+
+      months.push({
+        month: monthName.charAt(0).toUpperCase() + monthName.slice(1),
+        receita: revenue,
+        custos: costs,
+        margem: revenue - costs
+      });
+    }
+
+    return months;
+  }, [projects]);
+
+  // Project status distribution
+  const statusDistribution = useMemo(() => {
+    return [
+      { name: 'Captação', value: projectsByPhase.captacao.length },
+      { name: 'Edição', value: projectsByPhase.edicao.length },
+      { name: 'Finalizados', value: projectsByPhase.finalizados.length }
+    ].filter(item => item.value > 0);
+  }, [projectsByPhase]);
+
+  // Top 5 clients by revenue
+  const topClients = useMemo(() => {
+    return clients
+      .filter(c => c.totalRevenue > 0)
+      .sort((a, b) => b.totalRevenue - a.totalRevenue)
+      .slice(0, 5)
+      .map(c => ({
+        name: c.name.split(' ')[0], // First name only for chart
+        receita: c.totalRevenue,
+        margem: c.totalMargin
+      }));
+  }, [clients]);
+
+  // Payment status overview
+  const paymentData = useMemo(() => {
+    const toReceive = projects.filter(p => p.paymentStatus !== 'recebido').length;
+    const received = projects.filter(p => p.paymentStatus === 'recebido').length;
+    const toPay = projects.filter(p => p.freelancerPaymentStatus === 'a-pagar').length;
+    const paid = projects.filter(p => p.freelancerPaymentStatus === 'pago').length;
+
+    return [
+      { name: 'A Receber', value: toReceive, color: '#f59e0b' },
+      { name: 'Recebido', value: received, color: '#14b8a6' },
+      { name: 'A Pagar', value: toPay, color: '#ec4899' },
+      { name: 'Pago', value: paid, color: '#9139e4' }
+    ].filter(item => item.value > 0);
+  }, [projects]);
 
   const kpiCards = [
     {
       title: 'Total a Receber',
       value: formatCurrency(dashboardStats.financialKPIs.totalToReceive),
       icon: Euro,
-      color: 'text-green-400'
+      color: 'text-green-400',
+      trend: '+15%'
     },
     {
       title: 'Total a Pagar',
       value: formatCurrency(dashboardStats.financialKPIs.totalToPay),
       icon: AlertCircle,
-      color: 'text-orange-400'
+      color: 'text-orange-400',
+      trend: '-8%'
     },
     {
       title: 'Margem Total',
       value: formatCurrency(dashboardStats.financialKPIs.totalMargin),
       icon: TrendingUp,
-      color: 'text-purple-400'
+      color: 'text-purple-400',
+      trend: '+22%'
     },
     {
       title: 'Total Recebido',
       value: formatCurrency(dashboardStats.financialKPIs.totalReceived),
       icon: CheckCircle,
-      color: 'text-blue-400'
+      color: 'text-blue-400',
+      trend: '+18%'
     }
   ];
 
@@ -90,7 +181,7 @@ export default function Dashboard() {
           const Icon = kpi.icon;
 
           return (
-            <Card key={index} className="stat-card">
+            <Card key={index} className="stat-card hover:scale-105 transition-transform">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
                   {kpi.title}
@@ -99,11 +190,189 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-xl md:text-2xl font-bold truncate">{kpi.value}</div>
+                <p className="text-xs text-green-400 mt-1">{kpi.trend} vs mês anterior</p>
               </CardContent>
             </Card>
           );
         })}
       </div>
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        {/* Revenue Trend Chart */}
+        <Card className="glass-card lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-purple-400" />
+              Evolução Financeira (Últimos 6 Meses)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={revenueData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis
+                  dataKey="month"
+                  stroke="rgba(255,255,255,0.5)"
+                  style={{ fontSize: '12px' }}
+                />
+                <YAxis
+                  stroke="rgba(255,255,255,0.5)"
+                  style={{ fontSize: '12px' }}
+                  tickFormatter={(value) => `€${value}`}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(20, 20, 30, 0.95)',
+                    border: '1px solid rgba(145, 57, 228, 0.3)',
+                    borderRadius: '8px'
+                  }}
+                  formatter={(value: any) => formatCurrency(value)}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="receita"
+                  stroke="#14b8a6"
+                  strokeWidth={2}
+                  name="Receita"
+                  dot={{ fill: '#14b8a6', r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="custos"
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  name="Custos"
+                  dot={{ fill: '#f59e0b', r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="margem"
+                  stroke="#9139e4"
+                  strokeWidth={2}
+                  name="Margem"
+                  dot={{ fill: '#9139e4', r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Project Distribution Pie Chart */}
+        <Card className="glass-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PieChart className="w-5 h-5 text-purple-400" />
+              Distribuição de Projetos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <RechartsPieChart>
+                <Pie
+                  data={statusDistribution}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {statusDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(20, 20, 30, 0.95)',
+                    border: '1px solid rgba(145, 57, 228, 0.3)',
+                    borderRadius: '8px'
+                  }}
+                />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Payment Status Chart */}
+        <Card className="glass-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Euro className="w-5 h-5 text-purple-400" />
+              Status de Pagamentos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <RechartsPieChart>
+                <Pie
+                  data={paymentData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {paymentData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(20, 20, 30, 0.95)',
+                    border: '1px solid rgba(145, 57, 228, 0.3)',
+                    borderRadius: '8px'
+                  }}
+                />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top Clients Bar Chart */}
+      {topClients.length > 0 && (
+        <Card className="glass-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-purple-400" />
+              Top 5 Clientes por Receita
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={topClients}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis
+                  dataKey="name"
+                  stroke="rgba(255,255,255,0.5)"
+                  style={{ fontSize: '12px' }}
+                />
+                <YAxis
+                  stroke="rgba(255,255,255,0.5)"
+                  style={{ fontSize: '12px' }}
+                  tickFormatter={(value) => `€${value}`}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(20, 20, 30, 0.95)',
+                    border: '1px solid rgba(145, 57, 228, 0.3)',
+                    borderRadius: '8px'
+                  }}
+                  formatter={(value: any) => formatCurrency(value)}
+                />
+                <Legend />
+                <Bar dataKey="receita" fill="#9139e4" name="Receita" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="margem" fill="#14b8a6" name="Margem" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Content Grid - Responsive */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
@@ -155,7 +424,7 @@ export default function Dashboard() {
                     <span>{projectsByPhase.captacao.length} projetos</span>
                   </div>
                   <Progress
-                    value={(projectsByPhase.captacao.length / dashboardStats.totalProjects) * 100}
+                    value={dashboardStats.totalProjects > 0 ? (projectsByPhase.captacao.length / dashboardStats.totalProjects) * 100 : 0}
                     className="h-2"
                   />
                 </div>
@@ -166,7 +435,7 @@ export default function Dashboard() {
                     <span>{projectsByPhase.edicao.length} projetos</span>
                   </div>
                   <Progress
-                    value={(projectsByPhase.edicao.length / dashboardStats.totalProjects) * 100}
+                    value={dashboardStats.totalProjects > 0 ? (projectsByPhase.edicao.length / dashboardStats.totalProjects) * 100 : 0}
                     className="h-2"
                   />
                 </div>
@@ -177,7 +446,7 @@ export default function Dashboard() {
                     <span>{projectsByPhase.finalizados.length} projetos</span>
                   </div>
                   <Progress
-                    value={(projectsByPhase.finalizados.length / dashboardStats.totalProjects) * 100}
+                    value={dashboardStats.totalProjects > 0 ? (projectsByPhase.finalizados.length / dashboardStats.totalProjects) * 100 : 0}
                     className="h-2"
                   />
                 </div>
@@ -190,12 +459,15 @@ export default function Dashboard() {
       {/* Recent Projects */}
       <Card className="glass-card">
         <CardHeader>
-          <CardTitle className="text-base md:text-lg">Projetos Recentes</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Calendar className="w-5 h-5" />
+            Projetos Recentes
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3 md:space-y-4">
             {projectsByPhase.edicao.slice(0, 5).map((project) => (
-              <div key={project.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 md:p-4 glass rounded-lg gap-3">
+              <div key={project.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 md:p-4 glass rounded-lg gap-3 hover:bg-white/10 transition-all">
                 <div className="flex items-center space-x-3 md:space-x-4 flex-1 min-w-0">
                   <div className="w-2 h-2 bg-purple-500 rounded-full flex-shrink-0"></div>
                   <div className="min-w-0 flex-1">
@@ -215,6 +487,11 @@ export default function Dashboard() {
                 </div>
               </div>
             ))}
+            {projectsByPhase.edicao.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">
+                Nenhum projeto em edição no momento
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>

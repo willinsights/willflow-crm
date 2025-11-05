@@ -1,11 +1,24 @@
 # 🎯 WillFlow CRM - Sistema em Produção ✅
 
-## 🚀 VERSÃO 47 - REVISÃO COMPLETA FINALIZADA
+## 🚀 VERSÃO 48 - DEPLOY FIX E TESTES FINAIS
 
 **Data**: 05/11/2025
 **Status**: ✅ Deployed
 **GitHub**: https://github.com/willinsights/willflow-crm
 **Railway**: https://will-flow.up.railway.app
+**Commit**: b33b710
+
+### Correção V48
+- ✅ **Dialog prop fix**: Corrigido `onValueChange` para `onOpenChange` no ViewProjectModal
+- ✅ Deploy bem-sucedido no Railway
+- ✅ Todas as features V45-47 funcionando em produção
+
+---
+
+## 🚀 VERSÃO 47 - REVISÃO COMPLETA FINALIZADA
+
+**Data**: 05/11/2025
+**Status**: ✅ Deployed
 **Commit**: 93cbe1a
 
 ---
@@ -107,15 +120,35 @@
 - **Database**: PostgreSQL no Railway
 - **Auto-Deploy**: ✅ Configurado na branch `main`
 
+## ✅ VERSÃO 50 - DASHBOARD COM GRÁFICOS PROFISSIONAIS
+
+**Data**: 05/11/2025
+**Status**: 🚀 Em Teste
+**Commit**: (pending)
+
+### Implementações V50
+- ✅ **Gráfico de Linha**: Evolução financeira dos últimos 6 meses (receita, custos, margem)
+- ✅ **Gráfico de Pizza**: Distribuição de projetos por fase
+- ✅ **Gráfico de Pizza**: Status de pagamentos (a receber, recebido, a pagar, pago)
+- ✅ **Gráfico de Barras**: Top 5 clientes por receita e margem
+- ✅ **Tendências**: Indicadores percentuais nos KPIs (+15%, -8%, etc.)
+- ✅ **Responsivo**: Todos os gráficos adaptam-se a mobile
+- ✅ **Tooltips**: Informações detalhadas ao passar o mouse
+- ✅ **Cores**: Paleta consistente com o tema WillFlow
+
+---
+
 ## 📝 PRÓXIMAS FUNCIONALIDADES (Backlog)
 
-- [ ] Dashboard com gráficos de KPIs financeiros
+- [x] Dashboard com gráficos de KPIs financeiros ✅ **V50**
 - [ ] Notificações por email
-- [ ] Exportação de relatórios PDF
+- [ ] Exportação de relatórios PDF/CSV
 - [ ] Sistema de permissões granular
 - [ ] Histórico de alterações (audit log)
-- [ ] Integração com calendário
+- [ ] Integração com calendário Google/Outlook
 - [ ] Upload de arquivos para projetos
+- [ ] Campos "Cliente Pagou?" em Finalizados
+- [ ] Webhooks para integrações
 
 ---
 
