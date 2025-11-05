@@ -64,7 +64,7 @@ export default function ViewProjectModal({ project, trigger }: ViewProjectModalP
   };
 
   return (
-    <Dialog open={open} onValueChange={setOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
           <Button variant="ghost" size="sm" className="w-full justify-start">
