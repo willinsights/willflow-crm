@@ -1,0 +1,30 @@
+# Railway Configuration for Audiovisual CRM Frontend
+# Service name: svc-web
+
+[build]
+builder = "NIXPACKS"
+
+[build.nixpacksPlan.phases.setup]
+nixPkgs = ["nodejs-20_x", "yarn", "bash"]
+
+[build.nixpacksPlan.phases.install]
+cmds = [
+  "yarn install --frozen-lockfile || npm ci --legacy-peer-deps || npm ci"
+]
+
+[build.nixpacksPlan.phases.build]
+cmds = [
+  "npm run build || yarn build"
+]
+
+[start]
+cmd = "npm start"
+
+[deploy]
+healthcheckPath = "/api/health"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[env]
+NODE_ENV = "production"
