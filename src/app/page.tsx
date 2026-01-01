@@ -2,17 +2,19 @@
 
 import { useState } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
-import Dashboard from '@/components/dashboard/Dashboard';
+import DashboardRouter from '@/components/dashboard/DashboardRouter';
 import KanbanBoard from '@/components/kanban/KanbanBoard';
 import FinishedProjectsList from '@/components/projects/FinishedProjectsList';
+import FinancePage from '@/components/finance/FinancePage';
 import ClientsPage from '@/components/clients/ClientsPage';
 import UsersPage from '@/components/users/UsersPage';
 import CategoriesPage from '@/components/categories/CategoriesPage';
 import ReportsPage from '@/components/reports/ReportsPage';
 import UploadsPage from '@/components/uploads/UploadsPage';
+import CalendarPage from '@/components/calendar/CalendarPage';
+import SettingsPage from '@/components/settings/SettingsPage';
 import RoleTestPanel from '@/components/debug/RoleTestPanel';
 import LoginPage from '@/components/auth/LoginPage';
-import { ProjectPhase } from '@/lib/types';
 import { useAuth } from '@/lib/useAuth';
 
 export default function Home() {
@@ -45,13 +47,15 @@ export default function Home() {
   const renderContent = () => {
     switch (activeView) {
       case 'dashboard':
-        return <Dashboard />;
+        return <DashboardRouter />;
       case 'captacao':
         return <KanbanBoard phase="captacao" />;
       case 'edicao':
         return <KanbanBoard phase="edicao" />;
       case 'finalizados':
         return <FinishedProjectsList />;
+      case 'financeiro':
+        return <FinancePage />;
       case 'clientes':
         return <ClientsPage />;
       case 'colaboradores':
@@ -63,11 +67,13 @@ export default function Home() {
       case 'uploads':
         return <UploadsPage />;
       case 'calendario':
-        return <div className="p-6"><h1 className="text-2xl font-bold">Calendário (Em desenvolvimento)</h1></div>;
+        return <CalendarPage />;
       case 'role-test':
         return <RoleTestPanel />;
+      case 'configuracoes':
+        return <SettingsPage />;
       default:
-        return <Dashboard />;
+        return <DashboardRouter />;
     }
   };
 
