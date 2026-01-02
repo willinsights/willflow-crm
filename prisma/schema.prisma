@@ -1,0 +1,436 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String    @id @default(uuid())
+  name               String
+  email              String    @unique
+  password           String?   // Hash da senha
+  role               String
+  avatar             String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  canViewFinance     Boolean   @default(false)
+  canEditProjects    Boolean   @default(false)
+  canViewAllProjects Boolean   @default(false)
+
+  // Controle de acesso
+  isActive           Boolean   @default(true)
+  lastLogin          DateTime?
+  mustChangePassword Boolean   @default(true) // Forçar troca na primeira vez
+
+  // Tipo de colaborador (para captação)
+  collaboratorType   String?   // photographer, filmmaker, both
+
+  // Dados bancários
+  iban               String?
+  bankName           String?
+
+  // Dados fiscais
+  nif                String?   // NIF ou CPF
+  contributorType    String?   // company, receipts, freelancer, other
+
+  // Relações
+  projectsCaptacao   Project[] @relation("ProjectCaptacao")
+  projectsEdicao     Project[] @relation("ProjectEdicao")
+  loginAudits        LoginAudit[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model LoginAudit {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action      String   // login, logout, failed_login, password_change, password_reset
+  ipAddress   String?
+  userAgent   String?
+  success     Boolean  @default(true)
+  details     String?  // Detalhes adicionais (ex: motivo da falha)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("login_audits")
+}
+
+model Client {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  phone        String?
+  company      String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  totalRevenue Int       @default(0)
+  totalCosts   Int       @default(0)
+  totalMargin  Int       @default(0)
+  projectCount Int       @default(0)
+  projects     Project[]
+
+  @@index([name])
+  @@map("clients")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  color       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  projects    Project[]
+
+  @@map("categories")
+}
+
+model Project {
+  id                      String    @id @default(uuid())
+  title                   String
+  clientId                String
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  phase                   String
+  statusCaptacao          String?
+  statusEdicao            String?
+  videoType               String
+  categoryId              String?
+  location                String?
+  description             String?
+  customId                String?   // ID personalizado do projeto
+  nasLink                 String?
+  frameIoLink             String?
+  responsavelCaptacaoId   String?
+  responsavelEdicaoId     String?
+  clientPrice             Int       @default(0)
+  captationCost           Int       @default(0)
+  editionCost             Int       @default(0)
+  margin                  Int       @default(0)
+  paymentStatus           String
+  freelancerPaymentStatus String
+  clientDueDate           DateTime?
+  clientReceivedDate      DateTime?
+  freelancerDueDate       DateTime?
+  freelancerPaidDate      DateTime?
+  category                Category? @relation(fields: [categoryId], references: [id])
+  client                  Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  responsavelCaptacao     User?     @relation("ProjectCaptacao", fields: [responsavelCaptacaoId], references: [id])
+  responsavelEdicao       User?     @relation("ProjectEdicao", fields: [responsavelEdicaoId], references: [id])
+  subtasks                Subtask[]
+
+  @@index([clientId])
+  @@index([categoryId])
+  @@index([phase])
+  @@index([statusCaptacao])
+  @@index([statusEdicao])
+  @@index([responsavelCaptacaoId])
+  @@index([responsavelEdicaoId])
+  @@index([customId])
+  @@map("projects")
+}
+
+model Subtask {
+  id          String    @id @default(uuid())
+  projectId   String
+
+  // Básico
+  title       String
+  description String?   @db.Text
+  completed   Boolean   @default(false)
+
+  // Metadados
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  // Detalhes expandidos
+  priority    String    @default("medium") // low, medium, high, urgent
+  status      String    @default("todo")    // todo, in_progress, review, done
+  dueDate     DateTime?
+  assignedTo  String?
+
+  // Estimativas
+  estimatedHours Int?
+  actualHours    Int?
+
+  // Tags (JSON array)
+  tags        String?   @db.Text
+
+  // Ordem para drag & drop
+  order       Int       @default(0)
+
+  // Relações
+  project         Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  checklistItems  SubtaskChecklist[]
+  comments        SubtaskComment[]
+  attachments     SubtaskAttachment[]
+  activityLog     SubtaskActivity[]
+
+  @@index([projectId])
+  @@index([status])
+  @@index([priority])
+  @@index([assignedTo])
+  @@index([dueDate])
+  @@map("subtasks")
+}
+
+model SubtaskChecklist {
+  id          String    @id @default(uuid())
+  subtaskId   String
+  title       String
+  completed   Boolean   @default(false)
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  completedBy String?
+
+  subtask     Subtask   @relation(fields: [subtaskId], references: [id], onDelete: Cascade)
+
+  @@index([subtaskId])
+  @@map("subtask_checklist")
+}
+
+model SubtaskComment {
+  id        String   @id @default(uuid())
+  subtaskId String
+  content   String   @db.Text
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isEdited  Boolean  @default(false)
+  mentions  String?  @db.Text
+
+  subtask   Subtask  @relation(fields: [subtaskId], references: [id], onDelete: Cascade)
+
+  @@index([subtaskId])
+  @@index([createdBy])
+  @@map("subtask_comments")
+}
+
+model SubtaskAttachment {
+  id         String   @id @default(uuid())
+  subtaskId  String
+  fileName   String
+  fileSize   Int
+  fileType   String
+  fileUrl    String   @db.Text
+  uploadedBy String
+  uploadedAt DateTime @default(now())
+
+  subtask    Subtask  @relation(fields: [subtaskId], references: [id], onDelete: Cascade)
+
+  @@index([subtaskId])
+  @@map("subtask_attachments")
+}
+
+model SubtaskActivity {
+  id         String   @id @default(uuid())
+  subtaskId  String
+  action     String
+  field      String?
+  oldValue   String?  @db.Text
+  newValue   String?  @db.Text
+  userId     String
+  createdAt  DateTime @default(now())
+
+  subtask    Subtask  @relation(fields: [subtaskId], references: [id], onDelete: Cascade)
+
+  @@index([subtaskId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("subtask_activity")
+}
+
+// ✨ NOVAS TABELAS V90
+
+model Communication {
+  id        String   @id @default(uuid())
+  clientId  String
+  type      String   // email, phone, meeting, message, other
+  subject   String
+  content   String?
+  status    String   // pending, sent, received, completed
+  sentBy    String?
+  sentAt    DateTime @default(now())
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([type])
+  @@index([status])
+  @@map("communications")
+}
+
+model ClientNote {
+  id        String   @id @default(uuid())
+  clientId  String
+  content   String
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@map("client_notes")
+}
+
+model ProjectFile {
+  id          String   @id @default(uuid())
+  projectId   String
+  name        String
+  url         String
+  size        Int
+  mimeType    String
+  category    String   // video, image, audio, document, other
+  description String?
+  uploadedBy  String?
+  uploadedAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([category])
+  @@map("project_files")
+}
+
+model BudgetItem {
+  id          String   @id @default(uuid())
+  projectId   String
+  category    String   // equipamento, equipe, locacao, transporte, alimentacao, pos-producao, outros
+  description String
+  quantity    Int
+  unitPrice   Int
+  total       Int
+  phase       String   // captacao, edicao
+  isPaid      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([category])
+  @@index([phase])
+  @@map("budget_items")
+}
+
+// ✨ V105 - Checklist e Comentários a nível de Projeto
+
+model ProjectChecklist {
+  id          String    @id @default(uuid())
+  projectId   String
+  title       String
+  completed   Boolean   @default(false)
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  completedBy String?
+
+  @@index([projectId])
+  @@map("project_checklist")
+}
+
+model ProjectComment {
+  id        String   @id @default(uuid())
+  projectId String
+  content   String   @db.Text
+  createdBy String
+  createdByName String?
+  createdByAvatar String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isEdited  Boolean  @default(false)
+  mentions  String?  @db.Text
+
+  @@index([projectId])
+  @@index([createdBy])
+  @@map("project_comments")
+}
+
+model ProjectActivity {
+  id         String   @id @default(uuid())
+  projectId  String
+  action     String   // created, updated, status_changed, comment_added, etc.
+  field      String?
+  oldValue   String?  @db.Text
+  newValue   String?  @db.Text
+  userId     String
+  userName   String?
+  createdAt  DateTime @default(now())
+
+  @@index([projectId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("project_activity")
+}
+
+// ✨ V106 - Sistema de Notificações
+
+model Notification {
+  id         String   @id @default(uuid())
+  userId     String   // Destinatário da notificação
+  type       String   // deadline, payment, project, comment, system
+  priority   String   @default("medium") // low, medium, high, urgent
+  title      String
+  message    String   @db.Text
+  projectId  String?  // Projeto relacionado (opcional)
+  actionUrl  String?  // URL para ação
+  isRead     Boolean  @default(false)
+  readAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([type])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ✨ V110 - Sistema de Media (NAS e Frame.io)
+
+model ProjectMedia {
+  id          String   @id @default(uuid())
+  projectId   String
+  type        String   // nas, frameio, vimeo, youtube, gdrive, other
+  title       String
+  url         String   @db.Text
+  description String?  @db.Text
+  thumbnail   String?  @db.Text
+  duration    String?  // Duração do vídeo (ex: "02:30")
+  status      String   @default("active") // active, archived, processing
+  order       Int      @default(0)
+  addedBy     String?
+  addedByName String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([type])
+  @@index([status])
+  @@map("project_media")
+}
+
+// ✨ V112 - Configuração de Colunas do Kanban
+
+model KanbanColumn {
+  id          String   @id @default(uuid())
+  phase       String   // captacao, edicao, finalizados
+  statusKey   String   // key original (ex: "em-edicao")
+  customName  String?  // nome personalizado (ex: "Em Produção")
+  color       String?  // cor personalizada
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([phase, statusKey])
+  @@index([phase])
+  @@map("kanban_columns")
+}

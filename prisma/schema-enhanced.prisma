@@ -1,0 +1,148 @@
+// 🚀 SCHEMA EXPANDIDO - WillFlow CRM
+// Adicione estas mudanças ao seu schema.prisma existente
+
+// ========================================
+// SUBTASK (TAREFA) EXPANDIDA
+// ========================================
+
+model Subtask {
+  id          String    @id @default(uuid())
+  projectId   String
+
+  // Básico
+  title       String
+  description String?   @db.Text // ✨ NOVO - Descrição detalhada
+  completed   Boolean   @default(false)
+
+  // Metadados
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  // ✨ NOVOS CAMPOS
+  priority    String    @default("medium") // low, medium, high, urgent
+  status      String    @default("todo")    // todo, in_progress, review, done
+  dueDate     DateTime?
+  assignedTo  String?   // userId do responsável
+
+  // Estimativas
+  estimatedHours Int?
+  actualHours    Int?
+
+  // Tags (JSON array)
+  tags        String?   @db.Text // ["design", "video", "urgent"]
+
+  // Ordem para drag & drop
+  order       Int       @default(0)
+
+  // Relações
+  project         Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  checklistItems  SubtaskChecklist[]
+  comments        SubtaskComment[]
+  attachments     SubtaskAttachment[]
+  activityLog     SubtaskActivity[]
+
+  @@index([projectId])
+  @@index([status])
+  @@index([priority])
+  @@index([assignedTo])
+  @@index([dueDate])
+  @@map("subtasks")
+}
+
+// ========================================
+// CHECKLIST ITEMS (dentro de cada subtask)
+// ========================================
+
+model SubtaskChecklist {
+  id          String    @id @default(uuid())
+  subtaskId   String
+  title       String
+  completed   Boolean   @default(false)
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  completedBy String?   // userId
+
+  subtask     Subtask   @relation(fields: [subtaskId], references: [id], onDelete: Cascade)
+
+  @@index([subtaskId])
+  @@map("subtask_checklist")
+}
+
+// ========================================
+// COMENTÁRIOS
+// ========================================
+
+model SubtaskComment {
+  id        String   @id @default(uuid())
+  subtaskId String
+  content   String   @db.Text
+  createdBy String   // userId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isEdited  Boolean  @default(false)
+
+  // Para mencionar usuários: @usuario
+  mentions  String?  @db.Text // JSON array de userIds
+
+  subtask   Subtask  @relation(fields: [subtaskId], references: [id], onDelete: Cascade)
+
+  @@index([subtaskId])
+  @@index([createdBy])
+  @@map("subtask_comments")
+}
+
+// ========================================
+// ANEXOS
+// ========================================
+
+model SubtaskAttachment {
+  id         String   @id @default(uuid())
+  subtaskId  String
+  fileName   String
+  fileSize   Int
+  fileType   String   // image/png, application/pdf, etc
+  fileUrl    String   @db.Text
+  uploadedBy String   // userId
+  uploadedAt DateTime @default(now())
+
+  subtask    Subtask  @relation(fields: [subtaskId], references: [id], onDelete: Cascade)
+
+  @@index([subtaskId])
+  @@map("subtask_attachments")
+}
+
+// ========================================
+// HISTÓRICO DE ATIVIDADES
+// ========================================
+
+model SubtaskActivity {
+  id         String   @id @default(uuid())
+  subtaskId  String
+  action     String   // created, updated, completed, commented, etc
+  field      String?  // Qual campo mudou (title, status, priority, etc)
+  oldValue   String?  @db.Text
+  newValue   String?  @db.Text
+  userId     String   // Quem fez a ação
+  createdAt  DateTime @default(now())
+
+  subtask    Subtask  @relation(fields: [subtaskId], references: [id], onDelete: Cascade)
+
+  @@index([subtaskId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("subtask_activity")
+}
+
+// ========================================
+// ADICIONAR AO MODEL PROJECT EXISTENTE
+// ========================================
+
+// No seu model Project, a relação já existe:
+// subtasks  Subtask[]
+
+// Mas se quiser adicionar campos relacionados a tarefas no Project:
+// taskCount         Int @default(0)
+// completedTasks    Int @default(0)
+// pendingTasks      Int @default(0)
