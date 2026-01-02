@@ -144,7 +144,7 @@ export default function TaskDetailsModal({
     if (!newChecklistItem.trim() || !subtask) return;
 
     const newItem: ChecklistItem = {
-      id: crypto.randomUUID(),
+      id: `checklist-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       title: newChecklistItem,
       completed: false,
       order: (subtask.checklistItems?.length || 0) + 1,
@@ -193,7 +193,7 @@ export default function TaskDetailsModal({
     if (!newComment.trim() || !subtask) return;
 
     const comment: Comment = {
-      id: crypto.randomUUID(),
+      id: `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       content: newComment,
       createdBy: 'current-user', // TODO: Get from auth
       createdAt: new Date().toISOString(),
