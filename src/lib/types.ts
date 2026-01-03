@@ -253,6 +253,7 @@ export interface Project {
   // Datas
   createdAt: Date;
   updatedAt: Date;
+  captacaoDate?: Date;
   clientDueDate?: Date;
   clientReceivedDate?: Date;
   freelancerDueDate?: Date;
