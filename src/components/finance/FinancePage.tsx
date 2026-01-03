@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Euro, TrendingUp, FileOutput, Calendar, BarChart3, Download, PieChart } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { Euro, TrendingUp, FileOutput, Calendar, BarChart3, Download, PieChart, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAppStore } from '@/lib/useAppStore';
@@ -12,12 +12,16 @@ import CashFlowForecast from './CashFlowForecast';
 import PaymentControl from './PaymentControl';
 import InvoicesReceipts from './InvoicesReceipts';
 import ReportsPage from '@/components/reports/ReportsPage';
+import ToastNotifications, { useToastNotifications } from '@/components/notifications/ToastNotifications';
 
 export default function FinancePage() {
   const { projects, clients, users } = useAppStore();
   const [activeTab, setActiveTab] = useState('payments');
+  const { toasts, removeToast, showSuccess, showError } = useToastNotifications();
+  const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
-  const handleMarkAsPaid = async (projectId: string, type: 'client' | 'freelancer') => {
+  const handleMarkAsPaid = useCallback(async (projectId: string, type: 'client' | 'freelancer') => {
+    setIsUpdating(projectId);
     try {
       const response = await fetch(`/api/projects/${projectId}`, {
         method: 'PUT',
@@ -31,17 +35,23 @@ export default function FinancePage() {
       const data = await response.json();
 
       if (data.success) {
-        alert(`✅ Pagamento marcado como ${type === 'client' ? 'recebido' : 'pago'}!`);
-        console.log('✅ Status de pagamento atualizado');
-        window.location.reload();
+        const project = projects.find(p => p.id === projectId);
+        showSuccess(
+          type === 'client' ? 'Pagamento Recebido' : 'Pagamento Efetuado',
+          `${project?.title || 'Projeto'} - ${type === 'client' ? 'Cliente pagou' : 'Freelancer pago'}`
+        );
+        // Reload after a short delay to show the toast
+        setTimeout(() => window.location.reload(), 1500);
       } else {
-        alert(`❌ Erro ao atualizar status de pagamento`);
+        showError('Erro ao Atualizar', 'Nao foi possivel atualizar o status de pagamento');
       }
     } catch (error) {
       console.error('Erro ao marcar como pago:', error);
-      alert('❌ Erro ao atualizar status de pagamento');
+      showError('Erro de Conexao', 'Verifique sua conexao e tente novamente');
+    } finally {
+      setIsUpdating(null);
     }
-  };
+  }, [projects, showSuccess, showError]);
 
   return (
     <div className="space-y-6">
@@ -134,6 +144,9 @@ export default function FinancePage() {
           <ReportsPage embedded={true} />
         </TabsContent>
       </Tabs>
+
+      {/* Toast Notifications */}
+      <ToastNotifications notifications={toasts} onDismiss={removeToast} />
     </div>
   );
 }

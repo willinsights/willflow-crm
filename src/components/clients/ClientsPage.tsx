@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Building2,
   Mail,
@@ -13,23 +13,42 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  Eye
+  Eye,
+  Filter,
+  ArrowUpDown,
+  SortAsc,
+  SortDesc,
+  Search,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAppStore } from '@/lib/useAppStore';
 import { useLocale } from '@/lib/LocaleContext';
 import { Client } from '@/lib/types';
 import CreateClientModal from './CreateClientModal';
 import ClientDetailsModal from './ClientDetailsModal';
+
+type SortField = 'name' | 'totalRevenue' | 'projectCount' | 'createdAt';
+type SortDirection = 'asc' | 'desc';
+type FilterStatus = 'all' | 'active' | 'inactive';
 
 export default function ClientsPage() {
   const { filteredClients, projects, searchQuery } = useAppStore();
@@ -37,7 +56,69 @@ export default function ClientsPage() {
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [detailsClient, setDetailsClient] = useState<Client | null>(null);
 
-  const sortedClients = filteredClients.sort((a, b) => b.totalRevenue - a.totalRevenue);
+  // Filters and sorting state
+  const [localSearch, setLocalSearch] = useState('');
+  const [sortField, setSortField] = useState<SortField>('totalRevenue');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
+
+  // Filter and sort clients
+  const sortedClients = useMemo(() => {
+    let result = [...filteredClients];
+
+    // Apply local search filter
+    if (localSearch) {
+      const searchLower = localSearch.toLowerCase();
+      result = result.filter(client =>
+        client.name.toLowerCase().includes(searchLower) ||
+        client.email?.toLowerCase().includes(searchLower) ||
+        client.company?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply status filter
+    if (filterStatus === 'active') {
+      result = result.filter(client => {
+        const clientProjects = projects.filter(p => p.clientId === client.id);
+        return clientProjects.some(p => p.phase !== 'finalizados');
+      });
+    } else if (filterStatus === 'inactive') {
+      result = result.filter(client => {
+        const clientProjects = projects.filter(p => p.clientId === client.id);
+        return clientProjects.length === 0 || clientProjects.every(p => p.phase === 'finalizados');
+      });
+    }
+
+    // Apply sorting
+    result.sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortField) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'totalRevenue':
+          comparison = a.totalRevenue - b.totalRevenue;
+          break;
+        case 'projectCount':
+          const aProjects = projects.filter(p => p.clientId === a.id).length;
+          const bProjects = projects.filter(p => p.clientId === b.id).length;
+          comparison = aProjects - bProjects;
+          break;
+        case 'createdAt':
+          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          break;
+      }
+
+      return sortDirection === 'desc' ? -comparison : comparison;
+    });
+
+    return result;
+  }, [filteredClients, localSearch, sortField, sortDirection, filterStatus, projects]);
+
+  const toggleSortDirection = () => {
+    setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+  };
 
   const getClientProjects = (clientId: string) => {
     return projects.filter(p => p.clientId === clientId);
@@ -62,10 +143,70 @@ export default function ClientsPage() {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gradient mb-1 md:mb-2">Clientes</h1>
           <p className="text-sm md:text-base text-muted-foreground">
-            Gestão de clientes e análise de receitas
+            Gestao de clientes e analise de receitas
           </p>
         </div>
         <CreateClientModal />
+      </div>
+
+      {/* Filters and Sorting */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+        {/* Search */}
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Pesquisar cliente..."
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+            className="pl-9 glass border-white/20"
+          />
+        </div>
+
+        {/* Status Filter */}
+        <Select value={filterStatus} onValueChange={(v: FilterStatus) => setFilterStatus(v)}>
+          <SelectTrigger className="w-[140px] glass border-white/20">
+            <Filter className="w-4 h-4 mr-2" />
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent className="glass-strong border-white/20">
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="active">Ativos</SelectItem>
+            <SelectItem value="inactive">Inativos</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Sort By */}
+        <Select value={sortField} onValueChange={(v: SortField) => setSortField(v)}>
+          <SelectTrigger className="w-[150px] glass border-white/20">
+            <ArrowUpDown className="w-4 h-4 mr-2" />
+            <SelectValue placeholder="Ordenar" />
+          </SelectTrigger>
+          <SelectContent className="glass-strong border-white/20">
+            <SelectItem value="totalRevenue">Receita</SelectItem>
+            <SelectItem value="name">Nome</SelectItem>
+            <SelectItem value="projectCount">Projetos</SelectItem>
+            <SelectItem value="createdAt">Data Criacao</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Sort Direction */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleSortDirection}
+          className="glass border-white/20"
+        >
+          {sortDirection === 'desc' ? (
+            <SortDesc className="w-4 h-4" />
+          ) : (
+            <SortAsc className="w-4 h-4" />
+          )}
+        </Button>
+
+        {/* Results count */}
+        <Badge variant="outline" className="ml-auto">
+          {sortedClients.length} cliente{sortedClients.length !== 1 ? 's' : ''}
+        </Badge>
       </div>
 
       {/* Overview Cards */}

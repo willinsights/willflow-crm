@@ -1,57 +1,59 @@
-# WillFlow CRM - Melhorias V192
+# WillFlow CRM - Melhorias V193
 
-## Concluído ✅
+## Concluido ✅
 - [x] Senhas resetadas para `Insights26@`
 - [x] Login funcionando via API
 - [x] SMTP configurado com timeouts
 - [x] Corrigido erro de build: CategoriesPage prop `embedded` adicionada
 - [x] Push para GitHub para redeploy no Railway
+- [x] **Menu reorganizado por frequencia de uso:**
+  - Visao Geral: Dashboard
+  - Projetos: Captacao, Edicao, Finalizados
+  - Financas: Financas & Analytics (fusao de Financeiro + Relatorios)
+  - Gestao: Clientes, Colaboradores
+  - Ferramentas: Calendario, Uploads
+  - Sistema: Configuracoes
+- [x] **Nova Dashboard com:**
+  - Secao 1: Cards KPI com tooltips explicativos
+  - Secao 2: Acoes Rapidas (Novo Projeto, Pagamentos, Calendario, Relatorios)
+  - Secao 3: Atencao Necessaria (prazos urgentes, pagamentos pendentes, captacoes)
+  - Secao 4: Atividade Recente (log de acoes)
+  - Secao 5: Stats rapidas (Ativos, Captacao, Edicao, Finalizados)
+  - Grafico Evolucao Financeira
+- [x] Categorias movidas para aba em Configuracoes
 
-## Prioridade CRÍTICA 🔴
+## Proximas Melhorias 🟠
 
-### 1. Eliminar Redundância Financeira
-- [ ] Remover 4 cards de métricas de Financeiro
-- [ ] Remover 4 cards de métricas de Relatórios
-- [ ] Manter apenas no Dashboard
-- [ ] Fusionar Financeiro + Relatórios em "Finanças & Analytics"
+### Feedback Visual
+- [ ] Toasts de confirmacao ao marcar pagamento como pago
+- [ ] Animacoes suaves em transicoes do Kanban
+- [ ] Indicadores de loading durante acoes
 
-### 2. Clientes - Melhorias
-- [ ] Adicionar filtros e ordenação
-- [ ] Criar página de detalhes ao clicar
-- [ ] Permitir notas/observações por cliente
+### Vista Compacta vs Detalhada
+- [ ] Toggle para alternar entre vistas
+- [ ] Cards Kanban mais compactos opcao
 
-### 3. Colaboradores - Métricas
-- [ ] Adicionar métricas de performance
-- [ ] Mostrar projetos concluídos vs atribuídos
+### Clientes - Melhorias
+- [ ] Adicionar filtros e ordenacao
+- [ ] Criar pagina de detalhes ao clicar
+- [ ] Permitir notas/observacoes por cliente
+
+### Colaboradores - Metricas
+- [ ] Adicionar metricas de performance
+- [ ] Mostrar projetos concluidos vs atribuidos
 - [ ] Taxa de cumprimento de prazos
 
-## Prioridade ALTA 🟠
+### Calendario - Melhorias
+- [ ] Visualizacoes: Mes | Semana | Dia
+- [ ] Criar eventos no calendario
+- [ ] Horarios nos eventos
 
-### 4. Aba Descrição - Colaboradores
-- [ ] Mostrar colaboradores atribuídos
-- [ ] Responsável Captação
-- [ ] Responsável Edição
-
-### 5. Mover Categorias para Configurações
-- [x] Adicionar como aba em Configurações (já feito)
-- [ ] Remover de GESTÃO no menu se necessário
-
-### 6. Simplificar Notificações
-- [ ] 3 níveis: Nenhuma | Essenciais | Todas
-- [ ] Configurações avançadas em collapse
-- [ ] Link para changelog
-
-## Prioridade MÉDIA 🟡
-
-### 7. Calendário - Melhorias
-- [ ] Visualizações: Mês | Semana | Dia
-- [ ] Criar eventos no calendário
-- [ ] Horários nos eventos
-
-### 8. Notificações de Vencimentos
-- [ ] Alertas automáticos de prazos
+### Automacoes
+- [ ] Notificacoes automaticas de vencimentos
+- [ ] Emails automaticos para clientes/freelancers
+- [ ] Lembretes de follow-up
 
 ## Aguardando Deploy Railway 🚀
-- O Railway deve refazer o deploy automaticamente após o push
+- O Railway deve refazer o deploy automaticamente apos o push
 - Aguardar 2-3 minutos para o deploy completar
-- Testar login em produção com: geral@in-sights.pt / Insights26@
+- Testar em producao: https://will-flow.up.railway.app

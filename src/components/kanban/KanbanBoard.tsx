@@ -32,6 +32,8 @@ import {
   ArrowRightCircle,
   GripHorizontal,
   Lock,
+  LayoutGrid,
+  LayoutList,
 } from 'lucide-react';
 import {
   DndContext,
@@ -140,6 +142,20 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
   const [showNewColumnDialog, setShowNewColumnDialog] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
   const [newColumnKey, setNewColumnKey] = useState('');
+
+  // Compact view toggle
+  const [isCompactView, setIsCompactView] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('kanban-compact-view') === 'true';
+    }
+    return false;
+  });
+
+  const toggleCompactView = () => {
+    const newValue = !isCompactView;
+    setIsCompactView(newValue);
+    localStorage.setItem('kanban-compact-view', String(newValue));
+  };
 
   // Load custom column names and order on mount
   useEffect(() => {
@@ -639,6 +655,27 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
               </DropdownMenu>
             )}
 
+            {/* Compact/Detailed view toggle */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleCompactView}
+                  className={`glass ${isCompactView ? 'bg-purple-500/20' : ''}`}
+                >
+                  {isCompactView ? (
+                    <LayoutGrid className="w-4 h-4" />
+                  ) : (
+                    <LayoutList className="w-4 h-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isCompactView ? 'Vista Detalhada' : 'Vista Compacta'}</p>
+              </TooltipContent>
+            </Tooltip>
+
             {/* Add new column button */}
             <Button
               variant="outline"
@@ -712,6 +749,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
                             onCardClick={setSelectedProject}
                             onMoveToPhase={handleMoveToPhase}
                             allStatuses={statuses}
+                            isCompact={isCompactView}
                           />
                         ))}
                       </div>
@@ -1086,12 +1124,14 @@ function DraggableProjectCard({
   onCardClick,
   onMoveToPhase,
   allStatuses,
+  isCompact = false,
 }: {
   project: Project;
   phase: ProjectPhase;
   onCardClick: (project: Project) => void;
   onMoveToPhase: (projectId: string, phase: ProjectPhase) => void;
   allStatuses: string[];
+  isCompact?: boolean;
 }) {
   const {
     attributes,
@@ -1120,6 +1160,7 @@ function DraggableProjectCard({
           onCardClick={onCardClick}
           onMoveToPhase={onMoveToPhase}
           allStatuses={allStatuses}
+          isCompact={isCompact}
         />
       </div>
     </div>
@@ -1134,10 +1175,12 @@ function ProjectCard({
   onCardClick,
   onMoveToPhase,
   allStatuses,
+  isCompact = false,
 }: {
   project: Project;
   phase: ProjectPhase;
   isDragging?: boolean;
+  isCompact?: boolean;
   onCardClick?: (project: Project) => void;
   onMoveToPhase?: (projectId: string, phase: ProjectPhase) => void;
   allStatuses?: string[];
@@ -1288,103 +1331,123 @@ function ProjectCard({
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0 space-y-2 md:space-y-3">
-        {project.location && (
-          <div className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs text-muted-foreground">
-            <MapPin className="w-3 h-3 flex-shrink-0" />
-            <span className="truncate">{project.location}</span>
-          </div>
-        )}
-
-        {userPermissions.canViewFinance && (
-          <div className="space-y-1.5 md:space-y-2">
-            <div className="flex justify-between text-[10px] md:text-xs gap-2">
-              <span className="text-muted-foreground">Cliente:</span>
-              <span className="font-medium truncate">{formatCurrency(project.clientPrice)}</span>
-            </div>
-            <div className="flex justify-between text-[10px] md:text-xs gap-2">
-              <span className="text-muted-foreground">Margem:</span>
-              <span className={`font-medium truncate ${project.margin > 0 ? 'text-green-400' : 'text-red-400'}`}>
+      <CardContent className={`pt-0 ${isCompact ? 'space-y-1' : 'space-y-2 md:space-y-3'}`}>
+        {/* Compact view: Show only essential info */}
+        {isCompact ? (
+          <div className="flex items-center justify-between gap-2">
+            {project.clientDueDate && (
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <Clock className="w-3 h-3" />
+                <span>{new Date(project.clientDueDate).toLocaleDateString('pt-PT')}</span>
+              </div>
+            )}
+            {userPermissions.canViewFinance && (
+              <span className={`text-[10px] font-medium ${project.margin > 0 ? 'text-green-400' : 'text-red-400'}`}>
                 {formatCurrency(project.margin)}
               </span>
-            </div>
+            )}
           </div>
-        )}
+        ) : (
+          <>
+            {/* Detailed view: Show all info */}
+            {project.location && (
+              <div className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs text-muted-foreground">
+                <MapPin className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate">{project.location}</span>
+              </div>
+            )}
 
-        {project.clientDueDate && (
-          <div className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs text-muted-foreground">
-            <Clock className="w-3 h-3 flex-shrink-0" />
-            <span>
-              {new Date(project.clientDueDate).toLocaleDateString('pt-PT')}
-            </span>
-          </div>
-        )}
-
-        <div className="flex gap-1.5 md:gap-2 flex-wrap">
-          {project.nasLink && (
-            <Button variant="outline" size="sm" className="h-6 md:h-7 text-[10px] md:text-xs glass border-white/20" asChild>
-              <a href={project.nasLink} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="w-2.5 h-2.5 md:w-3 md:h-3 mr-1" />
-                NAS
-              </a>
-            </Button>
-          )}
-          {project.frameIoLink && (
-            <Button variant="outline" size="sm" className="h-6 md:h-7 text-[10px] md:text-xs glass border-white/20" asChild>
-              <a href={project.frameIoLink} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="w-2.5 h-2.5 md:w-3 md:h-3 mr-1" />
-                Frame.io
-              </a>
-            </Button>
-          )}
-        </div>
-
-        {((phase === 'captacao' && project.responsavelCaptacao) ||
-          (phase === 'edicao' && project.responsavelEdicao)) && (
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <Avatar className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0">
-              <AvatarFallback className="text-[10px] md:text-xs">
-                {phase === 'captacao'
-                  ? project.responsavelCaptacao?.name?.[0]
-                  : project.responsavelEdicao?.name?.[0]
-                }
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-[10px] md:text-xs text-muted-foreground truncate">
-              {phase === 'captacao'
-                ? project.responsavelCaptacao?.name
-                : project.responsavelEdicao?.name
-              }
-            </span>
-          </div>
-        )}
-
-        {project.subtasks && project.subtasks.length > 0 && (
-          <div className="pt-2 mt-2 border-t border-white/10">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] md:text-xs text-muted-foreground font-medium">
-                Tarefas
-              </span>
-              <Badge variant="secondary" className="text-[10px]">
-                {project.subtasks.filter(s => s.completed).length}/{project.subtasks.length}
-              </Badge>
-            </div>
-            <div className="space-y-1">
-              {project.subtasks.slice(0, 3).map((subtask) => (
-                <div key={subtask.id} className="flex items-center gap-1.5 text-[10px]">
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${subtask.completed ? 'bg-green-500' : 'bg-gray-500'}`} />
-                  <span className={`truncate ${subtask.completed ? 'line-through text-muted-foreground' : ''}`}>
-                    {subtask.title}
+            {userPermissions.canViewFinance && (
+              <div className="space-y-1.5 md:space-y-2">
+                <div className="flex justify-between text-[10px] md:text-xs gap-2">
+                  <span className="text-muted-foreground">Cliente:</span>
+                  <span className="font-medium truncate">{formatCurrency(project.clientPrice)}</span>
+                </div>
+                <div className="flex justify-between text-[10px] md:text-xs gap-2">
+                  <span className="text-muted-foreground">Margem:</span>
+                  <span className={`font-medium truncate ${project.margin > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {formatCurrency(project.margin)}
                   </span>
                 </div>
-              ))}
-              {project.subtasks.length > 3 && (
-                <span className="text-[10px] text-muted-foreground">
-                  +{project.subtasks.length - 3} mais...
+              </div>
+            )}
+
+            {project.clientDueDate && (
+              <div className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs text-muted-foreground">
+                <Clock className="w-3 h-3 flex-shrink-0" />
+                <span>
+                  {new Date(project.clientDueDate).toLocaleDateString('pt-PT')}
                 </span>
+              </div>
+            )}
+
+            <div className="flex gap-1.5 md:gap-2 flex-wrap">
+              {project.nasLink && (
+                <Button variant="outline" size="sm" className="h-6 md:h-7 text-[10px] md:text-xs glass border-white/20" asChild>
+                  <a href={project.nasLink} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="w-2.5 h-2.5 md:w-3 md:h-3 mr-1" />
+                    NAS
+                  </a>
+                </Button>
+              )}
+              {project.frameIoLink && (
+                <Button variant="outline" size="sm" className="h-6 md:h-7 text-[10px] md:text-xs glass border-white/20" asChild>
+                  <a href={project.frameIoLink} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="w-2.5 h-2.5 md:w-3 md:h-3 mr-1" />
+                    Frame.io
+                  </a>
+                </Button>
               )}
             </div>
-          </div>
+
+            {((phase === 'captacao' && project.responsavelCaptacao) ||
+              (phase === 'edicao' && project.responsavelEdicao)) && (
+              <div className="flex items-center gap-1.5 md:gap-2">
+                <Avatar className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0">
+                  <AvatarFallback className="text-[10px] md:text-xs">
+                    {phase === 'captacao'
+                      ? project.responsavelCaptacao?.name?.[0]
+                      : project.responsavelEdicao?.name?.[0]
+                    }
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-[10px] md:text-xs text-muted-foreground truncate">
+                  {phase === 'captacao'
+                    ? project.responsavelCaptacao?.name
+                    : project.responsavelEdicao?.name
+                  }
+                </span>
+              </div>
+            )}
+
+            {project.subtasks && project.subtasks.length > 0 && (
+              <div className="pt-2 mt-2 border-t border-white/10">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] md:text-xs text-muted-foreground font-medium">
+                    Tarefas
+                  </span>
+                  <Badge variant="secondary" className="text-[10px]">
+                    {project.subtasks.filter(s => s.completed).length}/{project.subtasks.length}
+                  </Badge>
+                </div>
+                <div className="space-y-1">
+                  {project.subtasks.slice(0, 3).map((subtask) => (
+                    <div key={subtask.id} className="flex items-center gap-1.5 text-[10px]">
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${subtask.completed ? 'bg-green-500' : 'bg-gray-500'}`} />
+                      <span className={`truncate ${subtask.completed ? 'line-through text-muted-foreground' : ''}`}>
+                        {subtask.title}
+                      </span>
+                    </div>
+                  ))}
+                  {project.subtasks.length > 3 && (
+                    <span className="text-[10px] text-muted-foreground">
+                      +{project.subtasks.length - 3} mais...
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

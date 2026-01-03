@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Plus, Edit, Trash2, User, Mail, Shield, Video, Edit3, Camera, Film,
   CreditCard, Building2, FileText, Lock, Eye, EyeOff, RefreshCw, Key,
-  CheckCircle, AlertCircle, Power
+  CheckCircle, AlertCircle, Power, TrendingUp, Target, Clock, Award
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import {
   Dialog,
   DialogContent,
@@ -28,7 +29,15 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { usersApi } from '@/lib/api';
+import { useAppStore } from '@/lib/useAppStore';
+import { useLocale } from '@/lib/LocaleContext';
 import { User as UserType, UserRole, CollaboratorType, ContributorType } from '@/lib/types';
 
 export default function UsersPage() {
@@ -39,6 +48,59 @@ export default function UsersPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [resetPasswordLoading, setResetPasswordLoading] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const { projects } = useAppStore();
+  const { formatCurrency } = useLocale();
+
+  // Calculate performance metrics for each user
+  const userMetrics = useMemo(() => {
+    const metrics: Record<string, {
+      projectCount: number;
+      completedProjects: number;
+      activeProjects: number;
+      totalRevenue: number;
+      totalMargin: number;
+      avgCompletionRate: number;
+      onTimeDelivery: number;
+    }> = {};
+
+    users.forEach(user => {
+      const userProjects = projects.filter(
+        p => p.responsavelCaptacaoId === user.id || p.responsavelEdicaoId === user.id
+      );
+
+      const completed = userProjects.filter(p => p.phase === 'finalizados');
+      const active = userProjects.filter(p => p.phase !== 'finalizados');
+
+      // Calculate on-time delivery rate
+      const projectsWithDeadline = completed.filter(p => p.clientDueDate);
+      const onTimeProjects = projectsWithDeadline.filter(p => {
+        if (!p.clientDueDate || !p.updatedAt) return true;
+        return new Date(p.updatedAt) <= new Date(p.clientDueDate);
+      });
+
+      const onTimeRate = projectsWithDeadline.length > 0
+        ? (onTimeProjects.length / projectsWithDeadline.length) * 100
+        : 100;
+
+      const totalRevenue = userProjects.reduce((sum, p) => sum + p.clientPrice, 0);
+      const totalMargin = userProjects.reduce((sum, p) => sum + p.margin, 0);
+
+      metrics[user.id] = {
+        projectCount: userProjects.length,
+        completedProjects: completed.length,
+        activeProjects: active.length,
+        totalRevenue,
+        totalMargin,
+        avgCompletionRate: userProjects.length > 0
+          ? (completed.length / userProjects.length) * 100
+          : 0,
+        onTimeDelivery: onTimeRate,
+      };
+    });
+
+    return metrics;
+  }, [users, projects]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -414,6 +476,56 @@ export default function UsersPage() {
                   </Badge>
                 )}
               </div>
+              {/* Performance Metrics */}
+              {userMetrics[user.id] && userMetrics[user.id].projectCount > 0 && (
+                <TooltipProvider>
+                  <div className="pt-2 border-t border-white/10 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Projetos</span>
+                      <span className="font-medium">
+                        {userMetrics[user.id].completedProjects}/{userMetrics[user.id].projectCount}
+                      </span>
+                    </div>
+                    <Progress
+                      value={userMetrics[user.id].avgCompletionRate}
+                      className="h-1.5"
+                    />
+                    <div className="flex gap-2">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex-1 p-1.5 rounded glass text-center cursor-help">
+                            <div className="text-xs font-bold text-green-400">
+                              {formatCurrency(userMetrics[user.id].totalMargin)}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground">Margem</div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Margem total gerada</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex-1 p-1.5 rounded glass text-center cursor-help">
+                            <div className={`text-xs font-bold ${
+                              userMetrics[user.id].onTimeDelivery >= 80 ? 'text-green-400' :
+                              userMetrics[user.id].onTimeDelivery >= 60 ? 'text-yellow-400' :
+                              'text-red-400'
+                            }`}>
+                              {userMetrics[user.id].onTimeDelivery.toFixed(0)}%
+                            </div>
+                            <div className="text-[10px] text-muted-foreground">No prazo</div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Taxa de entregas no prazo</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+                </TooltipProvider>
+              )}
+
               {(user.nif || user.iban) && (
                 <div className="text-xs text-muted-foreground space-y-1 pt-2 border-t border-white/10">
                   {user.nif && (
