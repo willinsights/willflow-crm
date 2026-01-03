@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   TrendingUp,
   Euro,
@@ -72,6 +73,7 @@ export default function AdminDashboard({
   projectsByPhase,
 }: AdminDashboardProps) {
   const { formatCurrency, formatDate } = useLocale();
+  const router = useRouter();
 
   // Calculate monthly revenue trend
   const revenueData = useMemo(() => {
@@ -372,6 +374,8 @@ export default function AdminDashboard({
                       if (action.action === 'create-project') {
                         const btn = document.querySelector('[data-create-project-modal]') as HTMLButtonElement;
                         btn?.click();
+                      } else if (action.href && action.href !== '#') {
+                        router.push(`/${action.href}`);
                       }
                     }}
                   >
