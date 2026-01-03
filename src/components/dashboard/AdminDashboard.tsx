@@ -720,21 +720,17 @@ export default function AdminDashboard({
         </div>
 
         {/* Project Details Modal */}
-        {selectedProject && (
-          <Dialog open={isProjectModalOpen} onOpenChange={(open) => {
-            if (!open) handleCloseProjectModal();
-          }}>
-            <DialogContent className="glass-strong border border-white/20 max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-2xl text-gradient flex items-center gap-2">
-                  <Video className="w-6 h-6" />
-                  {selectedProject.title}
-                </DialogTitle>
-              </DialogHeader>
-              <ProjectDetailsContent project={selectedProject} />
-            </DialogContent>
-          </Dialog>
-        )}
+        <Dialog open={isProjectModalOpen} onOpenChange={setIsProjectModalOpen}>
+          <DialogContent className="glass-strong border border-white/20 max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl text-gradient flex items-center gap-2">
+                <Video className="w-6 h-6" />
+                {selectedProject?.title || 'Detalhes do Projeto'}
+              </DialogTitle>
+            </DialogHeader>
+            {selectedProject && <ProjectDetailsContent project={selectedProject} />}
+          </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   );
