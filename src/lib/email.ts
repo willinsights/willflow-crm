@@ -17,7 +17,7 @@ const EMAIL_CONFIG = {
   from: process.env.SMTP_FROM || process.env.SMTP_USER || '',
 };
 
-// Create transporter
+// Create transporter with timeout settings
 function createTransporter() {
   return nodemailer.createTransport({
     host: EMAIL_CONFIG.host,
@@ -27,6 +27,13 @@ function createTransporter() {
       user: EMAIL_CONFIG.auth.user,
       pass: EMAIL_CONFIG.auth.pass,
     },
+    // Timeout settings for better reliability
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
+    // Pool connections for better performance
+    pool: true,
+    maxConnections: 3,
   });
 }
 
@@ -55,10 +62,7 @@ export async function sendEmail(options: EmailOptions): Promise<{ success: boole
   try {
     const transporter = createTransporter();
 
-    // Verify connection
-    await transporter.verify();
-
-    // Send email
+    // Send email directly (skip verify to avoid timeout)
     const info = await transporter.sendMail({
       from: EMAIL_CONFIG.from,
       to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
@@ -213,7 +217,7 @@ export async function sendTemplatedEmail(
   });
 }
 
-// Test email configuration
+// Test email configuration (with timeout)
 export async function testEmailConfiguration(): Promise<{ success: boolean; error?: string }> {
   if (!EMAIL_CONFIG.auth.user || !EMAIL_CONFIG.auth.pass) {
     return { success: false, error: 'Email not configured' };
@@ -221,7 +225,11 @@ export async function testEmailConfiguration(): Promise<{ success: boolean; erro
 
   try {
     const transporter = createTransporter();
-    await transporter.verify();
+    // Use Promise.race with timeout
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('SMTP verification timeout')), 10000);
+    });
+    await Promise.race([transporter.verify(), timeoutPromise]);
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
