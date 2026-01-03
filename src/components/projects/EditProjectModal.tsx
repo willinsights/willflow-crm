@@ -109,7 +109,8 @@ export default function EditProjectModal({ project }: EditProjectModalProps) {
       <DialogContent className="glass-strong border border-white/20">
         <DialogHeader>
           <DialogTitle className="text-gradient">Editar Projeto</DialogTitle>
-        <DialogDescription className="sr-only">Edição do projeto</DialogDescription></DialogHeader>
+          <DialogDescription className="sr-only">Edição do projeto</DialogDescription>
+        </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="space-y-2">
             <Label>Título</Label>

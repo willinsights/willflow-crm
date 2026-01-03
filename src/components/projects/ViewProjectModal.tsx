@@ -120,7 +120,8 @@ export default function ViewProjectModal({ project, trigger }: ViewProjectModalP
             <Video className="w-6 h-6" />
             {project.title}
           </DialogTitle>
-        <DialogDescription className="sr-only">Visualização do projeto</DialogDescription></DialogHeader>
+          <DialogDescription className="sr-only">Visualização do projeto</DialogDescription>
+        </DialogHeader>
 
         <div className="space-y-6">
           {/* Informações Gerais */}
