@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import {
   TrendingUp,
   Euro,
@@ -50,6 +50,7 @@ import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { useCreateProject } from '@/contexts/CreateProjectContext';
 import { Project, Client, User, DashboardStats } from '@/lib/types';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import ViewProjectModal from '@/components/projects/ViewProjectModal';
 
 const COLORS = ['#9139e4', '#c084fc', '#f59e0b', '#14b8a6', '#ec4899', '#8b5cf6'];
 
@@ -108,6 +109,17 @@ export default function AdminDashboard({
     return months;
   }, [projects]);
 
+  // State for selected project modal
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const modalTriggerRef = useRef<HTMLButtonElement>(null);
+
+  // Auto-open modal when project is selected
+  useEffect(() => {
+    if (selectedProject && modalTriggerRef.current) {
+      modalTriggerRef.current.click();
+    }
+  }, [selectedProject]);
+
   // Urgent projects: deadlines this week + pending payments
   const urgentItems = useMemo(() => {
     const now = new Date();
@@ -120,6 +132,7 @@ export default function AdminDashboard({
       icon: any;
       color: string;
       bgColor: string;
+      project: Project;
     }> = [];
 
     // Projects with deadline this week
@@ -136,6 +149,7 @@ export default function AdminDashboard({
           icon: Clock,
           color: days <= 2 ? 'text-red-400' : days <= 4 ? 'text-orange-400' : 'text-yellow-400',
           bgColor: days <= 2 ? 'bg-red-500/10' : days <= 4 ? 'bg-orange-500/10' : 'bg-yellow-500/10',
+          project: p,
         });
       }
     });
@@ -151,6 +165,7 @@ export default function AdminDashboard({
           icon: CreditCard,
           color: 'text-green-400',
           bgColor: 'bg-green-500/10',
+          project: p,
         });
       }
     });
@@ -169,6 +184,7 @@ export default function AdminDashboard({
             icon: Camera,
             color: 'text-blue-400',
             bgColor: 'bg-blue-500/10',
+            project: p,
           });
         }
       }
@@ -417,7 +433,8 @@ export default function AdminDashboard({
                   return (
                     <div
                       key={index}
-                      className={`p-3 rounded-lg border border-white/10 ${item.bgColor} flex items-center gap-3`}
+                      className={`p-3 rounded-lg border border-white/10 ${item.bgColor} flex items-center gap-3 cursor-pointer hover:bg-white/10 transition-colors`}
+                      onClick={() => setSelectedProject(item.project)}
                     >
                       <div className={`p-2 rounded-lg bg-white/5`}>
                         <Icon className={`w-4 h-4 ${item.color}`} />
@@ -537,6 +554,24 @@ export default function AdminDashboard({
             <p className="text-xs text-muted-foreground mt-1">Finalizados</p>
           </Card>
         </div>
+
+        {/* Project Details Modal - using Eye icon as trigger */}
+        {selectedProject && (
+          <ViewProjectModal
+            key={selectedProject.id}
+            project={selectedProject}
+            trigger={
+              <Button
+                ref={modalTriggerRef}
+                variant="ghost"
+                size="sm"
+                className="hidden"
+              >
+                <Eye className="w-4 h-4" />
+              </Button>
+            }
+          />
+        )}
       </div>
     </TooltipProvider>
   );
