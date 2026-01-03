@@ -35,6 +35,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -773,6 +774,7 @@ export default function PaymentControl({
                     Imprimir / PDF
                   </Button>
                 </DialogTitle>
+                <DialogDescription className="sr-only">Visualização e impressão da fatura do projeto</DialogDescription>
               </DialogHeader>
               <div ref={invoiceRef} className="space-y-4 p-6 bg-white text-black rounded-lg">
                 <div className="header text-center border-b pb-4">
@@ -875,6 +877,7 @@ export default function PaymentControl({
                     Imprimir / PDF
                   </Button>
                 </DialogTitle>
+                <DialogDescription className="sr-only">Visualização e impressão do recibo do projeto</DialogDescription>
               </DialogHeader>
               <div ref={receiptRef} className="space-y-4 p-6 bg-white text-black rounded-lg">
                 <div className="header text-center border-b pb-4">

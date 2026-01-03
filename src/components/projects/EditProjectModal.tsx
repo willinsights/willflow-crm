@@ -5,7 +5,8 @@ import { Edit, Plus, ListTodo, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+  DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -108,7 +109,7 @@ export default function EditProjectModal({ project }: EditProjectModalProps) {
       <DialogContent className="glass-strong border border-white/20">
         <DialogHeader>
           <DialogTitle className="text-gradient">Editar Projeto</DialogTitle>
-        </DialogHeader>
+        <DialogDescription className="sr-only">Edição do projeto</DialogDescription></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="space-y-2">
             <Label>Título</Label>

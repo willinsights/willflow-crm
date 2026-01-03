@@ -24,6 +24,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -119,7 +120,7 @@ export default function ViewProjectModal({ project, trigger }: ViewProjectModalP
             <Video className="w-6 h-6" />
             {project.title}
           </DialogTitle>
-        </DialogHeader>
+        <DialogDescription className="sr-only">Visualização do projeto</DialogDescription></DialogHeader>
 
         <div className="space-y-6">
           {/* Informações Gerais */}
