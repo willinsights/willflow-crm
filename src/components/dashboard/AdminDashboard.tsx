@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState } from 'react';
 import {
   TrendingUp,
   Euro,
@@ -30,6 +30,12 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   BarChart,
   Bar,
   LineChart,
@@ -50,9 +56,162 @@ import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { useCreateProject } from '@/contexts/CreateProjectContext';
 import { Project, Client, User, DashboardStats } from '@/lib/types';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import ViewProjectModal from '@/components/projects/ViewProjectModal';
+import { useAppStore } from '@/lib/useAppStore';
+import { statusLabels } from '@/lib/data';
 
 const COLORS = ['#9139e4', '#c084fc', '#f59e0b', '#14b8a6', '#ec4899', '#8b5cf6'];
+
+// Component to display project details in modal
+function ProjectDetailsContent({ project }: { project: Project }) {
+  const { formatCurrency } = useLocale();
+  const { clients, users } = useAppStore();
+  
+  const client = clients.find(c => c.id === project.clientId);
+  const responsavelCaptacao = users.find(u => u.id === project.responsavelCaptacaoId);
+  const responsavelEdicao = users.find(u => u.id === project.responsavelEdicaoId);
+
+  const getStatusBadge = (status: string) => {
+    const label = statusLabels[status] || status;
+    return <Badge className={`status-badge status-${status}`}>{label}</Badge>;
+  };
+
+  const getPaymentStatusBadge = (status: string) => {
+    switch (status) {
+      case 'recebido':
+      case 'pago':
+        return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Pago</Badge>;
+      case 'a-faturar':
+      case 'a-pagar':
+        return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Pendente</Badge>;
+      case 'faturado':
+        return <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">Faturado</Badge>;
+      default:
+        return <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30">{status}</Badge>;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Informações Gerais */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-purple-400" />
+          Informações Gerais
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="glass rounded-lg p-4 space-y-2">
+            <div className="text-muted-foreground text-sm">Cliente</div>
+            <p className="font-medium text-lg">{client?.name || 'Não definido'}</p>
+          </div>
+          <div className="glass rounded-lg p-4 space-y-2">
+            <div className="text-muted-foreground text-sm">Fase</div>
+            <p className="font-medium capitalize">{project.phase}</p>
+          </div>
+          {project.clientDueDate && (
+            <div className="glass rounded-lg p-4 space-y-2">
+              <div className="text-muted-foreground text-sm">Prazo do Cliente</div>
+              <p className="font-medium">{new Date(project.clientDueDate).toLocaleDateString('pt-PT')}</p>
+            </div>
+          )}
+          {project.location && (
+            <div className="glass rounded-lg p-4 space-y-2">
+              <div className="text-muted-foreground text-sm">Localização</div>
+              <p className="font-medium">{project.location}</p>
+            </div>
+          )}
+        </div>
+        {project.description && (
+          <div className="glass rounded-lg p-4 space-y-2">
+            <div className="text-muted-foreground text-sm">Descrição</div>
+            <p className="text-sm">{project.description}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Status */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <CheckCircle className="w-5 h-5 text-purple-400" />
+          Status
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="glass rounded-lg p-4 space-y-2">
+            <div className="text-muted-foreground text-sm">Status Captação</div>
+            {project.statusCaptacao && getStatusBadge(project.statusCaptacao)}
+          </div>
+          <div className="glass rounded-lg p-4 space-y-2">
+            <div className="text-muted-foreground text-sm">Status Edição</div>
+            {project.statusEdicao && getStatusBadge(project.statusEdicao)}
+          </div>
+        </div>
+      </div>
+
+      {/* Responsáveis */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <Users className="w-5 h-5 text-purple-400" />
+          Responsáveis
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="glass rounded-lg p-4 space-y-2">
+            <div className="text-muted-foreground text-sm">Responsável Captação</div>
+            <p className="font-medium">{responsavelCaptacao?.name || 'Não atribuído'}</p>
+          </div>
+          <div className="glass rounded-lg p-4 space-y-2">
+            <div className="text-muted-foreground text-sm">Responsável Edição</div>
+            <p className="font-medium">{responsavelEdicao?.name || 'Não atribuído'}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Valores Financeiros */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <Euro className="w-5 h-5 text-purple-400" />
+          Valores Financeiros
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="glass rounded-lg p-4 space-y-2">
+            <div className="text-muted-foreground text-sm">Preço Cliente</div>
+            <p className="font-bold text-xl text-green-400">{formatCurrency(project.clientPrice)}</p>
+          </div>
+          <div className="glass rounded-lg p-4 space-y-2">
+            <div className="text-muted-foreground text-sm">Custo Captação</div>
+            <p className="font-bold text-xl text-orange-400">{formatCurrency(project.captationCost)}</p>
+          </div>
+          <div className="glass rounded-lg p-4 space-y-2">
+            <div className="text-muted-foreground text-sm">Custo Edição</div>
+            <p className="font-bold text-xl text-orange-400">{formatCurrency(project.editionCost)}</p>
+          </div>
+          <div className="glass rounded-lg p-4 space-y-2">
+            <div className="text-muted-foreground text-sm">Margem</div>
+            <p className={`font-bold text-xl ${project.margin >= 0 ? 'text-purple-400' : 'text-red-400'}`}>
+              {formatCurrency(project.margin)}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Status de Pagamento */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <CreditCard className="w-5 h-5 text-purple-400" />
+          Status de Pagamento
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="glass rounded-lg p-4 space-y-2">
+            <div className="text-muted-foreground text-sm">Pagamento do Cliente</div>
+            {getPaymentStatusBadge(project.paymentStatus)}
+          </div>
+          <div className="glass rounded-lg p-4 space-y-2">
+            <div className="text-muted-foreground text-sm">Pagamento Colaboradores</div>
+            {getPaymentStatusBadge(project.freelancerPaymentStatus)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface AdminDashboardProps {
   projects: Project[];
@@ -111,14 +270,19 @@ export default function AdminDashboard({
 
   // State for selected project modal
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const modalTriggerRef = useRef<HTMLButtonElement>(null);
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
 
-  // Auto-open modal when project is selected
-  useEffect(() => {
-    if (selectedProject && modalTriggerRef.current) {
-      modalTriggerRef.current.click();
-    }
-  }, [selectedProject]);
+  // Handle opening project modal
+  const handleOpenProjectModal = (project: Project) => {
+    setSelectedProject(project);
+    setIsProjectModalOpen(true);
+  };
+
+  // Handle closing project modal
+  const handleCloseProjectModal = () => {
+    setIsProjectModalOpen(false);
+    setSelectedProject(null);
+  };
 
   // Urgent projects: deadlines this week + pending payments
   const urgentItems = useMemo(() => {
@@ -434,7 +598,7 @@ export default function AdminDashboard({
                     <div
                       key={index}
                       className={`p-3 rounded-lg border border-white/10 ${item.bgColor} flex items-center gap-3 cursor-pointer hover:bg-white/10 transition-colors`}
-                      onClick={() => setSelectedProject(item.project)}
+                      onClick={() => handleOpenProjectModal(item.project)}
                     >
                       <div className={`p-2 rounded-lg bg-white/5`}>
                         <Icon className={`w-4 h-4 ${item.color}`} />
@@ -555,22 +719,21 @@ export default function AdminDashboard({
           </Card>
         </div>
 
-        {/* Project Details Modal - using Eye icon as trigger */}
+        {/* Project Details Modal */}
         {selectedProject && (
-          <ViewProjectModal
-            key={selectedProject.id}
-            project={selectedProject}
-            trigger={
-              <Button
-                ref={modalTriggerRef}
-                variant="ghost"
-                size="sm"
-                className="hidden"
-              >
-                <Eye className="w-4 h-4" />
-              </Button>
-            }
-          />
+          <Dialog open={isProjectModalOpen} onOpenChange={(open) => {
+            if (!open) handleCloseProjectModal();
+          }}>
+            <DialogContent className="glass-strong border border-white/20 max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-2xl text-gradient flex items-center gap-2">
+                  <Video className="w-6 h-6" />
+                  {selectedProject.title}
+                </DialogTitle>
+              </DialogHeader>
+              <ProjectDetailsContent project={selectedProject} />
+            </DialogContent>
+          </Dialog>
         )}
       </div>
     </TooltipProvider>
