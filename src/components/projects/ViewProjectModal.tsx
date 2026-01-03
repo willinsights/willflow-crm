@@ -167,6 +167,18 @@ export default function ViewProjectModal({ project, trigger }: ViewProjectModalP
                 </div>
               )}
 
+              {project.captacaoDate && (
+                <div className="glass rounded-lg p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    <Calendar className="w-4 h-4" />
+                    Data de Captação
+                  </div>
+                  <p className="font-medium">
+                    {new Date(project.captacaoDate).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              )}
+
               <div className="glass rounded-lg p-4 space-y-2">
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <Video className="w-4 h-4" />

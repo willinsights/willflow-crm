@@ -65,6 +65,7 @@ export default function CreateProjectModal({
     captationCost: '',
     editionCost: '',
     dueDate: defaultDate || '',
+    captacaoDate: '', // Data e hora de captação
     filmakerIds: [] as string[], // Alterado para array (seleção múltipla)
     editorIds: [] as string[], // Alterado para array (seleção múltipla)
   });
@@ -160,6 +161,7 @@ export default function CreateProjectModal({
         paymentStatus: 'a-faturar' as PaymentStatus,
         freelancerPaymentStatus: 'a-pagar' as FreelancerPaymentStatus,
         clientDueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+        captacaoDate: formData.captacaoDate ? new Date(formData.captacaoDate) : undefined,
       };
 
       await createProject(projectData);
@@ -176,6 +178,7 @@ export default function CreateProjectModal({
         captationCost: '',
         editionCost: '',
         dueDate: '',
+        captacaoDate: '',
         filmakerIds: [],
         editorIds: [],
       });
@@ -474,6 +477,23 @@ export default function CreateProjectModal({
                       ℹ️ O primeiro selecionado será o responsável principal
                     </p>
                   )}
+                </div>
+              )}
+
+              {/* Data de Captação - Aparece se NÃO for apenas edição */}
+              {formData.projectFlow !== 'edition-only' && (
+                <div className="space-y-2">
+                  <Label htmlFor="captacaoDate">Data de Captação</Label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="captacaoDate"
+                      type="datetime-local"
+                      value={formData.captacaoDate}
+                      onChange={(e) => updateField('captacaoDate', e.target.value)}
+                      className="pl-10 glass border-white/20 focus:border-purple-500/50"
+                    />
+                  </div>
                 </div>
               )}
 

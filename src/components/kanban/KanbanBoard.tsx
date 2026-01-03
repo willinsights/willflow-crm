@@ -1372,6 +1372,15 @@ function ProjectCard({
               </div>
             )}
 
+            {project.captacaoDate && (
+              <div className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs text-muted-foreground">
+                <Calendar className="w-3 h-3 flex-shrink-0 text-purple-400" />
+                <span>
+                  Captação: {new Date(project.captacaoDate).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            )}
+
             {project.clientDueDate && (
               <div className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs text-muted-foreground">
                 <Clock className="w-3 h-3 flex-shrink-0" />
