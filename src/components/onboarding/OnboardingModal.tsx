@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, ChevronRight, ChevronLeft, Video, Users, Euro, Bell, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 const ONBOARDING_COMPLETED_KEY = 'willflow_onboarding_completed';
 
@@ -102,6 +102,8 @@ export default function OnboardingModal({ open, onComplete }: OnboardingModalPro
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="glass-strong border-white/20 max-w-md p-0 overflow-hidden">
+        <DialogTitle className="sr-only">Onboarding WillFlow</DialogTitle>
+        <DialogDescription className="sr-only">Tutorial de introdução ao sistema WillFlow</DialogDescription>
         <button onClick={onComplete} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground z-10">
           <X className="w-5 h-5" />
         </button>
