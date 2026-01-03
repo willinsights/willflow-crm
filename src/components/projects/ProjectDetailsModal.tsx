@@ -234,6 +234,15 @@ export default function ProjectDetailsModal({
                 </div>
               )}
 
+              {project.captacaoDate && (
+                <div className="glass-card p-4 space-y-2">
+                  <h3 className="text-sm font-semibold text-muted-foreground">Data de Captação</h3>
+                  <p className="text-lg font-medium">
+                    {new Date(project.captacaoDate).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              )}
+
               {project.clientDueDate && (
                 <div className="glass-card p-4 space-y-2">
                   <h3 className="text-sm font-semibold text-muted-foreground">Prazo Entrega</h3>

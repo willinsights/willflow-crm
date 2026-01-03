@@ -156,6 +156,7 @@ export async function POST(request: NextRequest) {
           margin,
           paymentStatus: body.paymentStatus || 'a-faturar',
           freelancerPaymentStatus: body.freelancerPaymentStatus || 'a-pagar',
+          captacaoDate: body.captacaoDate ? new Date(body.captacaoDate) : undefined,
           clientDueDate: body.clientDueDate ? new Date(body.clientDueDate) : undefined,
           clientReceivedDate: body.clientReceivedDate ? new Date(body.clientReceivedDate) : undefined,
           freelancerDueDate: body.freelancerDueDate ? new Date(body.freelancerDueDate) : undefined,

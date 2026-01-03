@@ -117,6 +117,7 @@ model Project {
   margin                  Int       @default(0)
   paymentStatus           String
   freelancerPaymentStatus String
+  captacaoDate            DateTime?  // Data e hora de captação
   clientDueDate           DateTime?
   clientReceivedDate      DateTime?
   freelancerDueDate       DateTime?

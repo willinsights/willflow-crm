@@ -64,6 +64,19 @@ export default function CalendarPage() {
     const allEvents: CalendarEvent[] = [];
 
     projects.forEach(project => {
+      // Captação date - data e hora de captação
+      if (project.captacaoDate) {
+        allEvents.push({
+          id: `${project.id}-captacao`,
+          projectId: project.id,
+          title: `[Captação] ${project.title}`,
+          date: new Date(project.captacaoDate),
+          type: 'captacao',
+          phase: project.phase,
+          project
+        });
+      }
+
       // Client due date - main deadline
       if (project.clientDueDate) {
         allEvents.push({
