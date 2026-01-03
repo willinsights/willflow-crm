@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Euro, TrendingUp, FileOutput, Calendar, BarChart3, Download } from 'lucide-react';
+import { Euro, TrendingUp, FileOutput, Calendar, BarChart3, Download, PieChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppStore } from '@/lib/useAppStore';
 import { exportFinancialCSV, exportFinancialPDF } from '@/lib/export-utils';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
@@ -12,12 +11,11 @@ import ProjectProfitability from './ProjectProfitability';
 import CashFlowForecast from './CashFlowForecast';
 import PaymentControl from './PaymentControl';
 import InvoicesReceipts from './InvoicesReceipts';
-import { useLocale } from '@/lib/LocaleContext';
+import ReportsPage from '@/components/reports/ReportsPage';
 
 export default function FinancePage() {
-  const { projects, clients, users, dashboardStats } = useAppStore();
-  const [activeTab, setActiveTab] = useState('overview');
-  const { formatCurrency } = useLocale();
+  const { projects, clients, users } = useAppStore();
+  const [activeTab, setActiveTab] = useState('payments');
 
   const handleMarkAsPaid = async (projectId: string, type: 'client' | 'freelancer') => {
     try {
@@ -35,7 +33,6 @@ export default function FinancePage() {
       if (data.success) {
         alert(`✅ Pagamento marcado como ${type === 'client' ? 'recebido' : 'pago'}!`);
         console.log('✅ Status de pagamento atualizado');
-        // Recarregar dados
         window.location.reload();
       } else {
         alert(`❌ Erro ao atualizar status de pagamento`);
@@ -49,14 +46,14 @@ export default function FinancePage() {
   return (
     <div className="space-y-6">
       {/* Breadcrumbs */}
-      <Breadcrumbs items={[{ label: 'Financeiro' }]} />
+      <Breadcrumbs items={[{ label: 'Finanças & Analytics' }]} />
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gradient mb-2">💰 Módulo Financeiro</h1>
+          <h1 className="text-3xl font-bold text-gradient mb-2">Finanças & Analytics</h1>
           <p className="text-muted-foreground">
-            Gestão completa de finanças, pagamentos e previsões
+            Gestão de pagamentos, rentabilidade e análise de dados
           </p>
         </div>
 
@@ -83,93 +80,30 @@ export default function FinancePage() {
         </div>
       </div>
 
-      {/* KPIs Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="glass-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-green-400" />
-              A Receber
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-400">
-              {formatCurrency(dashboardStats.financialKPIs.totalToReceive)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">De clientes</p>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-blue-400" />
-              Recebido
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-400">
-              {formatCurrency(dashboardStats.financialKPIs.totalReceived)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Já em caixa</p>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Euro className="w-4 h-4 text-orange-400" />
-              A Pagar
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-400">
-              {formatCurrency(dashboardStats.financialKPIs.totalToPay)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">A colaboradores</p>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-purple-400" />
-              Margem Total
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-400">
-              {formatCurrency(dashboardStats.financialKPIs.totalMargin)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Lucro líquido</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabs */}
+      {/* Tabs - No redundant KPI cards */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="glass grid w-full grid-cols-4">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4" />
-            Rentabilidade
-          </TabsTrigger>
+        <TabsList className="glass grid w-full grid-cols-5">
           <TabsTrigger value="payments" className="flex items-center gap-2">
             <FileOutput className="w-4 h-4" />
-            Pagamentos
+            <span className="hidden sm:inline">Pagamentos</span>
+          </TabsTrigger>
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4" />
+            <span className="hidden sm:inline">Rentabilidade</span>
           </TabsTrigger>
           <TabsTrigger value="forecast" className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
-            Previsão
+            <span className="hidden sm:inline">Previsão</span>
           </TabsTrigger>
           <TabsTrigger value="invoices" className="flex items-center gap-2">
             <Euro className="w-4 h-4" />
-            Faturas
+            <span className="hidden sm:inline">Faturas</span>
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <PieChart className="w-4 h-4" />
+            <span className="hidden sm:inline">Analytics</span>
           </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="overview" className="mt-6">
-          <ProjectProfitability projects={projects} clients={clients} />
-        </TabsContent>
 
         <TabsContent value="payments" className="mt-6">
           <PaymentControl
@@ -178,6 +112,10 @@ export default function FinancePage() {
             users={users}
             onMarkAsPaid={handleMarkAsPaid}
           />
+        </TabsContent>
+
+        <TabsContent value="overview" className="mt-6">
+          <ProjectProfitability projects={projects} clients={clients} />
         </TabsContent>
 
         <TabsContent value="forecast" className="mt-6">
@@ -190,6 +128,10 @@ export default function FinancePage() {
             clients={clients}
             users={users}
           />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="mt-6">
+          <ReportsPage embedded={true} />
         </TabsContent>
       </Tabs>
     </div>

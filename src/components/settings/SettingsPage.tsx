@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Settings, User, Bell, Globe, Lock, Database, Palette, Download, Shield, DollarSign, Clock } from 'lucide-react';
+import { Settings, User, Bell, Globe, Lock, Database, Palette, Download, Shield, DollarSign, Clock, Tag } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import PermissionsManager from './PermissionsManager';
 import NotificationSettings from './NotificationSettings';
 import EmailPreferencesSettings from './EmailPreferencesSettings';
+import CategoriesPage from '@/components/categories/CategoriesPage';
 
 export default function SettingsPage() {
   const { theme, toggleTheme } = useTheme();
@@ -77,6 +78,15 @@ export default function SettingsPage() {
             <Globe className="w-4 h-4 mr-2" />
             Idioma e Moeda
           </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger
+              value="categories"
+              className="data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400"
+            >
+              <Tag className="w-4 h-4 mr-2" />
+              Categorias
+            </TabsTrigger>
+          )}
           {isAdmin && (
             <TabsTrigger
               value="permissions"
@@ -435,6 +445,13 @@ export default function SettingsPage() {
             </Card>
           </div>
         </TabsContent>
+
+        {/* Categories Tab - Admin Only */}
+        {isAdmin && (
+          <TabsContent value="categories">
+            <CategoriesPage embedded={true} />
+          </TabsContent>
+        )}
 
         {/* Permissions Tab - Admin Only */}
         {isAdmin && (

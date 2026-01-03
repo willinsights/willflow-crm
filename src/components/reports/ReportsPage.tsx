@@ -45,7 +45,11 @@ import { useAppStore } from '@/lib/useAppStore';
 import { useLocale } from '@/lib/LocaleContext';
 import { exportReportsPDF } from '@/lib/export-utils';
 
-export default function ReportsPage() {
+interface ReportsPageProps {
+  embedded?: boolean;
+}
+
+export default function ReportsPage({ embedded = false }: ReportsPageProps) {
   const { projects, clients, users, currentUser, userPermissions } = useAppStore();
   const { formatCurrency, config } = useLocale();
   const [selectedPeriod, setSelectedPeriod] = useState('6m');
@@ -204,48 +208,51 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gradient mb-1 md:mb-2">Relatórios Financeiros</h1>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Analytics detalhados de receitas, custos e performance
-          </p>
+      {/* Header - Only shown when not embedded */}
+      {!embedded && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gradient mb-1 md:mb-2">Relatórios Financeiros</h1>
+            <p className="text-sm md:text-base text-muted-foreground">
+              Analytics detalhados de receitas, custos e performance
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 md:gap-3">
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger className="glass border-white/20 w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="glass-strong border border-white/20">
+                <SelectItem value="3m">3 meses</SelectItem>
+                <SelectItem value="6m">6 meses</SelectItem>
+                <SelectItem value="12m">1 ano</SelectItem>
+                <SelectItem value="all">Tudo</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button
+              onClick={exportToCSV}
+              variant="outline"
+              className="glass border-white/20 hover:bg-white/10"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              CSV
+            </Button>
+            <Button
+              onClick={() => exportReportsPDF(projects, clients, config.currencySymbol)}
+              variant="outline"
+              className="glass border-white/20 hover:bg-white/10"
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              PDF
+            </Button>
+          </div>
         </div>
+      )}
 
-        <div className="flex items-center gap-2 md:gap-3">
-          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="glass border-white/20 w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="glass-strong border border-white/20">
-              <SelectItem value="3m">3 meses</SelectItem>
-              <SelectItem value="6m">6 meses</SelectItem>
-              <SelectItem value="12m">1 ano</SelectItem>
-              <SelectItem value="all">Tudo</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button
-            onClick={exportToCSV}
-            variant="outline"
-            className="glass border-white/20 hover:bg-white/10"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            CSV
-          </Button>
-          <Button
-            onClick={() => exportReportsPDF(projects, clients, config.currencySymbol)}
-            variant="outline"
-            className="glass border-white/20 hover:bg-white/10"
-          >
-            <BarChart3 className="h-4 w-4 mr-2" />
-            PDF
-          </Button>
-        </div>
-      </div>
-
-      {/* KPI Cards */}
+      {/* KPI Cards - Only shown when not embedded (to avoid redundancy with Dashboard) */}
+      {!embedded && (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
         <Card className="glass-card">
           <CardHeader className="pb-2 md:pb-3">
@@ -323,6 +330,7 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
       </div>
+      )}
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

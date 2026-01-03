@@ -26,7 +26,11 @@ interface CategoryFormData {
   color: string;
 }
 
-export default function CategoriesPage() {
+interface CategoriesPageProps {
+  embedded?: boolean;
+}
+
+export default function CategoriesPage({ embedded = false }: CategoriesPageProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -167,14 +171,16 @@ export default function CategoriesPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gradient mb-2">Categorias</h1>
-            <p className="text-muted-foreground">
-              Gestão de categorias e tipos de vídeo
-            </p>
+        {!embedded && (
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gradient mb-2">Categorias</h1>
+              <p className="text-muted-foreground">
+                Gestão de categorias e tipos de vídeo
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="glass-card p-8 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
@@ -186,22 +192,36 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gradient mb-2">Categorias</h1>
-          <p className="text-muted-foreground">
-            Gestão de categorias e tipos de vídeo
-          </p>
-        </div>
+      {!embedded && (
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gradient mb-2">Categorias</h1>
+            <p className="text-muted-foreground">
+              Gestão de categorias e tipos de vídeo
+            </p>
+          </div>
 
-        <Button
-          onClick={openCreateModal}
-          className="gradient-purple hover:gradient-purple-hover text-white shadow-glow-sm"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nova Categoria
-        </Button>
-      </div>
+          <Button
+            onClick={openCreateModal}
+            className="gradient-purple hover:gradient-purple-hover text-white shadow-glow-sm"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Categoria
+          </Button>
+        </div>
+      )}
+
+      {embedded && (
+        <div className="flex justify-end">
+          <Button
+            onClick={openCreateModal}
+            className="gradient-purple hover:gradient-purple-hover text-white shadow-glow-sm"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Categoria
+          </Button>
+        </div>
+      )}
 
       {error && (
         <div className="glass p-4 border border-red-500/30 bg-red-500/10 rounded-lg">

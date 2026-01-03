@@ -1,40 +1,50 @@
-# WillFlow CRM - Todos
+# WillFlow CRM - Melhorias V191
+
+## Prioridade CRÍTICA 🔴
+
+### 1. Eliminar Redundância Financeira
+- [ ] Remover 4 cards de métricas de Financeiro
+- [ ] Remover 4 cards de métricas de Relatórios
+- [ ] Manter apenas no Dashboard
+- [ ] Fusionar Financeiro + Relatórios em "Finanças & Analytics"
+
+### 2. Clientes - Melhorias
+- [ ] Adicionar filtros e ordenação
+- [ ] Criar página de detalhes ao clicar
+- [ ] Permitir notas/observações por cliente
+
+### 3. Colaboradores - Métricas
+- [ ] Adicionar métricas de performance
+- [ ] Mostrar projetos concluídos vs atribuídos
+- [ ] Taxa de cumprimento de prazos
+
+## Prioridade ALTA 🟠
+
+### 4. Aba Descrição - Colaboradores
+- [ ] Mostrar colaboradores atribuídos
+- [ ] Responsável Captação
+- [ ] Responsável Edição
+
+### 5. Mover Categorias para Configurações
+- [ ] Remover de GESTÃO no menu
+- [ ] Adicionar como aba em Configurações
+
+### 6. Simplificar Notificações
+- [ ] 3 níveis: Nenhuma | Essenciais | Todas
+- [ ] Configurações avançadas em collapse
+- [ ] Link para changelog
+
+## Prioridade MÉDIA 🟡
+
+### 7. Calendário - Melhorias
+- [ ] Visualizações: Mês | Semana | Dia
+- [ ] Criar eventos no calendário
+- [ ] Horários nos eventos
+
+### 8. Notificações de Vencimentos
+- [ ] Alertas automáticos de prazos
 
 ## Concluído ✅
-- [x] Configurar SMTP para envio de emails
-- [x] Criar template de email de boas-vindas profissional
-- [x] Criar template de email de senha alterada
-- [x] Criar template de email de redefinição de senha
-- [x] Testar envio de email (funcionando!)
-- [x] Criar rota de teste /api/test-email
-- [x] Adicionar logo WillFlow nos emails (header e footer)
-- [x] Criar template: Projeto Finalizado
-- [x] Criar template: Status Alterado
-- [x] Criar template: Pagamento a Freelancer
-- [x] Enviar emails de teste com novo design
-
-## Pendente para Produção ⚠️
-- [ ] Configurar variáveis SMTP no Railway (ver RAILWAY_SMTP_CONFIG.md)
-
-## Templates de Email Disponíveis
-
-| Template | Descrição |
-|----------|-----------|
-| `welcome` | Boas-vindas com credenciais |
-| `password-changed` | Confirmação de alteração de senha |
-| `password-reset` | Nova senha gerada |
-| `project-created` | Novo projeto atribuído |
-| `project-completed` | Projeto finalizado 🎉 |
-| `status-changed` | Status do projeto alterado |
-| `deadline` | Lembrete de prazo (2+ dias) |
-| `deadline-urgent` | Prazo vence hoje 🚨 |
-| `payment` | Pagamento recebido |
-| `freelancer-payment` | Pagamento pendente a freelancer |
-
-## Design dos Emails
-- Background escuro (#151315)
-- Gradient roxo no header (#9139e4 → #7e37cc)
-- Logo WillFlow no header e footer
-- Cards com glass effect
-- Botão CTA com sombra glow
-- Footer com slogan "Porque criar deve ser simples."
+- [x] Senhas resetadas
+- [x] Login funcionando
+- [x] SMTP configurado com timeouts

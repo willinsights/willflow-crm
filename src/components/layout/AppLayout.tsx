@@ -83,8 +83,6 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
     { id: 'finalizados', label: 'Finalizados', icon: CheckCircle },
     { id: 'clientes', label: 'Clientes', icon: Users },
     { id: 'colaboradores', label: 'Colaboradores', icon: Users },
-    { id: 'categorias', label: 'Categorias', icon: Tag },
-    { id: 'relatorios', label: 'Relatórios', icon: TrendingUp },
     { id: 'calendario', label: 'Calendário', icon: Calendar },
     { id: 'uploads', label: 'Uploads', icon: Upload },
     { id: 'configuracoes', label: 'Configurações', icon: Settings },
@@ -254,14 +252,12 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
       items: [
         { id: 'clientes', label: 'Clientes', icon: Users, count: 0 },
         { id: 'colaboradores', label: 'Colaboradores', icon: Users, count: 0 },
-        { id: 'categorias', label: 'Categorias', icon: Tag, count: 0 },
       ]
     },
     {
       title: 'Ferramentas',
       items: [
-        { id: 'financeiro', label: 'Financeiro', icon: Euro, count: 0 },
-        { id: 'relatorios', label: 'Relatórios', icon: TrendingUp, count: 0 },
+        { id: 'financeiro', label: 'Finanças', icon: Euro, count: 0 },
         { id: 'calendario', label: 'Calendário', icon: Calendar, count: 0 },
         { id: 'uploads', label: 'Uploads', icon: Upload, count: 0 },
       ]
