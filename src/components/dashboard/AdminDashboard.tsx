@@ -151,8 +151,8 @@ export default function AdminDashboard({
 
     // Captacoes scheduled
     projects.forEach(p => {
-      if (p.phase === 'captacao' && p.captacaoDate) {
-        const captDate = new Date(p.captacaoDate);
+      if (p.phase === 'captacao' && p.clientDueDate) {
+        const captDate = new Date(p.clientDueDate);
         const days = Math.ceil((captDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         if (days >= 0 && days <= 3) {
           items.push({
