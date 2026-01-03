@@ -48,6 +48,7 @@ import TaskDrawer from '@/components/projects/TaskDrawer';
 import OfflineIndicator from '@/components/layout/OfflineIndicator';
 import { useAppStore } from '@/lib/useAppStore';
 import { useTheme } from '@/lib/ThemeContext';
+import { useCreateProject } from '@/contexts/CreateProjectContext';
 import { Project, Client } from '@/lib/types';
 
 interface AppLayoutProps {
@@ -63,6 +64,7 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
   const { currentUser, switchUser, projectsByPhase, searchQuery, setSearchQuery, projects, clients, users } = useAppStore();
   const { toasts, removeToast, showSuccess, showInfo, showDeadlineAlert } = useToastNotifications();
   const { theme, toggleTheme, cycleTheme, isOLED } = useTheme();
+  const { isCreateProjectOpen, setCreateProjectOpen, openCreateProject } = useCreateProject();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -360,7 +362,10 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
             </button>
 
             <div className="hidden sm:block">
-              <CreateProjectModal />
+              <CreateProjectModal 
+                isOpen={isCreateProjectOpen} 
+                onOpenChange={setCreateProjectOpen} 
+              />
             </div>
 
             <NotificationCenter
@@ -576,7 +581,10 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
           {/* Mobile Create Project Button */}
           {!isSidebarCollapsed && (
             <div className="sm:hidden mt-4">
-              <CreateProjectModal />
+              <CreateProjectModal 
+                isOpen={isCreateProjectOpen} 
+                onOpenChange={setCreateProjectOpen} 
+              />
             </div>
           )}
 
@@ -646,11 +654,7 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
 
       {/* Mobile FAB - Create Project */}
       <button
-        onClick={() => {
-          // Trigger create project modal
-          const createBtn = document.querySelector('[data-create-project]') as HTMLButtonElement;
-          if (createBtn) createBtn.click();
-        }}
+        onClick={() => openCreateProject()}
         className="fab lg:hidden"
         aria-label="Criar projeto"
       >

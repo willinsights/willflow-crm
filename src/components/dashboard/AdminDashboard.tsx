@@ -48,6 +48,7 @@ import {
 import { useLocale } from '@/lib/LocaleContext';
 import { exportDashboardCSV } from '@/lib/export-utils';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
+import { useCreateProject } from '@/contexts/CreateProjectContext';
 import { Project, Client, User, DashboardStats } from '@/lib/types';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -74,6 +75,7 @@ export default function AdminDashboard({
 }: AdminDashboardProps) {
   const { formatCurrency, formatDate } = useLocale();
   const router = useRouter();
+  const { openCreateProject } = useCreateProject();
 
   // Calculate monthly revenue trend
   const revenueData = useMemo(() => {
@@ -369,11 +371,9 @@ export default function AdminDashboard({
                     key={index}
                     variant="ghost"
                     className={`h-auto py-4 flex flex-col gap-2 ${action.color} ${action.color.includes('gradient') ? 'text-white shadow-glow-sm' : ''}`}
-                    data-create-project={action.action === 'create-project' ? 'true' : undefined}
                     onClick={() => {
                       if (action.action === 'create-project') {
-                        const btn = document.querySelector('[data-create-project]') as HTMLButtonElement;
-                        btn?.click();
+                        openCreateProject();
                       } else if (action.href && action.href !== '#') {
                         router.push(`/${action.href}`);
                       }

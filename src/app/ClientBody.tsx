@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { ThemeProvider } from "@/lib/ThemeContext";
 import { LocaleProvider } from "@/lib/LocaleContext";
 import { AppStoreProvider } from "@/lib/useAppStore";
+import { CreateProjectProvider } from "@/contexts/CreateProjectContext";
 
 export default function ClientBody({
   children,
@@ -23,7 +24,9 @@ export default function ClientBody({
     <ThemeProvider>
       <LocaleProvider>
         <AppStoreProvider>
-          <div className="antialiased">{children}</div>
+          <CreateProjectProvider>
+            <div className="antialiased">{children}</div>
+          </CreateProjectProvider>
         </AppStoreProvider>
       </LocaleProvider>
     </ThemeProvider>
