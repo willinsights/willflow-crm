@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -714,6 +715,9 @@ export default function AdminDashboard({
                 <Video className="w-6 h-6" />
                 {selectedProject?.title || 'Detalhes do Projeto'}
               </DialogTitle>
+              <DialogDescription>
+                Informações detalhadas do projeto selecionado
+              </DialogDescription>
             </DialogHeader>
             {selectedProject && <ProjectDetailsContent project={selectedProject} />}
           </DialogContent>
