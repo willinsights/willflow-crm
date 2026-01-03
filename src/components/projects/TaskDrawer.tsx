@@ -341,6 +341,7 @@ export default function TaskDrawer({ open, taskId, onClose, onTaskUpdate }: Task
           <>
             {/* Fixed Header */}
             <DialogHeader className="border-b p-6 space-y-4 shrink-0">
+              <DialogTitle className="sr-only">Detalhes do Projeto</DialogTitle>
               <DialogDescription className="sr-only">Detalhes do projeto</DialogDescription>
               {/* Top bar: Close, Actions, Save State */}
               <div className="flex items-center justify-between">
