@@ -1,0 +1,32 @@
+# Railway Configuration for WillFlow CRM
+# Atualizado: 01/01/2026
+
+[build]
+builder = "NIXPACKS"
+
+[build.nixpacksPlan.phases.setup]
+nixPkgs = ["nodejs-20_x", "bun", "openssl"]
+
+[build.nixpacksPlan.phases.install]
+cmds = [
+  "bun install --no-save"
+]
+
+[build.nixpacksPlan.phases.build]
+cmds = [
+  "bunx prisma generate",
+  "bunx prisma db push --accept-data-loss || echo 'DB migration skipped - using mock data fallback'",
+  "bun run build"
+]
+
+[start]
+cmd = "bun run start"
+
+[deploy]
+healthcheckPath = "/api/health"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[env]
+NODE_ENV = "production"

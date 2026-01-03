@@ -1,0 +1,111 @@
+// Service Worker for WillFlow PWA
+// V2 - Network-first strategy to always get latest version
+const CACHE_NAME = 'willflow-v2';
+const STATIC_CACHE = 'willflow-static-v2';
+
+// Only cache static assets that don't change often
+const staticAssets = [
+  '/logo-willflow.png',
+  '/logo-willflow-login.png',
+  '/logo-willflow-sistema.png',
+  '/manifest.json',
+];
+
+// Install event - cache static assets only
+self.addEventListener('install', (event) => {
+  console.log('[SW] Installing new version...');
+  event.waitUntil(
+    caches.open(STATIC_CACHE)
+      .then((cache) => {
+        console.log('[SW] Caching static assets');
+        return cache.addAll(staticAssets).catch(err => {
+          console.log('[SW] Some assets failed to cache:', err);
+        });
+      })
+  );
+  // Force immediate activation
+  self.skipWaiting();
+});
+
+// Activate event - clean up ALL old caches
+self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating new version...');
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          // Delete all caches that don't match current version
+          if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE) {
+            console.log('[SW] Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  // Take control of all clients immediately
+  self.clients.claim();
+});
+
+// Fetch event - NETWORK-FIRST strategy
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  // Skip API requests - always go to network
+  if (url.pathname.startsWith('/api/')) {
+    return;
+  }
+
+  // For static assets (images, fonts), use cache-first
+  if (isStaticAsset(url.pathname)) {
+    event.respondWith(
+      caches.match(event.request)
+        .then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          return fetch(event.request);
+        })
+    );
+    return;
+  }
+
+  // For everything else (HTML, JS, CSS), use NETWORK-FIRST
+  event.respondWith(
+    fetch(event.request)
+      .then((networkResponse) => {
+        // Got network response, use it
+        return networkResponse;
+      })
+      .catch(() => {
+        // Network failed, try cache as fallback
+        return caches.match(event.request);
+      })
+  );
+});
+
+// Helper to check if request is for static asset
+function isStaticAsset(pathname) {
+  return (
+    pathname.endsWith('.png') ||
+    pathname.endsWith('.jpg') ||
+    pathname.endsWith('.jpeg') ||
+    pathname.endsWith('.gif') ||
+    pathname.endsWith('.svg') ||
+    pathname.endsWith('.ico') ||
+    pathname.endsWith('.woff') ||
+    pathname.endsWith('.woff2')
+  );
+}
+
+// Listen for messages to force update
+self.addEventListener('message', (event) => {
+  if (event.data === 'skipWaiting') {
+    self.skipWaiting();
+  }
+});
