@@ -226,6 +226,7 @@ export default function TaskDetailsModal({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader className="border-b pb-4">
+          <DialogDescription className="sr-only">Detalhes da tarefa</DialogDescription>
           <div className="flex items-start justify-between">
             <div className="flex-1">
               {isEditing ? (
