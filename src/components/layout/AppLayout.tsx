@@ -81,7 +81,7 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
   // Additional menu items for "More" sheet on mobile
   const moreMenuItems = [
     { id: 'finalizados', label: 'Finalizados', icon: CheckCircle },
-    { id: 'clientes', label: 'Clientes', icon: Users },
+    { id: 'clientes', label: 'Clientes', icon: Briefcase },
     { id: 'colaboradores', label: 'Colaboradores', icon: Users },
     { id: 'calendario', label: 'Calendário', icon: Calendar },
     { id: 'uploads', label: 'Uploads', icon: Upload },
@@ -231,12 +231,12 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
     setIsSidebarOpen(false);
   };
 
-  // Navigation with visual hierarchy
+  // Navigation with visual hierarchy - Reorganized by frequency of use
   const navigationSections = [
     {
       title: 'Visão Geral',
       items: [
-        { id: 'dashboard', label: 'Dashboard', icon: BarChart3, count: 0 },
+        { id: 'dashboard', label: 'Dashboard', icon: Home, count: 0 },
       ]
     },
     {
@@ -248,16 +248,21 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
       ]
     },
     {
+      title: 'Finanças',
+      items: [
+        { id: 'financeiro', label: 'Finanças & Analytics', icon: Wallet, count: 0 },
+      ]
+    },
+    {
       title: 'Gestão',
       items: [
-        { id: 'clientes', label: 'Clientes', icon: Users, count: 0 },
+        { id: 'clientes', label: 'Clientes', icon: Briefcase, count: 0 },
         { id: 'colaboradores', label: 'Colaboradores', icon: Users, count: 0 },
       ]
     },
     {
       title: 'Ferramentas',
       items: [
-        { id: 'financeiro', label: 'Finanças', icon: Euro, count: 0 },
         { id: 'calendario', label: 'Calendário', icon: Calendar, count: 0 },
         { id: 'uploads', label: 'Uploads', icon: Upload, count: 0 },
       ]

@@ -16,6 +16,14 @@ import {
   Clock,
   ArrowUpRight,
   ArrowDownRight,
+  Plus,
+  Wallet,
+  CalendarDays,
+  FileText,
+  AlertTriangle,
+  Activity,
+  CreditCard,
+  Eye,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +48,7 @@ import { useLocale } from '@/lib/LocaleContext';
 import { exportDashboardCSV } from '@/lib/export-utils';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { Project, Client, User, DashboardStats } from '@/lib/types';
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const COLORS = ['#9139e4', '#c084fc', '#f59e0b', '#14b8a6', '#ec4899', '#8b5cf6'];
 
@@ -93,112 +102,142 @@ export default function AdminDashboard({
     return months;
   }, [projects]);
 
-  // Project status distribution
-  const statusDistribution = useMemo(() => {
-    return [
-      { name: 'Captação', value: projectsByPhase.captacao.length, color: '#f59e0b' },
-      { name: 'Edição', value: projectsByPhase.edicao.length, color: '#9139e4' },
-      { name: 'Finalizados', value: projectsByPhase.finalizados.length, color: '#14b8a6' }
-    ].filter(item => item.value > 0);
-  }, [projectsByPhase]);
+  // Urgent projects: deadlines this week + pending payments
+  const urgentItems = useMemo(() => {
+    const now = new Date();
+    const items: Array<{
+      type: 'deadline' | 'payment_client' | 'payment_freelancer' | 'captacao';
+      title: string;
+      subtitle: string;
+      daysLeft?: number;
+      amount?: number;
+      icon: any;
+      color: string;
+      bgColor: string;
+    }> = [];
 
-  // Top clients by revenue
-  const topClients = useMemo(() => {
-    return clients
-      .filter(c => c.totalRevenue > 0)
-      .sort((a, b) => b.totalRevenue - a.totalRevenue)
-      .slice(0, 5)
-      .map(c => ({
-        name: c.name.split(' ')[0],
-        receita: c.totalRevenue,
-        margem: c.totalMargin
-      }));
-  }, [clients]);
-
-  // Payment status overview
-  const paymentData = useMemo(() => {
-    const toReceive = projects.filter(p => p.paymentStatus !== 'recebido').length;
-    const received = projects.filter(p => p.paymentStatus === 'recebido').length;
-    const toPay = projects.filter(p => p.freelancerPaymentStatus === 'a-pagar').length;
-    const paid = projects.filter(p => p.freelancerPaymentStatus === 'pago').length;
-
-    return [
-      { name: 'A Receber', value: toReceive, color: '#f59e0b' },
-      { name: 'Recebido', value: received, color: '#14b8a6' },
-      { name: 'A Pagar', value: toPay, color: '#ec4899' },
-      { name: 'Pago', value: paid, color: '#9139e4' }
-    ].filter(item => item.value > 0);
-  }, [projects]);
-
-  // Top collaborators by profit
-  const topCollaborators = useMemo(() => {
-    const collaboratorStats = new Map<string, {
-      id: string;
-      name: string;
-      role: string;
-      projectCount: number;
-      totalProfit: number;
-    }>();
-
-    projects.forEach(project => {
-      if (project.responsavelCaptacaoId) {
-        const user = users.find(u => u.id === project.responsavelCaptacaoId);
-        if (user) {
-          const key = `${project.responsavelCaptacaoId}-captacao`;
-          const existing = collaboratorStats.get(key) || {
-            id: user.id,
-            name: user.name,
-            role: 'Captação',
-            projectCount: 0,
-            totalProfit: 0
-          };
-          existing.projectCount++;
-          existing.totalProfit += project.margin;
-          collaboratorStats.set(key, existing);
-        }
+    // Projects with deadline this week
+    projects.forEach(p => {
+      if (!p.clientDueDate) return;
+      const due = new Date(p.clientDueDate);
+      const days = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      if (days > 0 && days <= 7 && p.phase !== 'finalizados') {
+        items.push({
+          type: 'deadline',
+          title: p.title,
+          subtitle: days === 1 ? 'Entrega amanha' : `Entrega em ${days} dias`,
+          daysLeft: days,
+          icon: Clock,
+          color: days <= 2 ? 'text-red-400' : days <= 4 ? 'text-orange-400' : 'text-yellow-400',
+          bgColor: days <= 2 ? 'bg-red-500/10' : days <= 4 ? 'bg-orange-500/10' : 'bg-yellow-500/10',
+        });
       }
+    });
 
-      if (project.responsavelEdicaoId) {
-        const user = users.find(u => u.id === project.responsavelEdicaoId);
-        if (user) {
-          const key = `${project.responsavelEdicaoId}-edicao`;
-          const existing = collaboratorStats.get(key) || {
-            id: user.id,
-            name: user.name,
-            role: 'Edição',
-            projectCount: 0,
-            totalProfit: 0
-          };
-          existing.projectCount++;
-          existing.totalProfit += project.margin;
-          collaboratorStats.set(key, existing);
+    // Client payments pending (due in 3 days)
+    projects.forEach(p => {
+      if (p.paymentStatus !== 'recebido' && p.clientPrice > 0) {
+        items.push({
+          type: 'payment_client',
+          title: `${p.client?.name || 'Cliente'}`,
+          subtitle: `${formatCurrency(p.clientPrice)} - ${p.title}`,
+          amount: p.clientPrice,
+          icon: CreditCard,
+          color: 'text-green-400',
+          bgColor: 'bg-green-500/10',
+        });
+      }
+    });
+
+    // Captacoes scheduled
+    projects.forEach(p => {
+      if (p.phase === 'captacao' && p.captacaoDate) {
+        const captDate = new Date(p.captacaoDate);
+        const days = Math.ceil((captDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (days >= 0 && days <= 3) {
+          items.push({
+            type: 'captacao',
+            title: p.title,
+            subtitle: days === 0 ? 'Captacao HOJE' : days === 1 ? 'Captacao amanha' : `Captacao em ${days} dias`,
+            daysLeft: days,
+            icon: Camera,
+            color: 'text-blue-400',
+            bgColor: 'bg-blue-500/10',
+          });
         }
       }
     });
 
-    return Array.from(collaboratorStats.values())
-      .sort((a, b) => b.totalProfit - a.totalProfit)
-      .slice(0, 5);
-  }, [projects, users]);
+    // Sort by urgency
+    return items.sort((a, b) => {
+      if (a.daysLeft !== undefined && b.daysLeft !== undefined) {
+        return a.daysLeft - b.daysLeft;
+      }
+      return 0;
+    }).slice(0, 5);
+  }, [projects, formatCurrency]);
 
-  // Upcoming deadlines
-  const upcomingDeadlines = useMemo(() => {
-    const now = new Date();
-    return projects
-      .filter(p => {
-        if (!p.clientDueDate) return false;
-        const due = new Date(p.clientDueDate);
-        const daysUntil = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        return daysUntil > 0 && daysUntil <= 7;
-      })
-      .map(p => {
-        const due = new Date(p.clientDueDate!);
-        const days = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        return { ...p, daysUntil: days };
-      })
-      .sort((a, b) => a.daysUntil - b.daysUntil)
-      .slice(0, 5);
-  }, [projects]);
+  // Recent activity log (simulated based on project data)
+  const recentActivity = useMemo(() => {
+    const activities: Array<{
+      id: string;
+      action: string;
+      target: string;
+      user: string;
+      time: string;
+      icon: any;
+      color: string;
+    }> = [];
+
+    // Get recent projects sorted by updatedAt
+    const recentProjects = [...projects]
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 10);
+
+    recentProjects.forEach(p => {
+      const updatedDate = new Date(p.updatedAt);
+      const now = new Date();
+      const diffHours = Math.floor((now.getTime() - updatedDate.getTime()) / (1000 * 60 * 60));
+      const timeLabel = diffHours < 1 ? 'Agora' :
+                       diffHours < 24 ? `Ha ${diffHours}h` :
+                       diffHours < 48 ? 'Ontem' :
+                       formatDate(updatedDate);
+
+      if (p.phase === 'finalizados') {
+        activities.push({
+          id: `${p.id}-finished`,
+          action: 'marcou como Entregue',
+          target: p.title,
+          user: users.find(u => u.id === p.responsavelEdicaoId)?.name || 'Sistema',
+          time: timeLabel,
+          icon: CheckCircle,
+          color: 'text-green-400',
+        });
+      } else if (p.paymentStatus === 'recebido') {
+        activities.push({
+          id: `${p.id}-paid`,
+          action: `pagou ${formatCurrency(p.clientPrice)}`,
+          target: p.title,
+          user: p.client?.name || 'Cliente',
+          time: timeLabel,
+          icon: Euro,
+          color: 'text-green-400',
+        });
+      } else if (p.phase === 'edicao') {
+        activities.push({
+          id: `${p.id}-editing`,
+          action: 'esta em edicao',
+          target: p.title,
+          user: users.find(u => u.id === p.responsavelEdicaoId)?.name || 'Editor',
+          time: timeLabel,
+          icon: Edit3,
+          color: 'text-purple-400',
+        });
+      }
+    });
+
+    return activities.slice(0, 5);
+  }, [projects, users, formatCurrency, formatDate]);
 
   // KPI Cards
   const kpiCards = [
@@ -210,6 +249,7 @@ export default function AdminDashboard({
       bgColor: 'bg-green-500/10',
       trend: '+15%',
       trendUp: true,
+      tooltip: 'Soma de todos os pagamentos pendentes de clientes',
     },
     {
       title: 'Total a Pagar',
@@ -219,6 +259,7 @@ export default function AdminDashboard({
       bgColor: 'bg-orange-500/10',
       trend: '-8%',
       trendUp: false,
+      tooltip: 'Soma de todos os pagamentos pendentes a freelancers',
     },
     {
       title: 'Margem Total',
@@ -228,6 +269,7 @@ export default function AdminDashboard({
       bgColor: 'bg-purple-500/10',
       trend: '+22%',
       trendUp: true,
+      tooltip: 'Lucro total: Receita menos custos de captacao e edicao',
     },
     {
       title: 'Total Recebido',
@@ -237,97 +279,206 @@ export default function AdminDashboard({
       bgColor: 'bg-blue-500/10',
       trend: '+18%',
       trendUp: true,
+      tooltip: 'Soma de todos os pagamentos ja recebidos de clientes',
     }
   ];
 
-  // Quick Stats
-  const quickStats = [
-    {
-      label: 'Projetos Ativos',
-      value: dashboardStats.activeProjects,
-      total: dashboardStats.totalProjects,
-      icon: Video,
-      color: 'bg-purple-500/20 text-purple-300'
-    },
-    {
-      label: 'Clientes',
-      value: dashboardStats.totalClients,
-      icon: Users,
-      color: 'bg-blue-500/20 text-blue-300'
-    },
-    {
-      label: 'Em Captação',
-      value: projectsByPhase.captacao.length,
-      icon: Camera,
-      color: 'bg-orange-500/20 text-orange-300'
-    },
-    {
-      label: 'Em Edição',
-      value: projectsByPhase.edicao.length,
-      icon: Edit3,
-      color: 'bg-yellow-500/20 text-yellow-300'
-    }
+  // Quick Actions
+  const quickActions = [
+    { label: 'Novo Projeto', icon: Plus, href: '#', color: 'gradient-purple', action: 'create-project' },
+    { label: 'Ver Pagamentos', icon: Wallet, href: 'financeiro', color: 'bg-green-500/20 hover:bg-green-500/30 text-green-400' },
+    { label: 'Calendario', icon: CalendarDays, href: 'calendario', color: 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400' },
+    { label: 'Relatorios', icon: FileText, href: 'financeiro', color: 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400' },
   ];
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      <Breadcrumbs items={[{ label: 'Dashboard' }]} />
+    <TooltipProvider>
+      <div className="space-y-4 md:space-y-6">
+        <Breadcrumbs items={[{ label: 'Dashboard' }]} />
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gradient mb-2">Dashboard Admin</h1>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Visão geral completa dos projetos e finanças
-          </p>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gradient mb-2">Dashboard</h1>
+            <p className="text-sm md:text-base text-muted-foreground">
+              Visao geral completa dos projetos e financas
+            </p>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => exportDashboardCSV(projects, clients, dashboardStats)}
+            className="glass border-white/20 hover:bg-white/10 w-fit"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exportar CSV
+          </Button>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => exportDashboardCSV(projects, clients, dashboardStats)}
-          className="glass border-white/20 hover:bg-white/10 w-fit"
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Exportar CSV
-        </Button>
-      </div>
+        {/* Secao 1: KPI Cards with Tooltips */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
+          {kpiCards.map((kpi, index) => {
+            const Icon = kpi.icon;
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
-        {kpiCards.map((kpi, index) => {
-          const Icon = kpi.icon;
+            return (
+              <UITooltip key={index}>
+                <TooltipTrigger asChild>
+                  <Card className="stat-card hover:scale-105 transition-transform cursor-help">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
+                        {kpi.title}
+                      </CardTitle>
+                      <div className={`p-2 rounded-lg ${kpi.bgColor}`}>
+                        <Icon className={`h-4 w-4 ${kpi.color}`} />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-xl md:text-2xl font-bold truncate">{kpi.value}</div>
+                      <div className={`flex items-center text-xs mt-1 ${kpi.trendUp ? 'text-green-400' : 'text-red-400'}`}>
+                        {kpi.trendUp ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
+                        {kpi.trend} vs mes anterior
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TooltipTrigger>
+                <TooltipContent className="glass-strong border-white/20">
+                  <p className="text-sm">{kpi.tooltip}</p>
+                </TooltipContent>
+              </UITooltip>
+            );
+          })}
+        </div>
 
-          return (
-            <Card key={index} className="stat-card hover:scale-105 transition-transform">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
-                  {kpi.title}
-                </CardTitle>
-                <div className={`p-2 rounded-lg ${kpi.bgColor}`}>
-                  <Icon className={`h-4 w-4 ${kpi.color}`} />
+        {/* Secao 2: Acoes Rapidas */}
+        <Card className="glass-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base md:text-lg flex items-center gap-2">
+              <Activity className="w-5 h-5 text-purple-400" />
+              Acoes Rapidas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {quickActions.map((action, index) => {
+                const Icon = action.icon;
+                return (
+                  <Button
+                    key={index}
+                    variant="ghost"
+                    className={`h-auto py-4 flex flex-col gap-2 ${action.color} ${action.color.includes('gradient') ? 'text-white shadow-glow-sm' : ''}`}
+                    data-create-project={action.action === 'create-project' ? 'true' : undefined}
+                    onClick={() => {
+                      if (action.action === 'create-project') {
+                        const btn = document.querySelector('[data-create-project-modal]') as HTMLButtonElement;
+                        btn?.click();
+                      }
+                    }}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="text-sm font-medium">{action.label}</span>
+                  </Button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Secao 3: Projetos Urgentes + Atividade Recente */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+          {/* Projetos Urgentes */}
+          <Card className="glass-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-orange-400" />
+                Atencao Necessaria
+                {urgentItems.length > 0 && (
+                  <Badge variant="destructive" className="ml-2">{urgentItems.length}</Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {urgentItems.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <CheckCircle className="w-10 h-10 mx-auto mb-2 text-green-400 opacity-50" />
+                  <p className="text-sm">Tudo em dia!</p>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xl md:text-2xl font-bold truncate">{kpi.value}</div>
-                <div className={`flex items-center text-xs mt-1 ${kpi.trendUp ? 'text-green-400' : 'text-red-400'}`}>
-                  {kpi.trendUp ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
-                  {kpi.trend} vs mês anterior
+              ) : (
+                <div className="space-y-3">
+                  {urgentItems.map((item, index) => {
+                    const Icon = item.icon;
+                    return (
+                      <div
+                        key={index}
+                        className={`p-3 rounded-lg border border-white/10 ${item.bgColor} flex items-center gap-3`}
+                      >
+                        <div className={`p-2 rounded-lg bg-white/5`}>
+                          <Icon className={`w-4 h-4 ${item.color}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{item.title}</p>
+                          <p className="text-xs text-muted-foreground">{item.subtitle}</p>
+                        </div>
+                        {item.daysLeft !== undefined && item.daysLeft <= 2 && (
+                          <Badge variant="destructive" className="text-xs">Urgente</Badge>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+              )}
+            </CardContent>
+          </Card>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        {/* Revenue Trend */}
-        <Card className="glass-card lg:col-span-2">
+          {/* Atividade Recente */}
+          <Card className="glass-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                <Activity className="w-5 h-5 text-blue-400" />
+                Atividade Recente
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recentActivity.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Activity className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Nenhuma atividade recente</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentActivity.map((activity) => {
+                    const Icon = activity.icon;
+                    return (
+                      <div
+                        key={activity.id}
+                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors"
+                      >
+                        <div className="p-1.5 rounded-full bg-white/5 mt-0.5">
+                          <Icon className={`w-3 h-3 ${activity.color}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm">
+                            <span className="font-medium">{activity.user}</span>
+                            {' '}<span className="text-muted-foreground">{activity.action}</span>
+                            {' '}<span className="font-medium">"{activity.target}"</span>
+                          </p>
+                          <p className="text-xs text-muted-foreground">{activity.time}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Secao 4: Evolucao Financeira */}
+        <Card className="glass-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-purple-400" />
-              Evolução Financeira (Últimos 6 Meses)
+              Evolucao Financeira (Ultimos 6 Meses)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -353,187 +504,26 @@ export default function AdminDashboard({
           </CardContent>
         </Card>
 
-        {/* Project Distribution */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Video className="w-5 h-5 text-purple-400" />
-              Distribuição de Projetos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <RechartsPieChart>
-                <Pie
-                  data={statusDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={(props: any) => `${props.name} ${(props.percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  dataKey="value"
-                >
-                  {statusDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(20, 20, 30, 0.95)', border: '1px solid rgba(145, 57, 228, 0.3)', borderRadius: '8px' }} />
-              </RechartsPieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Payment Status */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Euro className="w-5 h-5 text-purple-400" />
-              Status de Pagamentos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <RechartsPieChart>
-                <Pie
-                  data={paymentData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={(props: any) => `${props.name} ${(props.percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  dataKey="value"
-                >
-                  {paymentData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(20, 20, 30, 0.95)', border: '1px solid rgba(145, 57, 228, 0.3)', borderRadius: '8px' }} />
-              </RechartsPieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        {/* Secao 5: Stats Rapidas */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <Card className="glass-card text-center p-4">
+            <div className="text-3xl font-bold text-purple-400">{dashboardStats.activeProjects}</div>
+            <p className="text-xs text-muted-foreground mt-1">Projetos Ativos</p>
+          </Card>
+          <Card className="glass-card text-center p-4">
+            <div className="text-3xl font-bold text-orange-400">{projectsByPhase.captacao.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">Em Captacao</p>
+          </Card>
+          <Card className="glass-card text-center p-4">
+            <div className="text-3xl font-bold text-yellow-400">{projectsByPhase.edicao.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">Em Edicao</p>
+          </Card>
+          <Card className="glass-card text-center p-4">
+            <div className="text-3xl font-bold text-green-400">{projectsByPhase.finalizados.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">Finalizados</p>
+          </Card>
+        </div>
       </div>
-
-      {/* Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-        {/* Quick Stats */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="text-base md:text-lg">Estatísticas Rápidas</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {quickStats.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg ${stat.color}`}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <span className="text-sm font-medium">{stat.label}</span>
-                  </div>
-                  <span className="text-lg font-bold">
-                    {stat.value}
-                    {stat.total !== undefined && <span className="text-xs text-muted-foreground ml-1">/{stat.total}</span>}
-                  </span>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-
-        {/* Upcoming Deadlines */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-              <Clock className="w-5 h-5 text-orange-400" />
-              Próximos Prazos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {upcomingDeadlines.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <CheckCircle className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Nenhum prazo próximo</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {upcomingDeadlines.map((project, index) => (
-                  <div
-                    key={project.id}
-                    className={`p-3 rounded-lg border ${
-                      project.daysUntil <= 3
-                        ? 'border-red-500/30 bg-red-500/5'
-                        : project.daysUntil <= 5
-                        ? 'border-yellow-500/30 bg-yellow-500/5'
-                        : 'border-white/10 bg-white/5'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium truncate">{project.title}</p>
-                      <Badge
-                        variant="outline"
-                        className={
-                          project.daysUntil <= 3
-                            ? 'border-red-500/30 text-red-400'
-                            : project.daysUntil <= 5
-                            ? 'border-yellow-500/30 text-yellow-400'
-                            : 'border-blue-500/30 text-blue-400'
-                        }
-                      >
-                        {project.daysUntil === 1 ? 'Amanhã' : `${project.daysUntil} dias`}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatDate(new Date(project.clientDueDate!))}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Top Collaborators */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-              <Users className="w-5 h-5 text-purple-400" />
-              Top Colaboradores
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {topCollaborators.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Nenhum colaborador</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {topCollaborators.map((collab, index) => (
-                  <div key={`${collab.id}-${collab.role}`} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                        index === 0 ? 'bg-yellow-500/20 text-yellow-300' :
-                        index === 1 ? 'bg-gray-400/20 text-gray-300' :
-                        index === 2 ? 'bg-orange-500/20 text-orange-300' :
-                        'bg-purple-500/20 text-purple-300'
-                      }`}>
-                        {index + 1}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{collab.name}</p>
-                        <p className="text-xs text-muted-foreground">{collab.role}</p>
-                      </div>
-                    </div>
-                    <span className="text-sm font-bold text-green-400">{formatCurrency(collab.totalProfit)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    </TooltipProvider>
   );
 }

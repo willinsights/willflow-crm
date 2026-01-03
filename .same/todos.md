@@ -1,4 +1,11 @@
-# WillFlow CRM - Melhorias V191
+# WillFlow CRM - Melhorias V192
+
+## Concluído ✅
+- [x] Senhas resetadas para `Insights26@`
+- [x] Login funcionando via API
+- [x] SMTP configurado com timeouts
+- [x] Corrigido erro de build: CategoriesPage prop `embedded` adicionada
+- [x] Push para GitHub para redeploy no Railway
 
 ## Prioridade CRÍTICA 🔴
 
@@ -26,8 +33,8 @@
 - [ ] Responsável Edição
 
 ### 5. Mover Categorias para Configurações
-- [ ] Remover de GESTÃO no menu
-- [ ] Adicionar como aba em Configurações
+- [x] Adicionar como aba em Configurações (já feito)
+- [ ] Remover de GESTÃO no menu se necessário
 
 ### 6. Simplificar Notificações
 - [ ] 3 níveis: Nenhuma | Essenciais | Todas
@@ -44,7 +51,7 @@
 ### 8. Notificações de Vencimentos
 - [ ] Alertas automáticos de prazos
 
-## Concluído ✅
-- [x] Senhas resetadas
-- [x] Login funcionando
-- [x] SMTP configurado com timeouts
+## Aguardando Deploy Railway 🚀
+- O Railway deve refazer o deploy automaticamente após o push
+- Aguardar 2-3 minutos para o deploy completar
+- Testar login em produção com: geral@in-sights.pt / Insights26@
