@@ -268,21 +268,8 @@ export default function AdminDashboard({
     return months;
   }, [projects]);
 
-  // State for selected project modal
+  // State for selected project modal - simplified
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
-
-  // Handle opening project modal
-  const handleOpenProjectModal = (project: Project) => {
-    setSelectedProject(project);
-    setIsProjectModalOpen(true);
-  };
-
-  // Handle closing project modal
-  const handleCloseProjectModal = () => {
-    setIsProjectModalOpen(false);
-    setSelectedProject(null);
-  };
 
   // Urgent projects: deadlines this week + pending payments
   const urgentItems = useMemo(() => {
@@ -598,7 +585,7 @@ export default function AdminDashboard({
                     <div
                       key={index}
                       className={`p-3 rounded-lg border border-white/10 ${item.bgColor} flex items-center gap-3 cursor-pointer hover:bg-white/10 transition-colors`}
-                      onClick={() => handleOpenProjectModal(item.project)}
+                      onClick={() => setSelectedProject(item.project)}
                     >
                       <div className={`p-2 rounded-lg bg-white/5`}>
                         <Icon className={`w-4 h-4 ${item.color}`} />
@@ -719,8 +706,8 @@ export default function AdminDashboard({
           </Card>
         </div>
 
-        {/* Project Details Modal */}
-        <Dialog open={isProjectModalOpen} onOpenChange={setIsProjectModalOpen}>
+        {/* Project Details Modal - Simplified */}
+        <Dialog open={selectedProject !== null} onOpenChange={(open) => { if (!open) setSelectedProject(null); }}>
           <DialogContent className="glass-strong border border-white/20 max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-2xl text-gradient flex items-center gap-2">
