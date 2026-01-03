@@ -77,7 +77,7 @@ export default function AdminDashboard({
   const router = useRouter();
   const { openCreateProject } = useCreateProject();
 
-  // Calculate monthly revenue trend
+  // Calculate monthly revenue trend - Fixed to handle zero values properly
   const revenueData = useMemo(() => {
     const months = [];
     const now = new Date();
@@ -92,14 +92,16 @@ export default function AdminDashboard({
           createdDate.getFullYear() === month.getFullYear();
       });
 
-      const revenue = monthProjects.reduce((sum, p) => sum + p.clientPrice, 0);
-      const costs = monthProjects.reduce((sum, p) => sum + p.captationCost + p.editionCost, 0);
+      // Ensure we get valid numbers, defaulting to 0 if undefined/null
+      const revenue = monthProjects.reduce((sum, p) => sum + (Number(p.clientPrice) || 0), 0);
+      const costs = monthProjects.reduce((sum, p) => sum + (Number(p.captationCost) || 0) + (Number(p.editionCost) || 0), 0);
+      const margem = revenue - costs;
 
       months.push({
         month: monthName.charAt(0).toUpperCase() + monthName.slice(1),
         receita: revenue,
         custos: costs,
-        margem: revenue - costs
+        margem: margem
       });
     }
 
@@ -388,127 +390,135 @@ export default function AdminDashboard({
           </CardContent>
         </Card>
 
-        {/* Secao 3: Projetos Urgentes + Atividade Recente */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-          {/* Projetos Urgentes */}
-          <Card className="glass-card">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base md:text-lg flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-orange-400" />
-                Atencao Necessaria
-                {urgentItems.length > 0 && (
-                  <Badge variant="destructive" className="ml-2">{urgentItems.length}</Badge>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {urgentItems.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle className="w-10 h-10 mx-auto mb-2 text-green-400 opacity-50" />
-                  <p className="text-sm">Tudo em dia!</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {urgentItems.map((item, index) => {
-                    const Icon = item.icon;
-                    return (
-                      <div
-                        key={index}
-                        className={`p-3 rounded-lg border border-white/10 ${item.bgColor} flex items-center gap-3`}
-                      >
-                        <div className={`p-2 rounded-lg bg-white/5`}>
-                          <Icon className={`w-4 h-4 ${item.color}`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{item.title}</p>
-                          <p className="text-xs text-muted-foreground">{item.subtitle}</p>
-                        </div>
-                        {item.daysLeft !== undefined && item.daysLeft <= 2 && (
-                          <Badge variant="destructive" className="text-xs">Urgente</Badge>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+        {/* Secao 3: Projetos Urgentes */}
+        <Card className="glass-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base md:text-lg flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-orange-400" />
+              Projetos Urgentes
+              {urgentItems.length > 0 && (
+                <Badge variant="destructive" className="ml-2">{urgentItems.length}</Badge>
               )}
-            </CardContent>
-          </Card>
-
-          {/* Atividade Recente */}
-          <Card className="glass-card">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base md:text-lg flex items-center gap-2">
-                <Activity className="w-5 h-5 text-blue-400" />
-                Atividade Recente
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {recentActivity.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Activity className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">Nenhuma atividade recente</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {recentActivity.map((activity) => {
-                    const Icon = activity.icon;
-                    return (
-                      <div
-                        key={activity.id}
-                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors"
-                      >
-                        <div className="p-1.5 rounded-full bg-white/5 mt-0.5">
-                          <Icon className={`w-3 h-3 ${activity.color}`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm">
-                            <span className="font-medium">{activity.user}</span>
-                            {' '}<span className="text-muted-foreground">{activity.action}</span>
-                            {' '}<span className="font-medium">"{activity.target}"</span>
-                          </p>
-                          <p className="text-xs text-muted-foreground">{activity.time}</p>
-                        </div>
+            </CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Entregas esta semana, pagamentos vencendo e captações agendadas
+            </p>
+          </CardHeader>
+          <CardContent>
+            {urgentItems.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <CheckCircle className="w-10 h-10 mx-auto mb-2 text-green-400 opacity-50" />
+                <p className="text-sm">Tudo em dia!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {urgentItems.map((item, index) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={index}
+                      className={`p-3 rounded-lg border border-white/10 ${item.bgColor} flex items-center gap-3`}
+                    >
+                      <div className={`p-2 rounded-lg bg-white/5`}>
+                        <Icon className={`w-4 h-4 ${item.color}`} />
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{item.title}</p>
+                        <p className="text-xs text-muted-foreground">{item.subtitle}</p>
+                      </div>
+                      {item.daysLeft !== undefined && item.daysLeft <= 2 && (
+                        <Badge variant="destructive" className="text-xs">Urgente</Badge>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Secao 4: Evolucao Financeira */}
         <Card className="glass-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-purple-400" />
-              Evolucao Financeira (Ultimos 6 Meses)
+              Evolução Financeira (Últimos 6 Meses)
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis dataKey="month" stroke="rgba(255,255,255,0.5)" style={{ fontSize: '12px' }} />
-                <YAxis stroke="rgba(255,255,255,0.5)" style={{ fontSize: '12px' }} tickFormatter={(value) => formatCurrency(value).split(',')[0]} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(20, 20, 30, 0.95)',
-                    border: '1px solid rgba(145, 57, 228, 0.3)',
-                    borderRadius: '8px'
-                  }}
-                  formatter={(value) => formatCurrency(Number(value))}
-                />
-                <Legend />
-                <Line type="monotone" dataKey="receita" stroke="#14b8a6" strokeWidth={2} name="Receita" dot={{ fill: '#14b8a6', r: 4 }} />
-                <Line type="monotone" dataKey="custos" stroke="#f59e0b" strokeWidth={2} name="Custos" dot={{ fill: '#f59e0b', r: 4 }} />
-                <Line type="monotone" dataKey="margem" stroke="#9139e4" strokeWidth={2} name="Margem" dot={{ fill: '#9139e4', r: 4 }} />
-              </LineChart>
-            </ResponsiveContainer>
+            {revenueData.every(d => d.receita === 0 && d.custos === 0) ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <BarChart3 className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p className="text-sm">Sem dados financeiros para exibir</p>
+                <p className="text-xs mt-1">Os dados aparecerão quando houver projetos com valores</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={revenueData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <XAxis dataKey="month" stroke="rgba(255,255,255,0.5)" style={{ fontSize: '12px' }} />
+                  <YAxis stroke="rgba(255,255,255,0.5)" style={{ fontSize: '12px' }} tickFormatter={(value) => formatCurrency(value).split(',')[0]} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(20, 20, 30, 0.95)',
+                      border: '1px solid rgba(145, 57, 228, 0.3)',
+                      borderRadius: '8px'
+                    }}
+                    formatter={(value) => formatCurrency(Number(value))}
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="receita" stroke="#14b8a6" strokeWidth={2} name="Receita" dot={{ fill: '#14b8a6', r: 4 }} />
+                  <Line type="monotone" dataKey="custos" stroke="#f59e0b" strokeWidth={2} name="Custos" dot={{ fill: '#f59e0b', r: 4 }} />
+                  <Line type="monotone" dataKey="margem" stroke="#9139e4" strokeWidth={2} name="Margem" dot={{ fill: '#9139e4', r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
-        {/* Secao 5: Stats Rapidas */}
+        {/* Secao 5: Atividade Recente */}
+        <Card className="glass-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base md:text-lg flex items-center gap-2">
+              <Activity className="w-5 h-5 text-blue-400" />
+              Atividade Recente
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentActivity.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Activity className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Nenhuma atividade recente</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentActivity.map((activity) => {
+                  const Icon = activity.icon;
+                  return (
+                    <div
+                      key={activity.id}
+                      className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors"
+                    >
+                      <div className="p-1.5 rounded-full bg-white/5 mt-0.5">
+                        <Icon className={`w-3 h-3 ${activity.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm">
+                          <span className="font-medium">{activity.user}</span>
+                          {' '}<span className="text-muted-foreground">{activity.action}</span>
+                          {' '}<span className="font-medium">"{activity.target}"</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">{activity.time}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Secao 6: Stats Rapidas */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           <Card className="glass-card text-center p-4">
             <div className="text-3xl font-bold text-purple-400">{dashboardStats.activeProjects}</div>
