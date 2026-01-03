@@ -372,7 +372,7 @@ export default function AdminDashboard({
                     data-create-project={action.action === 'create-project' ? 'true' : undefined}
                     onClick={() => {
                       if (action.action === 'create-project') {
-                        const btn = document.querySelector('[data-create-project-modal]') as HTMLButtonElement;
+                        const btn = document.querySelector('[data-create-project]') as HTMLButtonElement;
                         btn?.click();
                       } else if (action.href && action.href !== '#') {
                         router.push(`/${action.href}`);
