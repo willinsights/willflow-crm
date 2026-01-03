@@ -196,19 +196,24 @@ export default function CreateProjectModal({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Se isOpen é controlado externamente, não renderiza o trigger
+  const isControlled = isOpen !== undefined;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children || (
-          <Button
-            data-create-project
-            className="gradient-purple hover:gradient-purple-hover text-white shadow-glow-sm"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Projeto
-          </Button>
-        )}
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          {children || (
+            <Button
+              data-create-project
+              className="gradient-purple hover:gradient-purple-hover text-white shadow-glow-sm"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Projeto
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="glass-strong border border-white/20 max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
           <DialogTitle className="text-gradient text-lg md:text-xl">Criar Novo Projeto</DialogTitle>
