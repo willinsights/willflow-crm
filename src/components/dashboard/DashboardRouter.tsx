@@ -8,7 +8,11 @@ import EditorDashboard from './EditorDashboard';
 import FreelancerDashboard from './FreelancerDashboard';
 import ViewerDashboard from './ViewerDashboard';
 
-export default function DashboardRouter() {
+interface DashboardRouterProps {
+  onViewChange?: (view: string) => void;
+}
+
+export default function DashboardRouter({ onViewChange }: DashboardRouterProps) {
   const { currentUser, projects, clients, users, dashboardStats, projectsByPhase } = useAppStore();
 
   const permissions = useMemo(() => getUserPermissions(currentUser), [currentUser]);
@@ -28,6 +32,7 @@ export default function DashboardRouter() {
             users={users}
             dashboardStats={dashboardStats}
             projectsByPhase={projectsByPhase}
+            onViewChange={onViewChange}
           />
         );
 

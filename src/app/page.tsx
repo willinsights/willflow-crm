@@ -49,7 +49,7 @@ export default function Home() {
   const renderContent = () => {
     switch (activeView) {
       case 'dashboard':
-        return <DashboardRouter />;
+        return <DashboardRouter onViewChange={setActiveView} />;
       case 'captacao':
         return <KanbanBoard phase="captacao" />;
       case 'edicao':

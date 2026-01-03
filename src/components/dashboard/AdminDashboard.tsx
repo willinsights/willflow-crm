@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   TrendingUp,
   Euro,
@@ -64,6 +63,7 @@ interface AdminDashboardProps {
     edicao: Project[];
     finalizados: Project[];
   };
+  onViewChange?: (view: string) => void;
 }
 
 export default function AdminDashboard({
@@ -72,9 +72,9 @@ export default function AdminDashboard({
   users,
   dashboardStats,
   projectsByPhase,
+  onViewChange,
 }: AdminDashboardProps) {
   const { formatCurrency, formatDate } = useLocale();
-  const router = useRouter();
   const { openCreateProject } = useCreateProject();
 
   // Calculate monthly revenue trend - Fixed to handle zero values properly
@@ -294,7 +294,7 @@ export default function AdminDashboard({
     { label: 'Novo Projeto', icon: Plus, href: '#', color: 'gradient-purple', action: 'create-project' },
     { label: 'Ver Pagamentos', icon: Wallet, href: 'financeiro', color: 'bg-green-500/20 hover:bg-green-500/30 text-green-400' },
     { label: 'Calendario', icon: CalendarDays, href: 'calendario', color: 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400' },
-    { label: 'Relatorios', icon: FileText, href: 'financeiro', color: 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400' },
+    { label: 'Relatorios', icon: FileText, href: 'relatorios', color: 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400' },
   ];
 
   return (
@@ -376,8 +376,8 @@ export default function AdminDashboard({
                     onClick={() => {
                       if (action.action === 'create-project') {
                         openCreateProject();
-                      } else if (action.href && action.href !== '#') {
-                        router.push(`/${action.href}`);
+                      } else if (action.href && action.href !== '#' && onViewChange) {
+                        onViewChange(action.href);
                       }
                     }}
                   >
