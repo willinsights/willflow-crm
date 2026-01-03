@@ -169,13 +169,13 @@ export const statusLabels: Record<string, string> = {
   'agendado': 'Agendado',
   'em-gravacao': 'Em Gravação',
   'upload-nas': 'Upload NAS',
-  'concluido': 'Concluído',
+  'concluido': 'Finalização',
   // Edição
   'receber-ficheiros': 'Receber Ficheiros',
   'decupagem': 'Decupagem',
   'em-edicao': 'Em Edição',
-  'feedback': 'Feedback',
-  'revisao-cliente': 'Revisão Cliente',
+  'feedback': 'Feedback Interno',
+  'revisao-cliente': 'Revisão do Cliente',
   'entregue': 'Entregue',
   'finalizado': 'Finalizado'
 };

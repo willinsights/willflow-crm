@@ -83,9 +83,6 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
   // Additional menu items for "More" sheet on mobile
   const moreMenuItems = [
     { id: 'finalizados', label: 'Finalizados', icon: CheckCircle },
-    { id: 'rentabilidade', label: 'Rentabilidade', icon: TrendingUp },
-    { id: 'relatorios', label: 'Relatórios', icon: BarChart3 },
-    { id: 'faturas', label: 'Faturas', icon: Euro },
     { id: 'calendario', label: 'Calendário', icon: Calendar },
     { id: 'uploads', label: 'Uploads', icon: Upload },
     { id: 'clientes', label: 'Clientes', icon: Briefcase },
@@ -256,10 +253,7 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
     {
       title: 'Finanças',
       items: [
-        { id: 'financeiro', label: 'Pagamentos', icon: Wallet, count: 0 },
-        { id: 'rentabilidade', label: 'Rentabilidade', icon: TrendingUp, count: 0 },
-        { id: 'relatorios', label: 'Relatórios', icon: BarChart3, count: 0 },
-        { id: 'faturas', label: 'Faturas', icon: Euro, count: 0 },
+        { id: 'financeiro', label: 'Finanças', icon: Wallet, count: 0 },
       ]
     },
     {

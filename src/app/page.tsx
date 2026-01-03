@@ -57,6 +57,9 @@ export default function Home() {
       case 'finalizados':
         return <FinishedProjectsList />;
       case 'financeiro':
+      case 'relatorios':
+      case 'rentabilidade':
+      case 'faturas':
         return <FinancePage />;
       case 'clientes':
         return <ClientsPage />;
@@ -64,8 +67,6 @@ export default function Home() {
         return <UsersPage />;
       case 'categorias':
         return <CategoriesPage />;
-      case 'relatorios':
-        return <ReportsPage />;
       case 'uploads':
         return <UploadsPage />;
       case 'calendario':
