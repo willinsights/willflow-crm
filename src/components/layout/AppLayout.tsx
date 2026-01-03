@@ -83,10 +83,14 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
   // Additional menu items for "More" sheet on mobile
   const moreMenuItems = [
     { id: 'finalizados', label: 'Finalizados', icon: CheckCircle },
-    { id: 'clientes', label: 'Clientes', icon: Briefcase },
-    { id: 'colaboradores', label: 'Colaboradores', icon: Users },
+    { id: 'rentabilidade', label: 'Rentabilidade', icon: TrendingUp },
+    { id: 'relatorios', label: 'Relatórios', icon: BarChart3 },
+    { id: 'faturas', label: 'Faturas', icon: Euro },
     { id: 'calendario', label: 'Calendário', icon: Calendar },
     { id: 'uploads', label: 'Uploads', icon: Upload },
+    { id: 'clientes', label: 'Clientes', icon: Briefcase },
+    { id: 'colaboradores', label: 'Colaboradores', icon: Users },
+    { id: 'categorias', label: 'Categorias', icon: Tag },
     { id: 'configuracoes', label: 'Configurações', icon: Settings },
   ];
 
@@ -233,7 +237,7 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
     setIsSidebarOpen(false);
   };
 
-  // Navigation with visual hierarchy - Reorganized by frequency of use
+  // Navigation with visual hierarchy - Reorganized per user request
   const navigationSections = [
     {
       title: 'Visão Geral',
@@ -252,14 +256,10 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
     {
       title: 'Finanças',
       items: [
-        { id: 'financeiro', label: 'Finanças & Analytics', icon: Wallet, count: 0 },
-      ]
-    },
-    {
-      title: 'Gestão',
-      items: [
-        { id: 'clientes', label: 'Clientes', icon: Briefcase, count: 0 },
-        { id: 'colaboradores', label: 'Colaboradores', icon: Users, count: 0 },
+        { id: 'financeiro', label: 'Pagamentos', icon: Wallet, count: 0 },
+        { id: 'rentabilidade', label: 'Rentabilidade', icon: TrendingUp, count: 0 },
+        { id: 'relatorios', label: 'Relatórios', icon: BarChart3, count: 0 },
+        { id: 'faturas', label: 'Faturas', icon: Euro, count: 0 },
       ]
     },
     {
@@ -267,6 +267,14 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
       items: [
         { id: 'calendario', label: 'Calendário', icon: Calendar, count: 0 },
         { id: 'uploads', label: 'Uploads', icon: Upload, count: 0 },
+      ]
+    },
+    {
+      title: 'Gestão',
+      items: [
+        { id: 'clientes', label: 'Clientes', icon: Briefcase, count: 0 },
+        { id: 'colaboradores', label: 'Colaboradores', icon: Users, count: 0 },
+        { id: 'categorias', label: 'Categorias', icon: Tag, count: 0 },
       ]
     },
     {
