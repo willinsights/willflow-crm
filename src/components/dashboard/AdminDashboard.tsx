@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   TrendingUp,
@@ -30,6 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import { CardSkeleton, ListItemSkeleton, TimelineItemSkeleton, ChartSkeleton } from '@/components/ui/skeleton';
 import {
   BarChart,
   Bar,
@@ -74,6 +75,16 @@ export default function AdminDashboard({
 }: AdminDashboardProps) {
   const { formatCurrency, formatDate } = useLocale();
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulate loading state for initial render
+  useEffect(() => {
+    if (projects.length >= 0) {
+      // Small delay to show skeleton
+      const timer = setTimeout(() => setIsLoading(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [projects]);
 
   // Calculate monthly revenue trend
   const revenueData = useMemo(() => {
@@ -320,36 +331,44 @@ export default function AdminDashboard({
 
         {/* Secao 1: KPI Cards with Tooltips */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
-          {kpiCards.map((kpi, index) => {
-            const Icon = kpi.icon;
+          {isLoading ? (
+            <>
+              {[...Array(4)].map((_, i) => (
+                <CardSkeleton key={i} />
+              ))}
+            </>
+          ) : (
+            kpiCards.map((kpi, index) => {
+              const Icon = kpi.icon;
 
-            return (
-              <UITooltip key={index}>
-                <TooltipTrigger asChild>
-                  <Card className="stat-card hover:scale-105 transition-transform cursor-help">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
-                        {kpi.title}
-                      </CardTitle>
-                      <div className={`p-2 rounded-lg ${kpi.bgColor}`}>
-                        <Icon className={`h-4 w-4 ${kpi.color}`} />
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-xl md:text-2xl font-bold truncate">{kpi.value}</div>
-                      <div className={`flex items-center text-xs mt-1 ${kpi.trendUp ? 'text-green-400' : 'text-red-400'}`}>
-                        {kpi.trendUp ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
-                        {kpi.trend} vs mes anterior
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TooltipTrigger>
-                <TooltipContent className="glass-strong border-white/20">
-                  <p className="text-sm">{kpi.tooltip}</p>
-                </TooltipContent>
-              </UITooltip>
-            );
-          })}
+              return (
+                <UITooltip key={index}>
+                  <TooltipTrigger asChild>
+                    <Card className="stat-card hover:scale-105 transition-transform cursor-help">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
+                          {kpi.title}
+                        </CardTitle>
+                        <div className={`p-2 rounded-lg ${kpi.bgColor}`}>
+                          <Icon className={`h-4 w-4 ${kpi.color}`} />
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-xl md:text-2xl font-bold truncate">{kpi.value}</div>
+                        <div className={`flex items-center text-xs mt-1 ${kpi.trendUp ? 'text-green-400' : 'text-red-400'}`}>
+                          {kpi.trendUp ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
+                          {kpi.trend} vs mes anterior
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent className="glass-strong border-white/20">
+                    <p className="text-sm">{kpi.tooltip}</p>
+                  </TooltipContent>
+                </UITooltip>
+              );
+            })
+          )}
         </div>
 
         {/* Secao 2: Acoes Rapidas */}
@@ -402,7 +421,13 @@ export default function AdminDashboard({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {urgentItems.length === 0 ? (
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <ListItemSkeleton key={i} />
+                  ))}
+                </div>
+              ) : urgentItems.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <CheckCircle className="w-10 h-10 mx-auto mb-2 text-green-400 opacity-50" />
                   <p className="text-sm">Tudo em dia!</p>
@@ -443,7 +468,13 @@ export default function AdminDashboard({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {recentActivity.length === 0 ? (
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[...Array(4)].map((_, i) => (
+                    <TimelineItemSkeleton key={i} />
+                  ))}
+                </div>
+              ) : recentActivity.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Activity className="w-10 h-10 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">Nenhuma atividade recente</p>
@@ -486,25 +517,29 @@ export default function AdminDashboard({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis dataKey="month" stroke="rgba(255,255,255,0.5)" style={{ fontSize: '12px' }} />
-                <YAxis stroke="rgba(255,255,255,0.5)" style={{ fontSize: '12px' }} tickFormatter={(value) => formatCurrency(value).split(',')[0]} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(20, 20, 30, 0.95)',
-                    border: '1px solid rgba(145, 57, 228, 0.3)',
-                    borderRadius: '8px'
-                  }}
-                  formatter={(value) => formatCurrency(Number(value))}
-                />
-                <Legend />
-                <Line type="monotone" dataKey="receita" stroke="#14b8a6" strokeWidth={2} name="Receita" dot={{ fill: '#14b8a6', r: 4 }} />
-                <Line type="monotone" dataKey="custos" stroke="#f59e0b" strokeWidth={2} name="Custos" dot={{ fill: '#f59e0b', r: 4 }} />
-                <Line type="monotone" dataKey="margem" stroke="#9139e4" strokeWidth={2} name="Margem" dot={{ fill: '#9139e4', r: 4 }} />
-              </LineChart>
-            </ResponsiveContainer>
+            {isLoading ? (
+              <ChartSkeleton />
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={revenueData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <XAxis dataKey="month" stroke="rgba(255,255,255,0.5)" style={{ fontSize: '12px' }} />
+                  <YAxis stroke="rgba(255,255,255,0.5)" style={{ fontSize: '12px' }} tickFormatter={(value) => formatCurrency(value).split(',')[0]} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(20, 20, 30, 0.95)',
+                      border: '1px solid rgba(145, 57, 228, 0.3)',
+                      borderRadius: '8px'
+                    }}
+                    formatter={(value) => formatCurrency(Number(value))}
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="receita" stroke="#14b8a6" strokeWidth={2} name="Receita" dot={{ fill: '#14b8a6', r: 4 }} />
+                  <Line type="monotone" dataKey="custos" stroke="#f59e0b" strokeWidth={2} name="Custos" dot={{ fill: '#f59e0b', r: 4 }} />
+                  <Line type="monotone" dataKey="margem" stroke="#9139e4" strokeWidth={2} name="Margem" dot={{ fill: '#9139e4', r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 

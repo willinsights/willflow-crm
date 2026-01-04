@@ -88,6 +88,7 @@ import { Project, ProjectPhase } from '@/lib/types';
 import { statusLabels, videoTypeLabels } from '@/lib/data';
 import { useLocale } from '@/lib/LocaleContext';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/components/ui/toast';
 import EditProjectModal from '@/components/projects/EditProjectModal';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import TaskDrawer from '@/components/projects/TaskDrawer';
@@ -112,6 +113,7 @@ const FIXED_LAST_COLUMNS: Record<string, string> = {
 
 export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
   const { formatCurrency } = useLocale();
+  const { toast } = useToast();
   const {
     projectsByPhase,
     filteredProjects,
@@ -241,16 +243,37 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
       if (res.ok) {
         if (newName.trim()) {
           setCustomColumnNames(prev => ({ ...prev, [statusKey]: newName.trim() }));
+          toast({
+            title: 'Nome atualizado ✅',
+            description: `A coluna foi renomeada para "${newName.trim()}"`,
+            variant: 'success'
+          });
         } else {
           setCustomColumnNames(prev => {
             const copy = { ...prev };
             delete copy[statusKey];
             return copy;
           });
+          toast({
+            title: 'Nome restaurado ✅',
+            description: 'O nome original da coluna foi restaurado',
+            variant: 'success'
+          });
         }
+      } else {
+        toast({
+          title: 'Erro ao salvar',
+          description: 'Não foi possível atualizar o nome da coluna',
+          variant: 'error'
+        });
       }
     } catch (error) {
       console.error('Error saving column name:', error);
+      toast({
+        title: 'Erro ao salvar',
+        description: 'Ocorreu um erro inesperado',
+        variant: 'error'
+      });
     }
     setEditingColumn(null);
   };
@@ -316,9 +339,25 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
           }
           return [...prev, key];
         });
+        toast({
+          title: 'Coluna criada ✅',
+          description: `A coluna "${newColumnName.trim()}" foi adicionada com sucesso`,
+          variant: 'success'
+        });
+      } else {
+        toast({
+          title: 'Erro ao criar coluna',
+          description: 'Não foi possível criar a coluna',
+          variant: 'error'
+        });
       }
     } catch (error) {
       console.error('Error creating column:', error);
+      toast({
+        title: 'Erro ao criar coluna',
+        description: 'Ocorreu um erro inesperado',
+        variant: 'error'
+      });
     }
   };
 
@@ -350,6 +389,11 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
             return copy;
           });
           setColumnOrder(prev => prev.filter(c => c !== statusKey));
+          toast({
+            title: 'Coluna removida ✅',
+            description: `A coluna "${getColumnName(statusKey)}" foi removida`,
+            variant: 'success'
+          });
         }
       } else {
         // For default columns, just hide them
@@ -366,10 +410,20 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
         if (res.ok) {
           setHiddenColumns(prev => [...prev, statusKey]);
           setColumnOrder(prev => prev.filter(c => c !== statusKey));
+          toast({
+            title: 'Coluna ocultada ✅',
+            description: `A coluna "${getColumnName(statusKey)}" foi ocultada`,
+            variant: 'success'
+          });
         }
       }
     } catch (error) {
       console.error('Error deleting column:', error);
+      toast({
+        title: 'Erro ao remover coluna',
+        description: 'Ocorreu um erro ao remover a coluna',
+        variant: 'error'
+      });
     }
   };
 
@@ -397,9 +451,19 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
           }
           return [...prev, statusKey];
         });
+        toast({
+          title: 'Coluna restaurada ✅',
+          description: `A coluna "${statusLabels[statusKey] || statusKey}" foi restaurada`,
+          variant: 'success'
+        });
       }
     } catch (error) {
       console.error('Error restoring column:', error);
+      toast({
+        title: 'Erro ao restaurar coluna',
+        description: 'Ocorreu um erro ao restaurar a coluna',
+        variant: 'error'
+      });
     }
   };
 
@@ -522,6 +586,12 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
 
     try {
       await updateProjectStatus(projectId, phase, newStatus);
+      
+      toast({
+        title: 'Projeto movido ✅',
+        description: `"${project.title}" foi movido para ${statusLabels[newStatus] || newStatus}`,
+        variant: 'success'
+      });
 
       // If moving to "concluido" in captacao, handle automatic phase transition
       if (phase === 'captacao' && newStatus === 'concluido') {
@@ -535,7 +605,11 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
         }
       }
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Erro ao alterar status');
+      toast({
+        title: 'Erro ao mover projeto',
+        description: error instanceof Error ? error.message : 'Ocorreu um erro ao alterar o status',
+        variant: 'error'
+      });
     }
 
     resetDragState();
@@ -581,14 +655,35 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
       if (response.ok) {
         // Create notification for phase change
         await createMoveNotification(project, phase, targetPhase);
+        
+        const phaseLabels: Record<string, string> = {
+          captacao: 'Captação',
+          edicao: 'Edição',
+          finalizados: 'Finalizados'
+        };
+        
+        toast({
+          title: 'Projeto alterado ✅',
+          description: `"${project.title}" foi movido para ${phaseLabels[targetPhase]}`,
+          variant: 'success'
+        });
+        
         window.location.reload();
       } else {
         const data = await response.json();
-        alert(data.error || 'Erro ao mover projeto');
+        toast({
+          title: 'Erro ao mover projeto',
+          description: data.error || 'Ocorreu um erro ao mover o projeto',
+          variant: 'error'
+        });
       }
     } catch (error) {
       console.error('Error moving project:', error);
-      alert('Erro ao mover projeto');
+      toast({
+        title: 'Erro ao mover projeto',
+        description: 'Ocorreu um erro inesperado',
+        variant: 'error'
+      });
     }
   };
 
@@ -605,8 +700,17 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
       for (const project of cardsToMove) {
         await updateProjectStatus(project.id, phase, toStatus);
       }
+      toast({
+        title: 'Projetos movidos ✅',
+        description: `${cardsToMove.length} projetos foram movidos para ${statusLabels[toStatus] || toStatus}`,
+        variant: 'success'
+      });
     } catch (error) {
-      alert('Erro ao mover projetos');
+      toast({
+        title: 'Erro ao mover projetos',
+        description: 'Ocorreu um erro ao mover os projetos',
+        variant: 'error'
+      });
     }
   };
 

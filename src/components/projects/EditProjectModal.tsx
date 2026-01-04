@@ -14,6 +14,7 @@ import { Project, Category } from '@/lib/types';
 import { categoriesApi } from '@/lib/api';
 import TaskDetailsModal from '@/components/projects/TaskDetailsModal';
 import { useLocale } from '@/lib/LocaleContext';
+import { useToast } from '@/components/ui/toast';
 
 interface EditProjectModalProps {
   project: Project;
@@ -22,6 +23,7 @@ interface EditProjectModalProps {
 export default function EditProjectModal({ project }: EditProjectModalProps) {
   const { clients, updateProject } = useAppStore();
   const { config } = useLocale();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -89,9 +91,18 @@ export default function EditProjectModal({ project }: EditProjectModalProps) {
         captationCost: parseFloat(formData.captationCost) || 0,
         editionCost: parseFloat(formData.editionCost) || 0,
       });
+      toast({
+        title: 'Projeto atualizado ✅',
+        description: `"${formData.title}" foi atualizado com sucesso`,
+        variant: 'success'
+      });
       setOpen(false);
     } catch (error) {
-      alert('Erro ao atualizar');
+      toast({
+        title: 'Erro ao atualizar',
+        description: 'Não foi possível atualizar o projeto',
+        variant: 'error'
+      });
     } finally {
       setLoading(false);
     }

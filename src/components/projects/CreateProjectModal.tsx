@@ -29,6 +29,7 @@ import { VideoType, PaymentStatus, FreelancerPaymentStatus, Category } from '@/l
 import { videoTypeLabels } from '@/lib/data';
 import { categoriesApi } from '@/lib/api';
 import { useLocale } from '@/lib/LocaleContext';
+import { useToast } from '@/components/ui/toast';
 
 interface CreateProjectModalProps {
   children?: React.ReactNode;
@@ -45,6 +46,7 @@ export default function CreateProjectModal({
 }: CreateProjectModalProps) {
   const { config, formatCurrency } = useLocale();
   const { clients, users, createProject } = useAppStore();
+  const { toast } = useToast();
   const [internalOpen, setInternalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -166,6 +168,12 @@ export default function CreateProjectModal({
 
       await createProject(projectData);
 
+      toast({
+        title: 'Projeto criado ✅',
+        description: `"${formData.title}" foi criado com sucesso`,
+        variant: 'success'
+      });
+
       // Reset form
       setFormData({
         title: '',
@@ -186,7 +194,11 @@ export default function CreateProjectModal({
       setOpen(false);
     } catch (error) {
       console.error('Erro ao criar projeto:', error);
-      alert('Erro ao criar projeto: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
+      toast({
+        title: 'Erro ao criar projeto',
+        description: error instanceof Error ? error.message : 'Ocorreu um erro ao criar o projeto',
+        variant: 'error'
+      });
     } finally {
       setIsLoading(false);
     }
