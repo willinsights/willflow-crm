@@ -264,7 +264,7 @@ export default function ChecklistTab({ taskId, canEdit }: ChecklistTabProps) {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Deletar este item?') || !taskId) return;
+    if (!confirm('Eliminar este item?') || !taskId) return;
 
     // Optimistic update
     const previousItems = [...items];
@@ -279,10 +279,10 @@ export default function ChecklistTab({ taskId, canEdit }: ChecklistTabProps) {
       if (!result.success) {
         // Revert on error
         setItems(previousItems);
-        console.error('Erro ao deletar item:', result.error);
+        console.error('Erro ao eliminar item:', result.error);
       }
     } catch (error) {
-      console.error('Erro ao deletar item:', error);
+      console.error('Erro ao eliminar item:', error);
       setItems(previousItems);
     }
   };

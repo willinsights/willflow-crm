@@ -160,15 +160,15 @@ export default function FinishedProjectsList() {
     try {
       await deleteProject(projectToDelete.id);
       toast({
-        title: 'Projeto deletado',
-        description: `${projectToDelete.title} foi deletado com sucesso`
+        title: 'Projeto eliminado',
+        description: `${projectToDelete.title} foi eliminado com sucesso`
       });
       setShowDeleteModal(false);
       setProjectToDelete(null);
     } catch (error) {
       toast({
         title: 'Erro',
-        description: 'Não foi possível deletar o projeto',
+        description: 'Não foi possível eliminar o projeto',
         variant: 'destructive'
       });
     }
@@ -489,7 +489,7 @@ export default function FinishedProjectsList() {
                                   setShowDeleteModal(true);
                                 }}
                                 className="h-8 w-8 p-0 text-red-400 hover:text-red-300"
-                                title="Deletar"
+                                title="Eliminar"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -743,7 +743,7 @@ export default function FinishedProjectsList() {
           <DialogHeader>
             <DialogTitle>Confirmar Exclusão</DialogTitle>
             <DialogDescription>
-              Tem certeza que deseja deletar o projeto "{projectToDelete?.title}"?
+              Tem certeza que deseja eliminar o projeto "{projectToDelete?.title}"?
               Esta ação não pode ser desfeita.
             </DialogDescription>
           </DialogHeader>
@@ -762,7 +762,7 @@ export default function FinishedProjectsList() {
               variant="destructive"
               onClick={handleDelete}
             >
-              Deletar
+              Eliminar
             </Button>
           </DialogFooter>
         </DialogContent>

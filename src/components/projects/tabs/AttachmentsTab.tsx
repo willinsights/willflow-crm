@@ -142,7 +142,7 @@ export default function AttachmentsTab({ taskId, canEdit }: AttachmentsTabProps)
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Deletar este anexo?')) return;
+    if (!confirm('Eliminar este anexo?')) return;
 
     // TODO: DELETE /api/subtasks/${taskId}/attachments/${id}
     setAttachments(attachments.filter(a => a.id !== id));

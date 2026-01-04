@@ -163,7 +163,7 @@ export default function CommentsTab({ taskId, canEdit }: CommentsTabProps) {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Deletar este comentário?') || !taskId) return;
+    if (!confirm('Eliminar este comentário?') || !taskId) return;
 
     const previousComments = [...comments];
     setComments(comments.filter(c => c.id !== id));
@@ -176,10 +176,10 @@ export default function CommentsTab({ taskId, canEdit }: CommentsTabProps) {
       const result = await response.json();
       if (!result.success) {
         setComments(previousComments);
-        console.error('Erro ao deletar comentário:', result.error);
+        console.error('Erro ao eliminar comentário:', result.error);
       }
     } catch (error) {
-      console.error('Erro ao deletar comentário:', error);
+      console.error('Erro ao eliminar comentário:', error);
       setComments(previousComments);
     }
   };
@@ -260,7 +260,7 @@ export default function CommentsTab({ taskId, canEdit }: CommentsTabProps) {
                         className="text-red-600"
                       >
                         <Trash2 className="h-3 w-3 mr-2" />
-                        Deletar
+                        Eliminar
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -278,7 +278,7 @@ export default function CommentsTab({ taskId, canEdit }: CommentsTabProps) {
                   />
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => handleEdit(comment.id)}>
-                      Salvar
+                      Guardar
                     </Button>
                     <Button size="sm" variant="outline" onClick={cancelEdit}>
                       Cancelar

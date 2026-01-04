@@ -35,7 +35,7 @@ export default function Home() {
               </svg>
             </div>
           </div>
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-muted-foreground">A carregar...</p>
         </div>
       </div>
     );

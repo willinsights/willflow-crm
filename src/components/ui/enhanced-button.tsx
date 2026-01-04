@@ -24,7 +24,7 @@ const EnhancedButton = React.forwardRef<HTMLButtonElement, EnhancedButtonProps>(
         {loading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {loadingText || "Carregando..."}
+            {loadingText || "A carregar..."}
           </>
         ) : (
           children

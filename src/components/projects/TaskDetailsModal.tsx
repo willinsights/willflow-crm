@@ -294,7 +294,7 @@ export default function TaskDetailsModal({
                 <>
                   <Button onClick={handleSave} size="sm">
                     <Check className="h-4 w-4 mr-1" />
-                    Salvar
+                    Guardar
                   </Button>
                   <Button
                     onClick={() => setIsEditing(false)}

@@ -214,7 +214,7 @@ export default function TaskDrawer({ open, taskId, onClose, onTaskUpdate }: Task
           throw new Error(errorMsg);
         }
 
-        console.log('✅ [AUTOSAVE] Projeto salvo com sucesso!');
+        console.log('✅ [AUTOSAVE] Projeto guardado com sucesso!');
 
         setSaveState('saved');
         pendingChangesRef.current = {}; // Clear after successful save
@@ -322,7 +322,7 @@ export default function TaskDrawer({ open, taskId, onClose, onTaskUpdate }: Task
   };
 
   const handleDelete = () => {
-    if (confirm('Tem certeza que deseja deletar esta tarefa?')) {
+    if (confirm('Tem certeza que deseja eliminar esta tarefa?')) {
       // TODO: DELETE /api/tasks/:id
       handleClose();
     }
@@ -402,7 +402,7 @@ export default function TaskDrawer({ open, taskId, onClose, onTaskUpdate }: Task
                         onClick={handleDelete}
                         className="text-red-600"
                       >
-                        Deletar
+                        Eliminar
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

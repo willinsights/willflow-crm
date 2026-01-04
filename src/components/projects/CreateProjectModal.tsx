@@ -30,6 +30,8 @@ import { videoTypeLabels } from '@/lib/data';
 import { categoriesApi } from '@/lib/api';
 import { useLocale } from '@/lib/LocaleContext';
 import { useToast } from '@/components/ui/toast';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 interface CreateProjectModalProps {
   children?: React.ReactNode;
@@ -209,27 +211,28 @@ export default function CreateProjectModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children || (
-          <Button
-            data-create-project
-            className="gradient-purple hover:gradient-purple-hover text-white shadow-glow-sm"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Projeto
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="glass-strong border border-white/20 max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
-        <DialogHeader>
-          <DialogTitle className="text-gradient text-lg md:text-xl">Criar Novo Projeto</DialogTitle>
-          <DialogDescription className="text-muted-foreground text-xs md:text-sm">
-            Preencha os detalhes do novo projeto de produção audiovisual
-          </DialogDescription>
-        </DialogHeader>
+    <TooltipProvider>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          {children || (
+            <Button
+              data-create-project
+              className="gradient-purple hover:gradient-purple-hover text-white shadow-glow-sm"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Projeto
+            </Button>
+          )}
+        </DialogTrigger>
+        <DialogContent className="glass-strong border border-white/20 max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
+          <DialogHeader>
+            <DialogTitle className="text-gradient text-lg md:text-xl">Criar Novo Projeto</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-xs md:text-sm">
+              Preencha os detalhes do novo projeto de produção audiovisual
+            </DialogDescription>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* Informações Básicas */}
           <div className="space-y-3 md:space-y-4">
             <h3 className="text-base md:text-lg font-medium text-foreground">Informações Básicas</h3>
@@ -267,7 +270,7 @@ export default function CreateProjectModal({
                 <Label htmlFor="categoryId" className="text-xs md:text-sm">Categoria *</Label>
                 <Select value={formData.categoryId} onValueChange={(value) => updateField('categoryId', value)}>
                   <SelectTrigger className="glass border-white/20 focus:border-purple-500/50 text-sm md:text-base">
-                    <SelectValue placeholder={loadingCategories ? "Carregando..." : "Selecionar categoria"} />
+                    <SelectValue placeholder={loadingCategories ? "A carregar..." : "Selecionar categoria"} />
                   </SelectTrigger>
                   <SelectContent className="glass-strong border border-white/20">
                     {categories.length === 0 ? (
@@ -365,8 +368,9 @@ export default function CreateProjectModal({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
               <div className="space-y-1.5 md:space-y-2">
-                <Label htmlFor="clientPrice" className="text-xs md:text-sm">
+                <Label htmlFor="clientPrice" className="text-xs md:text-sm flex items-center gap-2">
                   Preço Cliente ({config.currencySymbol}) *
+                  <InfoTooltip content="Valor total cobrado ao cliente por este projeto" />
                 </Label>
                 <div className="relative">
                   <Euro className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -386,8 +390,9 @@ export default function CreateProjectModal({
               {/* Custo Captação - Aparece se NÃO for apenas edição */}
               {formData.projectFlow !== 'edition-only' && (
                 <div className="space-y-2">
-                  <Label htmlFor="captationCost">
+                  <Label htmlFor="captationCost" className="flex items-center gap-2">
                     Custo Captação ({config.currencySymbol})
+                    <InfoTooltip content="Fase inicial de prospeção e negociação com o cliente" />
                   </Label>
                   <div className="relative">
                     <Euro className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -407,8 +412,9 @@ export default function CreateProjectModal({
               {/* Custo Edição - Não aparece se for apenas captação */}
               {formData.projectFlow !== 'captation-only' && (
                 <div className="space-y-2">
-                  <Label htmlFor="editionCost">
+                  <Label htmlFor="editionCost" className="flex items-center gap-2">
                     Custo Edição ({config.currencySymbol})
+                    <InfoTooltip content="Fase de produção e pós-produção do projeto" />
                   </Label>
                   <div className="relative">
                     <Euro className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -430,7 +436,10 @@ export default function CreateProjectModal({
             {formData.clientPrice && (
               <div className="glass rounded-lg p-4 bg-purple-500/10 border border-purple-500/30">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-purple-300">Margem Estimada:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-purple-300">Margem Estimada</span>
+                    <InfoTooltip content="Diferença entre o valor cobrado ao cliente e o custo total do projeto" iconClassName="text-purple-300" />
+                  </div>
                   <span className="text-lg font-bold text-purple-400">
                     {formatCurrency(
                       parseFloat(formData.clientPrice || '0') -
@@ -547,5 +556,6 @@ export default function CreateProjectModal({
         </form>
       </DialogContent>
     </Dialog>
+    </TooltipProvider>
   );
 }

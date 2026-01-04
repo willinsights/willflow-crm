@@ -56,7 +56,7 @@ export default function ProjectDetailsModal({
   };
 
   const handleDeleteFile = async (fileId: string) => {
-    if (confirm('Tem certeza que deseja deletar este arquivo?')) {
+    if (confirm('Tem certeza que deseja eliminar este arquivo?')) {
       try {
         const response = await fetch(`/api/projects/${project.id}/files?fileId=${fileId}`, {
           method: 'DELETE',
@@ -66,13 +66,13 @@ export default function ProjectDetailsModal({
 
         if (data.success) {
           alert(`✅ ${data.message}`);
-          console.log('✅ Arquivo deletado:', fileId);
+          console.log('✅ Arquivo eliminado:', fileId);
         } else {
           alert(`❌ Erro: ${data.error}`);
         }
       } catch (error) {
-        console.error('Erro ao deletar arquivo:', error);
-        alert('❌ Erro ao deletar arquivo');
+        console.error('Erro ao eliminar arquivo:', error);
+        alert('❌ Erro ao eliminar arquivo');
       }
     }
   };
@@ -122,7 +122,7 @@ export default function ProjectDetailsModal({
   };
 
   const handleDeleteBudgetItem = async (itemId: string) => {
-    if (confirm('Tem certeza que deseja deletar este item?')) {
+    if (confirm('Tem certeza que deseja eliminar este item?')) {
       try {
         const response = await fetch(`/api/projects/${project.id}/budget?itemId=${itemId}`, {
           method: 'DELETE',
@@ -132,13 +132,13 @@ export default function ProjectDetailsModal({
 
         if (data.success) {
           alert(`✅ ${data.message}`);
-          console.log('✅ Budget item deletado:', itemId);
+          console.log('✅ Budget item eliminado:', itemId);
         } else {
           alert(`❌ Erro: ${data.error}`);
         }
       } catch (error) {
-        console.error('Erro ao deletar item de orçamento:', error);
-        alert('❌ Erro ao deletar item de orçamento');
+        console.error('Erro ao eliminar item de orçamento:', error);
+        alert('❌ Erro ao eliminar item de orçamento');
       }
     }
   };

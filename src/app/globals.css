@@ -867,3 +867,214 @@
     opacity: 1;
   }
 }
+
+
+
+/* ============================================
+   MELHORIAS DE ACESSIBILIDADE E UX/UI
+   ============================================ */
+
+/* Foco visível para navegação por teclado (WCAG 2.1 AA) */
+:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Melhor contraste para elementos interativos */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Estados hover consistentes */
+button:not(:disabled):hover,
+[role="button"]:not(:disabled):hover {
+  transform: translateY(-1px);
+  transition: transform 150ms ease-out;
+}
+
+button:not(:disabled):active,
+[role="button"]:not(:disabled):active {
+  transform: translateY(0);
+  transition: transform 100ms ease-in;
+}
+
+/* Melhorar legibilidade de inputs */
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: hsl(var(--primary) / 0.5);
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+  transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
+}
+
+/* Campos obrigatórios com melhor indicação visual */
+label:has(+ input[required])::after,
+label:has(+ textarea[required])::after,
+label:has(+ select[required])::after {
+  content: " *";
+  color: hsl(var(--destructive));
+  font-weight: 600;
+}
+
+/* Mensagens de erro com melhor contraste */
+.error-message,
+[role="alert"].error {
+  color: hsl(0 84% 65%);
+  background-color: hsl(0 84% 60% / 0.1);
+  border-left: 3px solid hsl(0 84% 60%);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Validação em tempo real - estados de input */
+input.valid:not(:focus),
+textarea.valid:not(:focus) {
+  border-color: hsl(142 76% 45%);
+}
+
+input.invalid:not(:focus),
+textarea.invalid:not(:focus) {
+  border-color: hsl(0 84% 60%);
+}
+
+input.invalid:not(:focus) {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc2626'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc2626' stroke='none'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem;
+}
+
+/* Transições suaves para toggle de vistas */
+.view-transition {
+  transition: all 300ms ease-in-out;
+}
+
+/* Drag & Drop feedback visual aprimorado */
+[data-dragging="true"] {
+  opacity: 0.5;
+  transform: rotate(2deg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  cursor: grabbing;
+}
+
+[data-drag-over="true"] {
+  background-color: hsl(var(--primary) / 0.1);
+  border-color: hsl(var(--primary) / 0.5);
+  transform: scale(1.02);
+  transition: all 200ms ease-out;
+}
+
+/* Melhor feedback para botões de ação */
+button[disabled],
+[role="button"][disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button:not([disabled]):active,
+[role="button"]:not([disabled]):active {
+  transform: scale(0.98);
+}
+
+/* Cards com melhor hierarquia visual */
+.glass-card {
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+}
+
+.glass-card:hover:not([disabled]) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Melhor contraste para badges */
+.badge-overdue {
+  background-color: hsl(0 84% 60% / 0.2);
+  color: hsl(0 84% 75%);
+  border-color: hsl(0 84% 60% / 0.5);
+  font-weight: 600;
+}
+
+.badge-pending {
+  background-color: hsl(45 93% 60% / 0.2);
+  color: hsl(45 93% 75%);
+  border-color: hsl(45 93% 60% / 0.5);
+}
+
+.badge-success {
+  background-color: hsl(142 76% 45% / 0.2);
+  color: hsl(142 76% 65%);
+  border-color: hsl(142 76% 45% / 0.5);
+}
+
+/* Loading states com melhor feedback */
+.loading-skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--muted-foreground) / 0.2) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: loading-skeleton 1.5s ease-in-out infinite;
+}
+
+@keyframes loading-skeleton {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Scrollbar personalizada para melhor UX */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Reduced motion para acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Melhor legibilidade de textos */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Alto contraste para modo escuro */
+@media (prefers-contrast: high) {
+  :root {
+    --foreground: 0 0% 100%;
+    --muted-foreground: 0 0% 80%;
+  }
+}
