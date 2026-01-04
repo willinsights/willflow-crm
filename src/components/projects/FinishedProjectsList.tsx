@@ -149,7 +149,7 @@ export default function FinishedProjectsList() {
       toast({
         title: 'Erro',
         description: 'Não foi possível mover o projeto',
-        variant: 'destructive'
+        variant: 'error'
       });
     }
   };
@@ -169,7 +169,7 @@ export default function FinishedProjectsList() {
       toast({
         title: 'Erro',
         description: 'Não foi possível eliminar o projeto',
-        variant: 'destructive'
+        variant: 'error'
       });
     }
   };
