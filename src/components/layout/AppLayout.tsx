@@ -81,10 +81,12 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
   // Additional menu items for "More" sheet on mobile
   const moreMenuItems = [
     { id: 'finalizados', label: 'Finalizados', icon: CheckCircle },
+    { id: 'relatorios', label: 'Relatórios', icon: BarChart3 },
+    { id: 'calendario', label: 'Calendário', icon: Calendar },
+    { id: 'uploads', label: 'Media', icon: Upload },
     { id: 'clientes', label: 'Clientes', icon: Briefcase },
     { id: 'colaboradores', label: 'Colaboradores', icon: Users },
-    { id: 'calendario', label: 'Calendário', icon: Calendar },
-    { id: 'uploads', label: 'Uploads', icon: Upload },
+    { id: 'categorias', label: 'Categorias', icon: Tag },
     { id: 'configuracoes', label: 'Configurações', icon: Settings },
   ];
 
@@ -234,13 +236,13 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
   // Navigation with visual hierarchy - Reorganized by frequency of use
   const navigationSections = [
     {
-      title: 'Visão Geral',
+      title: 'VISÃO GERAL',
       items: [
         { id: 'dashboard', label: 'Dashboard', icon: Home, count: 0 },
       ]
     },
     {
-      title: 'Projetos',
+      title: 'PROJETOS',
       items: [
         { id: 'captacao', label: 'Captação', icon: Video, count: projectsByPhase?.captacao?.length || 0 },
         { id: 'edicao', label: 'Edição', icon: Edit3, count: projectsByPhase?.edicao?.length || 0 },
@@ -248,27 +250,31 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
       ]
     },
     {
-      title: 'Finanças',
+      title: 'FINANÇAS',
       items: [
-        { id: 'financeiro', label: 'Finanças & Analytics', icon: Wallet, count: 0 },
+        { id: 'financeiro', label: 'Pagamentos', icon: Euro, count: 0 },
+        // { id: 'rentabilidade', label: 'Rentabilidade', icon: TrendingUp, count: 0 }, // TODO: Adicionar quando componente estiver pronto
+        { id: 'relatorios', label: 'Relatórios', icon: BarChart3, count: 0 },
+        // { id: 'faturas', label: 'Faturas', icon: FileText, count: 0 }, // TODO: Adicionar quando componente estiver pronto
       ]
     },
     {
-      title: 'Gestão',
+      title: 'FERRAMENTAS',
+      items: [
+        { id: 'calendario', label: 'Calendário', icon: Calendar, count: 0 },
+        { id: 'uploads', label: 'Media', icon: Upload, count: 0 },
+      ]
+    },
+    {
+      title: 'GESTÃO',
       items: [
         { id: 'clientes', label: 'Clientes', icon: Briefcase, count: 0 },
         { id: 'colaboradores', label: 'Colaboradores', icon: Users, count: 0 },
+        { id: 'categorias', label: 'Categorias', icon: Tag, count: 0 },
       ]
     },
     {
-      title: 'Ferramentas',
-      items: [
-        { id: 'calendario', label: 'Calendário', icon: Calendar, count: 0 },
-        { id: 'uploads', label: 'Uploads', icon: Upload, count: 0 },
-      ]
-    },
-    {
-      title: 'Sistema',
+      title: 'SISTEMA',
       items: [
         { id: 'configuracoes', label: 'Configurações', icon: Settings, count: 0 },
       ]
@@ -628,7 +634,7 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
           {bottomNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = item.id === 'more' ? isMobileMenuOpen : activeView === item.id;
-            const isMoreActive = item.id !== 'more' && ['finalizados', 'clientes', 'colaboradores', 'categorias', 'relatorios', 'calendario', 'uploads', 'configuracoes'].includes(activeView);
+            const isMoreActive = item.id !== 'more' && ['finalizados', 'relatorios', 'calendario', 'uploads', 'clientes', 'colaboradores', 'categorias', 'configuracoes'].includes(activeView);
 
             return (
               <button
