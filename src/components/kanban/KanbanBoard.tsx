@@ -1257,16 +1257,16 @@ function DraggableProjectCard({
       style={style}
       className={`${isDragging ? 'opacity-50' : ''}`}
     >
-      <div {...attributes} {...listeners}>
-        <ProjectCard
-          project={project}
-          phase={phase}
-          onCardClick={onCardClick}
-          onMoveToPhase={onMoveToPhase}
-          allStatuses={allStatuses}
-          isCompact={isCompact}
-        />
-      </div>
+      <ProjectCard
+        project={project}
+        phase={phase}
+        onCardClick={onCardClick}
+        onMoveToPhase={onMoveToPhase}
+        allStatuses={allStatuses}
+        isCompact={isCompact}
+        dragAttributes={attributes}
+        dragListeners={listeners}
+      />
     </div>
   );
 }
@@ -1280,6 +1280,8 @@ function ProjectCard({
   onMoveToPhase,
   allStatuses,
   isCompact = false,
+  dragAttributes,
+  dragListeners,
 }: {
   project: Project;
   phase: ProjectPhase;
@@ -1288,6 +1290,8 @@ function ProjectCard({
   onCardClick?: (project: Project) => void;
   onMoveToPhase?: (projectId: string, phase: ProjectPhase) => void;
   allStatuses?: string[];
+  dragAttributes?: any;
+  dragListeners?: any;
 }) {
   const { userPermissions, updateProjectStatus } = useAppStore();
   const { formatCurrency } = useLocale();
@@ -1344,7 +1348,9 @@ function ProjectCard({
           </div>
 
           <div className="flex items-center gap-1 flex-shrink-0">
-            <GripVertical className="w-3 h-3 text-muted-foreground" />
+            <span {...dragAttributes} {...dragListeners} className="cursor-grab active:cursor-grabbing">
+              <GripVertical className="w-3 h-3 text-muted-foreground" />
+            </span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
