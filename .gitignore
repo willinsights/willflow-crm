@@ -31,3 +31,4 @@ yarn-error.log*
 # Lock files - usar apenas bun.lock
 yarn.lock
 package-lock.json
+build_snapshot_log.tsx
