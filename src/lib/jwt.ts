@@ -119,7 +119,8 @@ export function verifyToken(token: string): JWTPayload | null {
 
     return payload;
   } catch (error) {
-    console.error('Error verifying token:', error);
+    // Log error without sensitive information
+    console.error('Error verifying token:', error instanceof Error ? error.message : 'Invalid token format');
     return null;
   }
 }

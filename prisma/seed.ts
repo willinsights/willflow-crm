@@ -27,8 +27,7 @@ async function main() {
 
   console.log('✅ Criado 1 usuário administrador')
 
-  // Verificar se deve popular com dados de exemplo
-  const shouldPopulate = process.env.SEED_WITH_SAMPLE_DATA === 'true' || process.env.NODE_ENV === 'development'
+  const shouldPopulate = process.env.SEED_WITH_SAMPLE_DATA === 'true'
 
   if (shouldPopulate) {
     console.log('📦 Populando banco com dados de exemplo...')
