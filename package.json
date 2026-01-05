@@ -8,6 +8,7 @@
     "build:with-db": "prisma generate && prisma db push --accept-data-loss && next build",
     "start": "NODE_ENV=production node server.js",
     "dev": "node server.js",
+    "lint": "next lint",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",

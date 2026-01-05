@@ -1,18 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "./ui-improvements.css";
 import ClientBody from "./ClientBody";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// Using system fonts for build compatibility
+// Fonts are defined in globals.css with fallbacks
 
 export const metadata: Metadata = {
   title: "WillFlow - Sistema de Gestão Audiovisual",
@@ -44,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-PT" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="pt-PT">
       <body suppressHydrationWarning className="antialiased">
         <ClientBody>{children}</ClientBody>
       </body>
