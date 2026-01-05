@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 // Helper function to get date offsets
+// JavaScript's Date.setDate() automatically handles month/year rollovers
 function getDateOffset(days: number): Date {
   const date = new Date()
   date.setDate(date.getDate() + days)
