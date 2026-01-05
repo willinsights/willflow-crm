@@ -21,9 +21,9 @@ export function ViewProvider({ children }: { children: ReactNode }) {
 
   // Load saved view mode from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem(VIEW_MODE_KEY) as ViewMode;
+    const saved = localStorage.getItem(VIEW_MODE_KEY);
     if (saved === 'compact' || saved === 'detailed') {
-      setViewModeState(saved);
+      setViewModeState(saved as ViewMode);
     }
   }, []);
 
