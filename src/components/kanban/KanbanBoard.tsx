@@ -90,6 +90,7 @@ import { useLocale } from '@/lib/LocaleContext';
 import { useView } from '@/lib/ViewContext';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import EditProjectModal from '@/components/projects/EditProjectModal';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import TaskDrawer from '@/components/projects/TaskDrawer';
@@ -1441,7 +1442,13 @@ function ProjectCard({
                   <span className="font-medium truncate">{formatCurrency(project.clientPrice)}</span>
                 </div>
                 <div className="flex justify-between text-[10px] md:text-xs gap-2">
-                  <span className="text-muted-foreground">Margem:</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">Margem:</span>
+                    <InfoTooltip 
+                      content="Diferença entre o valor cobrado ao cliente e os custos de captação e edição" 
+                      iconClassName="w-3 h-3"
+                    />
+                  </div>
                   <span className={`font-medium truncate ${project.margin > 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {formatCurrency(project.margin)}
                   </span>

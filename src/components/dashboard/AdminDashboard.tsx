@@ -419,7 +419,7 @@ export default function AdminDashboard({
             <CardHeader className="pb-3">
               <CardTitle className="text-base md:text-lg flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-orange-400" />
-                Atencao Necessaria
+                ⚠️ Atenção Hoje
                 {urgentItems.length > 0 && (
                   <Badge variant="destructive" className="ml-2">{urgentItems.length}</Badge>
                 )}
