@@ -107,8 +107,8 @@ describe('Menu Navigation Structure - Requirements Validation', () => {
     });
 
     it('should have all routes mapped', () => {
-      const allItems = Object.values(expectedStructure).flat();
-      const allMappedItems = Object.keys(expectedRouteMapping);
+      const allItems = Object.values(expectedStructure).flat().sort();
+      const allMappedItems = Object.keys(expectedRouteMapping).sort();
       
       expect(allMappedItems).toEqual(allItems);
     });
