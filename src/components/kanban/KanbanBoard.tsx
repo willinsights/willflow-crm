@@ -87,6 +87,7 @@ import { useAppStore } from '@/lib/useAppStore';
 import { Project, ProjectPhase } from '@/lib/types';
 import { statusLabels, videoTypeLabels } from '@/lib/data';
 import { useLocale } from '@/lib/LocaleContext';
+import { useView } from '@/lib/ViewContext';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
 import EditProjectModal from '@/components/projects/EditProjectModal';
@@ -114,6 +115,7 @@ const FIXED_LAST_COLUMNS: Record<string, string> = {
 export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
   const { formatCurrency } = useLocale();
   const { toast } = useToast();
+  const { isCompact } = useView();
   const {
     projectsByPhase,
     filteredProjects,
@@ -144,20 +146,6 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
   const [showNewColumnDialog, setShowNewColumnDialog] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
   const [newColumnKey, setNewColumnKey] = useState('');
-
-  // Compact view toggle
-  const [isCompactView, setIsCompactView] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('kanban-compact-view') === 'true';
-    }
-    return false;
-  });
-
-  const toggleCompactView = () => {
-    const newValue = !isCompactView;
-    setIsCompactView(newValue);
-    localStorage.setItem('kanban-compact-view', String(newValue));
-  };
 
   // Load custom column names and order on mount
   useEffect(() => {
@@ -759,27 +747,6 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
               </DropdownMenu>
             )}
 
-            {/* Compact/Detailed view toggle */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleCompactView}
-                  className={`glass ${isCompactView ? 'bg-purple-500/20' : ''}`}
-                >
-                  {isCompactView ? (
-                    <LayoutGrid className="w-4 h-4" />
-                  ) : (
-                    <LayoutList className="w-4 h-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{isCompactView ? 'Vista Detalhada' : 'Vista Compacta'}</p>
-              </TooltipContent>
-            </Tooltip>
-
             {/* Add new column button */}
             <Button
               variant="outline"
@@ -853,7 +820,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
                             onCardClick={setSelectedProject}
                             onMoveToPhase={handleMoveToPhase}
                             allStatuses={statuses}
-                            isCompact={isCompactView}
+                            isCompact={isCompact}
                           />
                         ))}
                       </div>

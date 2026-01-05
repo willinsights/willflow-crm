@@ -30,7 +30,9 @@ import {
   Briefcase,
   Wallet,
   MoreHorizontal,
-  ChevronUp
+  ChevronUp,
+  LayoutGrid,
+  LayoutList
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +40,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import CreateProjectModal from '@/components/projects/CreateProjectModal';
 import UserSelector from '@/components/user/UserSelector';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
@@ -49,6 +59,7 @@ import TaskDrawer from '@/components/projects/TaskDrawer';
 import OfflineIndicator from '@/components/layout/OfflineIndicator';
 import { useAppStore } from '@/lib/useAppStore';
 import { useTheme } from '@/lib/ThemeContext';
+import { useView } from '@/lib/ViewContext';
 import { Project, Client } from '@/lib/types';
 
 interface AppLayoutProps {
@@ -64,6 +75,7 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
   const { currentUser, switchUser, projectsByPhase, searchQuery, setSearchQuery, projects, clients, users } = useAppStore();
   const { toasts, removeToast, showSuccess, showInfo, showDeadlineAlert } = useToastNotifications();
   const { theme, toggleTheme, cycleTheme, isOLED } = useTheme();
+  const { viewMode, toggleViewMode, isCompact, isDetailed } = useView();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -348,58 +360,163 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
             {/* Quick Actions */}
             <QuickActions onViewChange={onViewChange} />
 
-            {/* Theme Toggle - Cycles through dark -> light -> oled */}
-            <button
-              onClick={cycleTheme}
-              className="p-2 rounded-lg glass hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-purple-500/30"
-              title={
-                theme === 'dark' ? 'Mudar para tema claro' :
-                theme === 'light' ? 'Mudar para tema OLED' :
-                'Mudar para tema escuro'
-              }
-            >
-              {theme === 'dark' && (
-                <Sun className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
-              )}
-              {theme === 'light' && (
-                <div className="w-4 h-4 md:w-5 md:h-5 rounded-full bg-black border border-white/50" />
-              )}
-              {theme === 'oled' && (
-                <Moon className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
-              )}
-            </button>
+            {/* Desktop: Show individual buttons */}
+            <div className="hidden lg:flex items-center space-x-2">
+              {/* View Mode Toggle - Compact/Detailed */}
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={toggleViewMode}
+                      className="p-2 rounded-lg glass hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-purple-500/30"
+                      title={isCompact ? 'Mudar para vista detalhada' : 'Mudar para vista compacta'}
+                    >
+                      {isCompact ? (
+                        <LayoutList className="w-5 h-5 text-purple-400" />
+                      ) : (
+                        <LayoutGrid className="w-5 h-5 text-green-400" />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="glass-strong border-white/20">
+                    <p>{isCompact ? 'Vista Detalhada' : 'Vista Compacta'}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {isCompact ? 'Mostrar mais informações' : 'Mostrar menos informações'}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
 
-            <div className="hidden sm:block">
-              <CreateProjectModal />
-            </div>
-
-            <NotificationCenter
-              projects={projects}
-              clients={clients}
-              users={users}
-              onViewProject={(projectId) => {
-                const project = projects.find(p => p.id === projectId);
-                if (project) {
-                  setSelectedProject(project);
-                  onViewChange(project.phase);
-                }
-              }}
-            />
-
-            <div className="hidden md:block">
-              <UserSelector currentUser={currentUser} onUserChange={switchUser} />
-            </div>
-
-            {/* Logout Button */}
-            {onLogout && (
+              {/* Theme Toggle - Cycles through dark -> light -> oled */}
               <button
-                onClick={onLogout}
-                className="p-2 rounded-lg glass hover:bg-red-500/10 transition-all duration-300 border border-white/10 hover:border-red-500/30"
-                title="Sair"
+                onClick={cycleTheme}
+                className="p-2 rounded-lg glass hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-purple-500/30"
+                title={
+                  theme === 'dark' ? 'Mudar para tema claro' :
+                  theme === 'light' ? 'Mudar para tema OLED' :
+                  'Mudar para tema escuro'
+                }
               >
-                <LogOut className="w-4 h-4 md:w-5 md:h-5 text-red-400" />
+                {theme === 'dark' && (
+                  <Sun className="w-5 h-5 text-yellow-400" />
+                )}
+                {theme === 'light' && (
+                  <div className="w-5 h-5 rounded-full bg-black border border-white/50" />
+                )}
+                {theme === 'oled' && (
+                  <Moon className="w-5 h-5 text-purple-500" />
+                )}
               </button>
-            )}
+
+              <CreateProjectModal />
+
+              <UserSelector currentUser={currentUser} onUserChange={switchUser} />
+
+              {/* Logout Button */}
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  className="p-2 rounded-lg glass hover:bg-red-500/10 transition-all duration-300 border border-white/10 hover:border-red-500/30"
+                  title="Sair"
+                >
+                  <LogOut className="w-5 h-5 text-red-400" />
+                </button>
+              )}
+            </div>
+
+            {/* Mobile & Tablet: Consolidated dropdown menu */}
+            <div className="lg:hidden flex items-center space-x-1 md:space-x-2">
+              <NotificationCenter
+                projects={projects}
+                clients={clients}
+                users={users}
+                onViewProject={(projectId) => {
+                  const project = projects.find(p => p.id === projectId);
+                  if (project) {
+                    setSelectedProject(project);
+                    onViewChange(project.phase);
+                  }
+                }}
+              />
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="p-2 rounded-lg glass hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-purple-500/30"
+                    aria-label="Opções"
+                  >
+                    <Settings className="w-4 h-4 md:w-5 md:h-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="glass-strong border-white/20 w-56">
+                  <DropdownMenuLabel>Preferências</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  
+                  {/* View Mode Toggle */}
+                  <DropdownMenuItem onClick={toggleViewMode} className="cursor-pointer">
+                    {isCompact ? (
+                      <>
+                        <LayoutList className="w-4 h-4 mr-2 text-purple-400" />
+                        Vista Detalhada
+                      </>
+                    ) : (
+                      <>
+                        <LayoutGrid className="w-4 h-4 mr-2 text-green-400" />
+                        Vista Compacta
+                      </>
+                    )}
+                  </DropdownMenuItem>
+
+                  {/* Theme Toggle */}
+                  <DropdownMenuItem onClick={cycleTheme} className="cursor-pointer">
+                    {theme === 'dark' && (
+                      <>
+                        <Sun className="w-4 h-4 mr-2 text-yellow-400" />
+                        Tema Claro
+                      </>
+                    )}
+                    {theme === 'light' && (
+                      <>
+                        <div className="w-4 h-4 mr-2 rounded-full bg-black border border-white/50" />
+                        Tema OLED
+                      </>
+                    )}
+                    {theme === 'oled' && (
+                      <>
+                        <Moon className="w-4 h-4 mr-2 text-purple-500" />
+                        Tema Escuro
+                      </>
+                    )}
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+
+                  {/* Logout */}
+                  {onLogout && (
+                    <DropdownMenuItem onClick={onLogout} className="cursor-pointer text-red-400">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sair
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Desktop: Notification Center */}
+            <div className="hidden lg:block">
+              <NotificationCenter
+                projects={projects}
+                clients={clients}
+                users={users}
+                onViewProject={(projectId) => {
+                  const project = projects.find(p => p.id === projectId);
+                  if (project) {
+                    setSelectedProject(project);
+                    onViewChange(project.phase);
+                  }
+                }}
+              />
+            </div>
           </div>
         </div>
 

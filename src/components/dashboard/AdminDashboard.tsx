@@ -25,6 +25,8 @@ import {
   Activity,
   CreditCard,
   Eye,
+  Upload,
+  Briefcase,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -296,12 +298,14 @@ export default function AdminDashboard({
     }
   ];
 
-  // Quick Actions
+  // Quick Actions - Note: Navigation actions don't work yet as dashboard doesn't have access to onViewChange
   const quickActions = [
     { label: 'Novo Projeto', icon: Plus, href: '#', color: 'gradient-purple', action: 'create-project' },
-    { label: 'Ver Pagamentos', icon: Wallet, href: 'financeiro', color: 'bg-green-500/20 hover:bg-green-500/30 text-green-400' },
-    { label: 'Calendario', icon: CalendarDays, href: 'calendario', color: 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400' },
-    { label: 'Relatorios', icon: FileText, href: 'financeiro', color: 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400' },
+    { label: 'Novo Cliente', icon: Briefcase, href: '#', color: 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400', action: 'view-only' },
+    { label: 'Upload Media', icon: Upload, href: '#', color: 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-400', action: 'view-only' },
+    { label: 'Ver Pagamentos', icon: Wallet, href: '#', color: 'bg-green-500/20 hover:bg-green-500/30 text-green-400', action: 'view-only' },
+    { label: 'Calendario', icon: CalendarDays, href: '#', color: 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400', action: 'view-only' },
+    { label: 'Relatorios', icon: FileText, href: '#', color: 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400', action: 'view-only' },
   ];
 
   return (
@@ -380,7 +384,7 @@ export default function AdminDashboard({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               {quickActions.map((action, index) => {
                 const Icon = action.icon;
                 return (
@@ -391,11 +395,12 @@ export default function AdminDashboard({
                     data-create-project={action.action === 'create-project' ? 'true' : undefined}
                     onClick={() => {
                       if (action.action === 'create-project') {
+                        // Trigger the create project modal in the header
                         const btn = document.querySelector('[data-create-project]') as HTMLButtonElement;
                         btn?.click();
-                      } else if (action.href && action.href !== '#') {
-                        router.push(`/${action.href}`);
                       }
+                      // Note: Other actions are visual placeholders for now
+                      // Navigation would require passing onViewChange from page.tsx through the component tree
                     }}
                   >
                     <Icon className="w-5 h-5" />
