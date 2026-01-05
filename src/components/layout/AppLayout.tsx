@@ -42,6 +42,7 @@ import CreateProjectModal from '@/components/projects/CreateProjectModal';
 import UserSelector from '@/components/user/UserSelector';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import ToastNotifications, { useToastNotifications } from '@/components/notifications/ToastNotifications';
+import QuickActions from '@/components/layout/QuickActions';
 // PWA Install Prompt removido - sistema roda apenas como website
 import SearchResults from '@/components/layout/SearchResults';
 import TaskDrawer from '@/components/projects/TaskDrawer';
@@ -344,6 +345,9 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
 
           {/* Actions */}
           <div className="flex items-center space-x-1 md:space-x-2 lg:space-x-4">
+            {/* Quick Actions */}
+            <QuickActions onViewChange={onViewChange} />
+
             {/* Theme Toggle - Cycles through dark -> light -> oled */}
             <button
               onClick={cycleTheme}
