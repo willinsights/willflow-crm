@@ -30,7 +30,9 @@ import {
   Briefcase,
   Wallet,
   MoreHorizontal,
-  ChevronUp
+  ChevronUp,
+  LayoutGrid,
+  LayoutList
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +51,7 @@ import TaskDrawer from '@/components/projects/TaskDrawer';
 import OfflineIndicator from '@/components/layout/OfflineIndicator';
 import { useAppStore } from '@/lib/useAppStore';
 import { useTheme } from '@/lib/ThemeContext';
+import { useView } from '@/lib/ViewContext';
 import { Project, Client } from '@/lib/types';
 
 interface AppLayoutProps {
@@ -64,6 +67,7 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
   const { currentUser, switchUser, projectsByPhase, searchQuery, setSearchQuery, projects, clients, users } = useAppStore();
   const { toasts, removeToast, showSuccess, showInfo, showDeadlineAlert } = useToastNotifications();
   const { theme, toggleTheme, cycleTheme, isOLED } = useTheme();
+  const { viewMode, toggleViewMode, isCompact, isDetailed } = useView();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -347,6 +351,31 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
           <div className="flex items-center space-x-1 md:space-x-2 lg:space-x-4">
             {/* Quick Actions */}
             <QuickActions onViewChange={onViewChange} />
+
+            {/* View Mode Toggle - Compact/Detailed */}
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={toggleViewMode}
+                    className="p-2 rounded-lg glass hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-purple-500/30"
+                    title={isCompact ? 'Mudar para vista detalhada' : 'Mudar para vista compacta'}
+                  >
+                    {isCompact ? (
+                      <LayoutList className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
+                    ) : (
+                      <LayoutGrid className="w-4 h-4 md:w-5 md:h-5 text-green-400" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="glass-strong border-white/20">
+                  <p>{isCompact ? 'Vista Detalhada' : 'Vista Compacta'}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {isCompact ? 'Mostrar mais informações' : 'Mostrar menos informações'}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
             {/* Theme Toggle - Cycles through dark -> light -> oled */}
             <button

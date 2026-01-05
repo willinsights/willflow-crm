@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/lib/ThemeContext";
 import { LocaleProvider } from "@/lib/LocaleContext";
 import { AppStoreProvider } from "@/lib/useAppStore";
 import { ToastProvider } from "@/components/providers/ToastProvider";
+import { ViewProvider } from "@/lib/ViewContext";
 
 export default function ClientBody({
   children,
@@ -23,10 +24,12 @@ export default function ClientBody({
   return (
     <ThemeProvider>
       <LocaleProvider>
-        <AppStoreProvider>
-          <ToastProvider />
-          <div className="antialiased">{children}</div>
-        </AppStoreProvider>
+        <ViewProvider>
+          <AppStoreProvider>
+            <ToastProvider />
+            <div className="antialiased">{children}</div>
+          </AppStoreProvider>
+        </ViewProvider>
       </LocaleProvider>
     </ThemeProvider>
   );
