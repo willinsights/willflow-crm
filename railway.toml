@@ -1,5 +1,10 @@
 # Railway Configuration for WillFlow CRM
 # Atualizado: 01/01/2026
+#
+# Note: Environment variables like SMTP_PASSWORD should be configured
+# in Railway's dashboard, not in this file. They are injected at runtime
+# for security. Nixpacks may show warnings about these variables during
+# build, but they are handled correctly by Railway.
 
 [build]
 builder = "NIXPACKS"
