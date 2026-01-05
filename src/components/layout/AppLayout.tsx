@@ -56,7 +56,6 @@ import TaskDrawer from '@/components/projects/TaskDrawer';
 import OfflineIndicator from '@/components/layout/OfflineIndicator';
 import { useAppStore } from '@/lib/useAppStore';
 import { useTheme } from '@/lib/ThemeContext';
-import { useView } from '@/lib/ViewContext';
 import { Project, Client } from '@/lib/types';
 
 interface AppLayoutProps {
@@ -72,7 +71,6 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
   const { currentUser, switchUser, projectsByPhase, searchQuery, setSearchQuery, projects, clients, users } = useAppStore();
   const { toasts, removeToast, showSuccess, showInfo, showDeadlineAlert } = useToastNotifications();
   const { theme, toggleTheme, cycleTheme, isOLED } = useTheme();
-  const { viewMode, toggleViewMode, isCompact, isDetailed } = useView();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
