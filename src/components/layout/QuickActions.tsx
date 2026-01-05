@@ -203,15 +203,14 @@ export default function QuickActions({ onViewChange }: QuickActionsProps) {
             : 'opacity-0 translate-y-4 scale-95 pointer-events-none'
           }
           
-          /* Desktop: top-right below header */
+          /* Desktop: top-right below header - shown on md+ screens */
+          top-20 right-6
           hidden md:block
-          md:top-20 md:right-6
           
-          /* Mobile: bottom sheet */
-          md:hidden
-          bottom-0 left-0 right-0
-          rounded-b-none
-          safe-area-bottom
+          /* Mobile: bottom sheet - shown on small screens */
+          max-md:block max-md:!top-auto max-md:bottom-0 max-md:left-0 max-md:right-0
+          max-md:rounded-b-none max-md:rounded-t-2xl
+          max-md:safe-area-bottom
         `}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
