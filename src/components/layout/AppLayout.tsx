@@ -30,9 +30,7 @@ import {
   Briefcase,
   Wallet,
   MoreHorizontal,
-  ChevronUp,
-  LayoutGrid,
-  LayoutList
+  ChevronUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,7 +50,6 @@ import CreateProjectModal from '@/components/projects/CreateProjectModal';
 import UserSelector from '@/components/user/UserSelector';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import ToastNotifications, { useToastNotifications } from '@/components/notifications/ToastNotifications';
-import QuickActions from '@/components/layout/QuickActions';
 // PWA Install Prompt removido - sistema roda apenas como website
 import SearchResults from '@/components/layout/SearchResults';
 import TaskDrawer from '@/components/projects/TaskDrawer';
@@ -307,15 +304,19 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
             {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
-          {/* Logo - Centered on mobile */}
-          <div className="flex flex-col items-start lg:items-start flex-1 lg:flex-none">
+          {/* Logo - Centered on mobile, clickable to navigate home */}
+          <button
+            onClick={() => onViewChange('dashboard')}
+            className="flex flex-col items-start lg:items-start flex-1 lg:flex-none hover:opacity-80 transition-opacity duration-300 cursor-pointer"
+            aria-label="Voltar ao Dashboard"
+          >
             <img
               src="/logo-willflow-sistema.png"
               alt="WillFlow"
               className="h-7 md:h-10 w-auto object-contain flex-shrink-0"
             />
             <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5 hidden sm:block">Porque criar deve ser simples.</p>
-          </div>
+          </button>
 
           {/* Search - Hidden on small mobile */}
           <div className="hidden md:flex flex-1 max-w-md mx-4 lg:mx-8">
@@ -357,36 +358,8 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
 
           {/* Actions */}
           <div className="flex items-center space-x-1 md:space-x-2 lg:space-x-4">
-            {/* Quick Actions */}
-            <QuickActions onViewChange={onViewChange} />
-
             {/* Desktop: Show individual buttons */}
             <div className="hidden lg:flex items-center space-x-2">
-              {/* View Mode Toggle - Compact/Detailed */}
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={toggleViewMode}
-                      className="p-2 rounded-lg glass hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-purple-500/30"
-                      title={isCompact ? 'Mudar para vista detalhada' : 'Mudar para vista compacta'}
-                    >
-                      {isCompact ? (
-                        <LayoutList className="w-5 h-5 text-purple-400" />
-                      ) : (
-                        <LayoutGrid className="w-5 h-5 text-green-400" />
-                      )}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="glass-strong border-white/20">
-                    <p>{isCompact ? 'Vista Detalhada' : 'Vista Compacta'}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {isCompact ? 'Mostrar mais informações' : 'Mostrar menos informações'}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
               {/* Theme Toggle - Cycles through dark -> light -> oled */}
               <button
                 onClick={cycleTheme}
@@ -409,6 +382,20 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
               </button>
 
               <CreateProjectModal />
+
+              {/* Notification Center - Desktop */}
+              <NotificationCenter
+                projects={projects}
+                clients={clients}
+                users={users}
+                onViewProject={(projectId) => {
+                  const project = projects.find(p => p.id === projectId);
+                  if (project) {
+                    setSelectedProject(project);
+                    onViewChange(project.phase);
+                  }
+                }}
+              />
 
               <UserSelector currentUser={currentUser} onUserChange={switchUser} />
 
@@ -452,21 +439,6 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
                   <DropdownMenuLabel>Preferências</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   
-                  {/* View Mode Toggle */}
-                  <DropdownMenuItem onClick={toggleViewMode} className="cursor-pointer">
-                    {isCompact ? (
-                      <>
-                        <LayoutList className="w-4 h-4 mr-2 text-purple-400" />
-                        Vista Detalhada
-                      </>
-                    ) : (
-                      <>
-                        <LayoutGrid className="w-4 h-4 mr-2 text-green-400" />
-                        Vista Compacta
-                      </>
-                    )}
-                  </DropdownMenuItem>
-
                   {/* Theme Toggle */}
                   <DropdownMenuItem onClick={cycleTheme} className="cursor-pointer">
                     {theme === 'dark' && (
@@ -500,22 +472,6 @@ export default function AppLayout({ children, activeView, onViewChange, onLogout
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-
-            {/* Desktop: Notification Center */}
-            <div className="hidden lg:block">
-              <NotificationCenter
-                projects={projects}
-                clients={clients}
-                users={users}
-                onViewProject={(projectId) => {
-                  const project = projects.find(p => p.id === projectId);
-                  if (project) {
-                    setSelectedProject(project);
-                    onViewChange(project.phase);
-                  }
-                }}
-              />
             </div>
           </div>
         </div>
