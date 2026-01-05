@@ -103,8 +103,8 @@ export default function AdminDashboard({
           createdDate.getFullYear() === month.getFullYear();
       });
 
-      const revenue = monthProjects.reduce((sum, p) => sum + p.clientPrice, 0);
-      const costs = monthProjects.reduce((sum, p) => sum + p.captationCost + p.editionCost, 0);
+      const revenue = monthProjects.reduce((sum, p) => sum + (p.clientPrice || 0), 0);
+      const costs = monthProjects.reduce((sum, p) => sum + (p.captationCost || 0) + (p.editionCost || 0), 0);
 
       months.push({
         month: monthName.charAt(0).toUpperCase() + monthName.slice(1),
@@ -154,7 +154,7 @@ export default function AdminDashboard({
       if (p.paymentStatus !== 'recebido' && p.clientPrice > 0) {
         items.push({
           type: 'payment_client',
-          title: `${p.client?.name || 'Cliente'}`,
+          title: `Pagamento pendente: ${p.client?.name || 'Cliente'}`,
           subtitle: `${formatCurrency(p.clientPrice)} - ${p.title}`,
           amount: p.clientPrice,
           icon: CreditCard,
@@ -298,14 +298,10 @@ export default function AdminDashboard({
     }
   ];
 
-  // Quick Actions - Note: Navigation actions don't work yet as dashboard doesn't have access to onViewChange
+  // Quick Actions - Focused on most frequent dashboard actions
   const quickActions = [
-    { label: 'Novo Projeto', icon: Plus, href: '#', color: 'gradient-purple', action: 'create-project' },
-    { label: 'Novo Cliente', icon: Briefcase, href: '#', color: 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400', action: 'view-only' },
-    { label: 'Upload Media', icon: Upload, href: '#', color: 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-400', action: 'view-only' },
-    { label: 'Ver Pagamentos', icon: Wallet, href: '#', color: 'bg-green-500/20 hover:bg-green-500/30 text-green-400', action: 'view-only' },
-    { label: 'Calendario', icon: CalendarDays, href: '#', color: 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400', action: 'view-only' },
-    { label: 'Relatorios', icon: FileText, href: '#', color: 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400', action: 'view-only' },
+    { label: 'Novo Projeto', icon: Plus, color: 'gradient-purple', action: 'create-project', description: 'Criar novo projeto audiovisual' },
+    { label: 'Pagamentos Pendentes', icon: Wallet, color: 'bg-green-500/20 hover:bg-green-500/30 text-green-400', action: 'payments', description: 'Ver pagamentos a receber' },
   ];
 
   return (
@@ -316,9 +312,9 @@ export default function AdminDashboard({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gradient mb-2">Dashboard</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-gradient mb-2">Dashboard Principal</h1>
             <p className="text-sm md:text-base text-muted-foreground">
-              Visao geral completa dos projetos e financas
+              Visao Rapida • Acoes Rapidas • Alertas • Evolucao Financeira • Atividade Recente
             </p>
           </div>
 
@@ -333,8 +329,13 @@ export default function AdminDashboard({
           </Button>
         </div>
 
-        {/* Secao 1: KPI Cards with Tooltips */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
+        {/* Secao 1: Visao Rapida - KPI Cards with Tooltips */}
+        <div>
+          <h2 className="text-lg md:text-xl font-semibold mb-4 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-purple-400" />
+            Visao Rapida
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
           {isLoading ? (
             <>
               {[...Array(4)].map((_, i) => (
@@ -374,6 +375,7 @@ export default function AdminDashboard({
             })
           )}
         </div>
+        </div>
 
         {/* Secao 2: Acoes Rapidas */}
         <Card className="glass-card">
@@ -384,27 +386,36 @@ export default function AdminDashboard({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               {quickActions.map((action, index) => {
                 const Icon = action.icon;
                 return (
                   <Button
                     key={index}
                     variant="ghost"
-                    className={`h-auto py-4 flex flex-col gap-2 ${action.color} ${action.color.includes('gradient') ? 'text-white shadow-glow-sm' : ''}`}
-                    data-create-project={action.action === 'create-project' ? 'true' : undefined}
+                    className={`h-auto py-6 flex flex-col gap-3 ${action.color} ${action.color.includes('gradient') ? 'text-white shadow-glow-sm' : ''}`}
                     onClick={() => {
                       if (action.action === 'create-project') {
-                        // Trigger the create project modal in the header
-                        const btn = document.querySelector('[data-create-project]') as HTMLButtonElement;
-                        btn?.click();
+                        // Trigger the create project modal
+                        const modalTrigger = document.querySelector('[data-state]') as HTMLButtonElement;
+                        if (modalTrigger) {
+                          modalTrigger.click();
+                        } else {
+                          // Fallback: dispatch custom event
+                          window.dispatchEvent(new CustomEvent('open-create-project'));
+                        }
+                      } else if (action.action === 'payments') {
+                        // Scroll to attention section or navigate to payments
+                        const attentionSection = document.querySelector('[data-section="attention"]');
+                        attentionSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                       }
-                      // Note: Other actions are visual placeholders for now
-                      // Navigation would require passing onViewChange from page.tsx through the component tree
                     }}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span className="text-sm font-medium">{action.label}</span>
+                    <Icon className="w-8 h-8" />
+                    <div className="text-center">
+                      <span className="text-base font-semibold block">{action.label}</span>
+                      <span className="text-xs text-muted-foreground">{action.description}</span>
+                    </div>
                   </Button>
                 );
               })}
@@ -412,14 +423,14 @@ export default function AdminDashboard({
           </CardContent>
         </Card>
 
-        {/* Secao 3: Projetos Urgentes + Atividade Recente */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-          {/* Projetos Urgentes */}
+        {/* Secao 3: Atencao Hoje + Atividade Recente */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6" data-section="attention">
+          {/* ⚠️ Atencao Hoje */}
           <Card className="glass-card">
             <CardHeader className="pb-3">
               <CardTitle className="text-base md:text-lg flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-orange-400" />
-                ⚠️ Atenção Hoje
+                ⚠️ Atencao Hoje
                 {urgentItems.length > 0 && (
                   <Badge variant="destructive" className="ml-2">{urgentItems.length}</Badge>
                 )}
@@ -524,6 +535,12 @@ export default function AdminDashboard({
           <CardContent>
             {isLoading ? (
               <ChartSkeleton />
+            ) : revenueData.every(m => m.receita === 0 && m.custos === 0) ? (
+              <div className="h-[300px] flex flex-col items-center justify-center text-center text-muted-foreground">
+                <BarChart3 className="w-12 h-12 mb-3 opacity-30" />
+                <p className="text-sm">Nenhum dado financeiro disponivel</p>
+                <p className="text-xs mt-1">Adicione projetos com valores financeiros para ver a evolucao</p>
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={revenueData}>
