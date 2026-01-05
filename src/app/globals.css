@@ -3,7 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+  /* System fonts with fallbacks */
   :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Menlo, Monaco, 'Courier New', monospace;
     --background: 210 20% 8%;
     --foreground: 0 0% 87%;
     --card: 210 20% 10%;
@@ -78,6 +81,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
     background: radial-gradient(ellipse at top, rgba(120, 55, 204, 0.15) 0%, transparent 50%),
                 radial-gradient(ellipse at bottom, rgba(145, 57, 228, 0.1) 0%, transparent 50%),
                 #151315;
