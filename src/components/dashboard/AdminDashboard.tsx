@@ -25,6 +25,8 @@ import {
   Activity,
   CreditCard,
   Eye,
+  Upload,
+  Briefcase,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -299,9 +301,11 @@ export default function AdminDashboard({
   // Quick Actions
   const quickActions = [
     { label: 'Novo Projeto', icon: Plus, href: '#', color: 'gradient-purple', action: 'create-project' },
+    { label: 'Novo Cliente', icon: Briefcase, href: '#', color: 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400', action: 'create-client' },
+    { label: 'Upload Media', icon: Upload, href: 'uploads', color: 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-400' },
     { label: 'Ver Pagamentos', icon: Wallet, href: 'financeiro', color: 'bg-green-500/20 hover:bg-green-500/30 text-green-400' },
-    { label: 'Calendario', icon: CalendarDays, href: 'calendario', color: 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400' },
-    { label: 'Relatorios', icon: FileText, href: 'financeiro', color: 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400' },
+    { label: 'Calendario', icon: CalendarDays, href: 'calendario', color: 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400' },
+    { label: 'Relatorios', icon: FileText, href: 'relatorios', color: 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400' },
   ];
 
   return (
@@ -380,7 +384,7 @@ export default function AdminDashboard({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               {quickActions.map((action, index) => {
                 const Icon = action.icon;
                 return (
@@ -391,10 +395,15 @@ export default function AdminDashboard({
                     data-create-project={action.action === 'create-project' ? 'true' : undefined}
                     onClick={() => {
                       if (action.action === 'create-project') {
+                        // Trigger the create project modal in the header
                         const btn = document.querySelector('[data-create-project]') as HTMLButtonElement;
                         btn?.click();
+                      } else if (action.action === 'create-client') {
+                        // For now, just navigate - modal handling can be improved later
+                        window.location.hash = 'clientes';
                       } else if (action.href && action.href !== '#') {
-                        router.push(`/${action.href}`);
+                        // Navigation handled by hash - will be picked up by main app
+                        window.location.hash = action.href;
                       }
                     }}
                   >

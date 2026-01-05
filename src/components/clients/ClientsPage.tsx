@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/select';
 import { useAppStore } from '@/lib/useAppStore';
 import { useLocale } from '@/lib/LocaleContext';
+import { useView } from '@/lib/ViewContext';
 import { Client } from '@/lib/types';
 import CreateClientModal from './CreateClientModal';
 import ClientDetailsModal from './ClientDetailsModal';
@@ -53,6 +54,7 @@ type FilterStatus = 'all' | 'active' | 'inactive';
 export default function ClientsPage() {
   const { filteredClients, projects, searchQuery } = useAppStore();
   const { formatCurrency } = useLocale();
+  const { isCompact } = useView();
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [detailsClient, setDetailsClient] = useState<Client | null>(null);
 
@@ -305,34 +307,55 @@ export default function ClientsPage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                        <div className="space-y-0.5 md:space-y-1">
-                          <p className="text-[10px] md:text-xs text-muted-foreground">Receita Total</p>
-                          <p className="text-xs md:text-sm font-medium truncate">{formatCurrency(client.totalRevenue)}</p>
-                        </div>
-                        <div className="space-y-0.5 md:space-y-1">
-                          <p className="text-[10px] md:text-xs text-muted-foreground">Margem</p>
-                          <p className="text-xs md:text-sm font-medium text-green-400 truncate">
-                            {formatCurrency(client.totalMargin)} ({marginPercentage.toFixed(1)}%)
-                          </p>
-                        </div>
-                        <div className="space-y-0.5 md:space-y-1">
-                          <p className="text-[10px] md:text-xs text-muted-foreground">Projetos</p>
-                          <div className="flex items-center gap-1.5 md:gap-2">
-                            <span className="text-xs md:text-sm font-medium">{projectStats.total}</span>
-                            <Badge variant="secondary" className="text-[10px] md:text-xs">
-                              {projectStats.active} ativos
-                            </Badge>
+                      {/* Compact view: Show only essential info */}
+                      {isCompact ? (
+                        <div className="flex items-center justify-between gap-3 md:gap-4">
+                          <div className="space-y-0.5">
+                            <p className="text-[10px] md:text-xs text-muted-foreground">Receita</p>
+                            <p className="text-xs md:text-sm font-medium truncate">{formatCurrency(client.totalRevenue)}</p>
+                          </div>
+                          <div className="space-y-0.5">
+                            <p className="text-[10px] md:text-xs text-muted-foreground">Projetos</p>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs md:text-sm font-medium">{projectStats.total}</span>
+                              {projectStats.active > 0 && (
+                                <Badge variant="secondary" className="text-[10px]">
+                                  {projectStats.active}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                         </div>
-                        <div className="space-y-0.5 md:space-y-1">
-                          <p className="text-[10px] md:text-xs text-muted-foreground">Contacto</p>
-                          <div className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs text-muted-foreground">
-                            <Mail className="w-3 h-3 flex-shrink-0" />
-                            <span className="truncate">{client.email}</span>
+                      ) : (
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                          <div className="space-y-0.5 md:space-y-1">
+                            <p className="text-[10px] md:text-xs text-muted-foreground">Receita Total</p>
+                            <p className="text-xs md:text-sm font-medium truncate">{formatCurrency(client.totalRevenue)}</p>
+                          </div>
+                          <div className="space-y-0.5 md:space-y-1">
+                            <p className="text-[10px] md:text-xs text-muted-foreground">Margem</p>
+                            <p className="text-xs md:text-sm font-medium text-green-400 truncate">
+                              {formatCurrency(client.totalMargin)} ({marginPercentage.toFixed(1)}%)
+                            </p>
+                          </div>
+                          <div className="space-y-0.5 md:space-y-1">
+                            <p className="text-[10px] md:text-xs text-muted-foreground">Projetos</p>
+                            <div className="flex items-center gap-1.5 md:gap-2">
+                              <span className="text-xs md:text-sm font-medium">{projectStats.total}</span>
+                              <Badge variant="secondary" className="text-[10px] md:text-xs">
+                                {projectStats.active} ativos
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="space-y-0.5 md:space-y-1">
+                            <p className="text-[10px] md:text-xs text-muted-foreground">Contacto</p>
+                            <div className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs text-muted-foreground">
+                              <Mail className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate">{client.email}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )}
 
                       {/* Expanded Details */}
                       {selectedClient === client.id && (
