@@ -31,7 +31,7 @@ import {
   Area,
   AreaChart
 } from 'recharts';
-import type { ValueType } from 'recharts/types/component/DefaultTooltipContent';
+import type { ValueType, NameType } from 'recharts/types/component/DefaultTooltipContent';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -402,10 +402,17 @@ export default function ReportsPage({ embedded = false }: ReportsPageProps) {
                     tickFormatter={(value) => `${config.currencySymbol}${(value / 1000).toFixed(0)}k`}
                   />
                   <Tooltip
-                    formatter={(value: ValueType | undefined, name?: string) => [
-                      typeof value === "number" ? formatCurrency(value) : formatCurrency(0),
-                      name === 'revenue' ? 'Receita' : name === 'costs' ? 'Custos' : 'Margem'
-                    ]}
+                    formatter={(value: ValueType | undefined, name: NameType | undefined) => {
+                      const displayName =
+                        name === "revenue" ? "Receita" :
+                        name === "costs" ? "Custos" :
+                        "Margem";
+
+                      return [
+                        typeof value === "number" ? formatCurrency(value) : formatCurrency(0),
+                        displayName,
+                      ];
+                    }}
                     labelStyle={{ color: '#fff' }}
                     contentStyle={{
                       backgroundColor: 'rgba(0,0,0,0.8)',
@@ -460,10 +467,17 @@ export default function ReportsPage({ embedded = false }: ReportsPageProps) {
                     tickFormatter={(value) => `${config.currencySymbol}${(value / 1000).toFixed(0)}k`}
                   />
                   <Tooltip
-                    formatter={(value: ValueType | undefined, name?: string) => [
-                      typeof value === "number" ? formatCurrency(value) : formatCurrency(0),
-                      name === 'captacao' ? 'Captação' : name === 'edicao' ? 'Edição' : 'Total'
-                    ]}
+                    formatter={(value: ValueType | undefined, name: NameType | undefined) => {
+                      const displayName =
+                        name === "captacao" ? "Captação" :
+                        name === "edicao" ? "Edição" :
+                        "Total";
+
+                      return [
+                        typeof value === "number" ? formatCurrency(value) : formatCurrency(0),
+                        displayName,
+                      ];
+                    }}
                     labelStyle={{ color: '#fff' }}
                     contentStyle={{
                       backgroundColor: 'rgba(0,0,0,0.8)',
