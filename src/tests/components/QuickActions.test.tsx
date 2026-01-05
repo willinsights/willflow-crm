@@ -58,9 +58,10 @@ describe('QuickActions', () => {
     const closeButton = screen.getByLabelText('Fechar');
     fireEvent.click(closeButton);
     
+    // Verificar que o painel foi fechado (classe pointer-events-none foi adicionada)
     await waitFor(() => {
-      const panel = screen.queryByText('Atalhos para agilizar seu trabalho');
-      expect(panel).not.toBeVisible();
+      const panel = screen.getByText('Ações Rápidas').closest('div[class*="pointer-events-none"]');
+      expect(panel).toBeInTheDocument();
     });
   });
 
@@ -184,9 +185,10 @@ describe('QuickActions', () => {
     
     fireEvent.keyDown(window, { key: 'Escape' });
     
+    // Verificar que o painel foi fechado
     await waitFor(() => {
-      const panel = screen.queryByText('Atalhos para agilizar seu trabalho');
-      expect(panel).not.toBeVisible();
+      const panel = screen.getByText('Ações Rápidas').closest('div[class*="pointer-events-none"]');
+      expect(panel).toBeInTheDocument();
     });
   });
 
@@ -203,9 +205,10 @@ describe('QuickActions', () => {
     // Fechar com Ctrl+K
     fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
     
+    // Verificar que o painel foi fechado
     await waitFor(() => {
-      const panel = screen.queryByText('Atalhos para agilizar seu trabalho');
-      expect(panel).not.toBeVisible();
+      const panel = screen.getByText('Ações Rápidas').closest('div[class*="pointer-events-none"]');
+      expect(panel).toBeInTheDocument();
     });
   });
 });
