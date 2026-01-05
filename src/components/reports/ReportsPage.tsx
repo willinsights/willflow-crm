@@ -360,7 +360,7 @@ export default function ReportsPage({ embedded = false }: ReportsPageProps) {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number) => [formatCurrency(value), 'Receita']}
+                    formatter={(value: number | undefined) => value !== undefined ? [formatCurrency(value), 'Receita'] : ['', '']}
                     labelStyle={{ color: '#fff' }}
                     contentStyle={{
                       backgroundColor: 'rgba(0,0,0,0.8)',
@@ -398,10 +398,10 @@ export default function ReportsPage({ embedded = false }: ReportsPageProps) {
                     tickFormatter={(value) => `${config.currencySymbol}${(value / 1000).toFixed(0)}k`}
                   />
                   <Tooltip
-                    formatter={(value: number, name: string) => [
+                    formatter={(value: number | undefined, name: string | undefined) => value !== undefined ? [
                       formatCurrency(value),
                       name === 'revenue' ? 'Receita' : name === 'costs' ? 'Custos' : 'Margem'
-                    ]}
+                    ] : ['', '']}
                     labelStyle={{ color: '#fff' }}
                     contentStyle={{
                       backgroundColor: 'rgba(0,0,0,0.8)',
@@ -456,10 +456,10 @@ export default function ReportsPage({ embedded = false }: ReportsPageProps) {
                     tickFormatter={(value) => `${config.currencySymbol}${(value / 1000).toFixed(0)}k`}
                   />
                   <Tooltip
-                    formatter={(value: number, name: string) => [
+                    formatter={(value: number | undefined, name: string | undefined) => value !== undefined ? [
                       formatCurrency(value),
                       name === 'captacao' ? 'Captação' : name === 'edicao' ? 'Edição' : 'Total'
-                    ]}
+                    ] : ['', '']}
                     labelStyle={{ color: '#fff' }}
                     contentStyle={{
                       backgroundColor: 'rgba(0,0,0,0.8)',

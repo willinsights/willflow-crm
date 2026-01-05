@@ -1,18 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "./ui-improvements.css";
 import ClientBody from "./ClientBody";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// Note: Google Fonts (Geist) temporarily disabled for builds without internet access
+// System fonts are used as fallback. To enable Google Fonts in production:
+// 1. Uncomment the import: import { Geist, Geist_Mono } from "next/font/google";
+// 2. Uncomment the font configurations below
+// 3. Add className to html tag: className={`${geistSans.variable} ${geistMono.variable}`}
+//
+// const geistSans = Geist({
+//   variable: "--font-geist-sans",
+//   subsets: ["latin"],
+//   fallback: ["system-ui", "-apple-system", "sans-serif"]
+// });
+// const geistMono = Geist_Mono({
+//   variable: "--font-geist-mono",
+//   subsets: ["latin"],
+//   fallback: ["ui-monospace", "monospace"]
+// });
 
 export const metadata: Metadata = {
   title: "WillFlow - Sistema de Gestão Audiovisual",
@@ -44,7 +50,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-PT" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="pt-PT" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <body suppressHydrationWarning className="antialiased">
         <ClientBody>{children}</ClientBody>
       </body>
