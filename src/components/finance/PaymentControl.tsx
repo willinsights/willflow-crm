@@ -51,6 +51,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Project, Client, User as UserType } from '@/lib/types';
 import { useLocale } from '@/lib/LocaleContext';
+import { useView } from '@/lib/ViewContext';
 
 interface PaymentControlProps {
   projects: Project[];
@@ -69,6 +70,7 @@ export default function PaymentControl({
   onMarkAsPaid,
 }: PaymentControlProps) {
   const { formatCurrency } = useLocale();
+  const { isCompact } = useView();
   const [selectedInvoice, setSelectedInvoice] = useState<Project | null>(null);
   const [selectedReceipt, setSelectedReceipt] = useState<Project | null>(null);
   const [copiedIban, setCopiedIban] = useState<string | null>(null);
@@ -518,15 +520,15 @@ export default function PaymentControl({
                     <TableHead>Cliente</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Vencimento</TableHead>
-                    <TableHead>Data Pagamento</TableHead>
+                    {!isCompact && <TableHead>Vencimento</TableHead>}
+                    {!isCompact && <TableHead>Data Pagamento</TableHead>}
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredClientProjects.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={isCompact ? 5 : 7} className="text-center text-muted-foreground py-8">
                         Nenhum pagamento encontrado para os filtros selecionados
                       </TableCell>
                     </TableRow>
@@ -544,23 +546,27 @@ export default function PaymentControl({
                             {formatCurrency(project.clientPrice)}
                           </TableCell>
                           <TableCell>{getStatusBadge(project.paymentStatus)}</TableCell>
-                          <TableCell>
-                            {dueDate ? (
-                              <div className="flex items-center gap-1">
-                                {isOverdue && <AlertCircle className="w-4 h-4 text-red-400" />}
-                                <span className={isOverdue ? 'text-red-400 font-semibold' : ''}>
-                                  {dueDate.toLocaleDateString('pt-PT')}
-                                </span>
-                              </div>
-                            ) : (
-                              '-'
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {project.clientReceivedDate
-                              ? new Date(project.clientReceivedDate).toLocaleDateString('pt-PT')
-                              : '-'}
-                          </TableCell>
+                          {!isCompact && (
+                            <TableCell>
+                              {dueDate ? (
+                                <div className="flex items-center gap-1">
+                                  {isOverdue && <AlertCircle className="w-4 h-4 text-red-400" />}
+                                  <span className={isOverdue ? 'text-red-400 font-semibold' : ''}>
+                                    {dueDate.toLocaleDateString('pt-PT')}
+                                  </span>
+                                </div>
+                              ) : (
+                                '-'
+                              )}
+                            </TableCell>
+                          )}
+                          {!isCompact && (
+                            <TableCell>
+                              {project.clientReceivedDate
+                                ? new Date(project.clientReceivedDate).toLocaleDateString('pt-PT')
+                                : '-'}
+                            </TableCell>
+                          )}
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
                               <Tooltip>
@@ -637,16 +643,16 @@ export default function PaymentControl({
                     <TableHead>Projeto</TableHead>
                     <TableHead>Freelancer</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
-                    <TableHead>Dados Bancários</TableHead>
+                    {!isCompact && <TableHead>Dados Bancários</TableHead>}
                     <TableHead>Status</TableHead>
-                    <TableHead>Vencimento</TableHead>
+                    {!isCompact && <TableHead>Vencimento</TableHead>}
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredFreelancerProjects.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={isCompact ? 5 : 7} className="text-center text-muted-foreground py-8">
                         Nenhum pagamento encontrado para os filtros selecionados
                       </TableCell>
                     </TableRow>
@@ -685,51 +691,55 @@ export default function PaymentControl({
                           <TableCell className="text-right text-orange-400 font-semibold">
                             {formatCurrency(totalCost)}
                           </TableCell>
-                          <TableCell>
-                            {freelancer && (freelancer as any).iban ? (
-                              <div className="space-y-1">
-                                <div className="flex items-center gap-1 text-xs">
-                                  <CreditCard className="w-3 h-3 text-muted-foreground" />
-                                  <span className="font-mono text-xs">
-                                    {((freelancer as any).iban as string).slice(0, 12)}...
-                                  </span>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-5 w-5 p-0"
-                                    onClick={() => copyIban((freelancer as any).iban)}
-                                  >
-                                    {copiedIban === (freelancer as any).iban ? (
-                                      <Check className="w-3 h-3 text-green-400" />
-                                    ) : (
-                                      <Copy className="w-3 h-3" />
-                                    )}
-                                  </Button>
-                                </div>
-                                {(freelancer as any).bankName && (
-                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                    <Building2 className="w-3 h-3" />
-                                    {(freelancer as any).bankName}
+                          {!isCompact && (
+                            <TableCell>
+                              {freelancer && (freelancer as any).iban ? (
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-1 text-xs">
+                                    <CreditCard className="w-3 h-3 text-muted-foreground" />
+                                    <span className="font-mono text-xs">
+                                      {((freelancer as any).iban as string).slice(0, 12)}...
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-5 w-5 p-0"
+                                      onClick={() => copyIban((freelancer as any).iban)}
+                                    >
+                                      {copiedIban === (freelancer as any).iban ? (
+                                        <Check className="w-3 h-3 text-green-400" />
+                                      ) : (
+                                        <Copy className="w-3 h-3" />
+                                      )}
+                                    </Button>
                                   </div>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">Não definido</span>
-                            )}
-                          </TableCell>
+                                  {(freelancer as any).bankName && (
+                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                      <Building2 className="w-3 h-3" />
+                                      {(freelancer as any).bankName}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">Não definido</span>
+                              )}
+                            </TableCell>
+                          )}
                           <TableCell>{getStatusBadge(project.freelancerPaymentStatus)}</TableCell>
-                          <TableCell>
-                            {dueDate ? (
-                              <div className="flex items-center gap-1">
-                                {isOverdue && <AlertCircle className="w-4 h-4 text-red-400" />}
-                                <span className={isOverdue ? 'text-red-400 font-semibold' : ''}>
-                                  {dueDate.toLocaleDateString('pt-PT')}
-                                </span>
-                              </div>
-                            ) : (
-                              '-'
-                            )}
-                          </TableCell>
+                          {!isCompact && (
+                            <TableCell>
+                              {dueDate ? (
+                                <div className="flex items-center gap-1">
+                                  {isOverdue && <AlertCircle className="w-4 h-4 text-red-400" />}
+                                  <span className={isOverdue ? 'text-red-400 font-semibold' : ''}>
+                                    {dueDate.toLocaleDateString('pt-PT')}
+                                  </span>
+                                </div>
+                              ) : (
+                                '-'
+                              )}
+                            </TableCell>
+                          )}
                           <TableCell className="text-right">
                             {onMarkAsPaid && project.freelancerPaymentStatus !== 'pago' && (
                               <Tooltip>
