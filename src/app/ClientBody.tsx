@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { ThemeProvider } from "@/lib/ThemeContext";
 import { LocaleProvider } from "@/lib/LocaleContext";
 import { AppStoreProvider } from "@/lib/useAppStore";
+import { ToastProvider } from "@/components/providers/ToastProvider";
 
 export default function ClientBody({
   children,
@@ -23,6 +24,7 @@ export default function ClientBody({
     <ThemeProvider>
       <LocaleProvider>
         <AppStoreProvider>
+          <ToastProvider />
           <div className="antialiased">{children}</div>
         </AppStoreProvider>
       </LocaleProvider>
