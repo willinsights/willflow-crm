@@ -39,6 +39,9 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Project, Client } from '@/lib/types';
 import { useLocale } from '@/lib/LocaleContext';
+import { useView } from '@/lib/ViewContext';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 interface ProjectProfitabilityProps {
   projects: Project[];
@@ -68,6 +71,7 @@ export default function ProjectProfitability({
   onViewProject,
 }: ProjectProfitabilityProps) {
   const { formatCurrency } = useLocale();
+  const { isCompact } = useView();
   // Filtros
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('month');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -260,10 +264,11 @@ export default function ProjectProfitability({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Filtros */}
-      <Card className="glass-card">
-        <CardContent className="p-4">
+    <TooltipProvider>
+      <div className="space-y-6">
+        {/* Filtros */}
+        <Card className="glass-card">
+          <CardContent className="p-4">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-muted-foreground" />
@@ -425,12 +430,20 @@ export default function ProjectProfitability({
                 <TableRow>
                   <TableHead>Projeto</TableHead>
                   <TableHead>Cliente</TableHead>
-                  <TableHead>Fase</TableHead>
+                  {!isCompact && <TableHead>Fase</TableHead>}
                   <TableHead className="text-right">Receita</TableHead>
-                  <TableHead className="text-right">Custo</TableHead>
+                  {!isCompact && <TableHead className="text-right">Custo</TableHead>}
                   <TableHead className="text-right">Lucro</TableHead>
-                  <TableHead className="text-right">% Margem</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <span>% Margem</span>
+                      <InfoTooltip 
+                        content="Percentual de lucro em relação à receita total. Quanto maior, melhor a rentabilidade do projeto."
+                        iconClassName="w-3 h-3"
+                      />
+                    </div>
+                  </TableHead>
+                  {!isCompact && <TableHead>Status</TableHead>}
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -438,7 +451,7 @@ export default function ProjectProfitability({
                 {profitabilityData.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={9}
+                      colSpan={isCompact ? 6 : 9}
                       className="text-center text-muted-foreground py-8"
                     >
                       Nenhum projeto encontrado para os filtros selecionados
@@ -454,17 +467,21 @@ export default function ProjectProfitability({
                       <TableCell className="text-muted-foreground">
                         {item.clientName}
                       </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {item.phase}
-                        </Badge>
-                      </TableCell>
+                      {!isCompact && (
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {item.phase}
+                          </Badge>
+                        </TableCell>
+                      )}
                       <TableCell className="text-right text-green-400">
                         {formatCurrency(item.revenue)}
                       </TableCell>
-                      <TableCell className="text-right text-orange-400">
-                        {formatCurrency(item.totalCost)}
-                      </TableCell>
+                      {!isCompact && (
+                        <TableCell className="text-right text-orange-400">
+                          {formatCurrency(item.totalCost)}
+                        </TableCell>
+                      )}
                       <TableCell
                         className={`text-right font-semibold ${getMarginColor(
                           item.marginPercent
@@ -480,36 +497,38 @@ export default function ProjectProfitability({
                           {item.marginPercent.toFixed(1)}%
                         </Badge>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <Badge
-                            variant="outline"
-                            className={
-                              item.isPaid
-                                ? 'bg-green-500/20 text-green-400'
+                      {!isCompact && (
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <Badge
+                              variant="outline"
+                              className={
+                                item.isPaid
+                                  ? 'bg-green-500/20 text-green-400'
+                                  : item.isOverdue
+                                  ? 'bg-red-500/20 text-red-400'
+                                  : 'bg-yellow-500/20 text-yellow-400'
+                              }
+                            >
+                              {item.isPaid
+                                ? '✓ Recebido'
                                 : item.isOverdue
-                                ? 'bg-red-500/20 text-red-400'
-                                : 'bg-yellow-500/20 text-yellow-400'
-                            }
-                          >
-                            {item.isPaid
-                              ? '✓ Recebido'
-                              : item.isOverdue
-                              ? '⚠ Atrasado'
-                              : '⏱ Pendente'}
-                          </Badge>
-                          <Badge
-                            variant="outline"
-                            className={
-                              item.isFreelancerPaid
-                                ? 'bg-blue-500/20 text-blue-400'
-                                : 'bg-orange-500/20 text-orange-400'
-                            }
-                          >
-                            {item.isFreelancerPaid ? '✓ Pago' : '⏱ A Pagar'}
-                          </Badge>
-                        </div>
-                      </TableCell>
+                                ? '⚠ Atrasado'
+                                : '⏱ Pendente'}
+                            </Badge>
+                            <Badge
+                              variant="outline"
+                              className={
+                                item.isFreelancerPaid
+                                  ? 'bg-blue-500/20 text-blue-400'
+                                  : 'bg-orange-500/20 text-orange-400'
+                              }
+                            >
+                              {item.isFreelancerPaid ? '✓ Pago' : '⏱ A Pagar'}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                      )}
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -582,5 +601,6 @@ export default function ProjectProfitability({
         </CardContent>
       </Card>
     </div>
+    </TooltipProvider>
   );
 }
