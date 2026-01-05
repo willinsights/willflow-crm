@@ -290,7 +290,12 @@ export default function CashFlowForecast({ projects, users = [] }: CashFlowForec
                   border: '1px solid #333',
                   borderRadius: '8px',
                 }}
-                formatter={(value: number | undefined) => value ? formatCurrency(value) : formatCurrency(0)}
+                formatter={(value) => {
+                  if (typeof value === 'number') {
+                    return formatCurrency(value);
+                  }
+                  return formatCurrency(0);
+                }}
               />
               <Legend />
               <ReferenceLine y={0} stroke="#666" strokeDasharray="3 3" />
