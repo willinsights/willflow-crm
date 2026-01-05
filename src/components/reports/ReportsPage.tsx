@@ -360,7 +360,7 @@ export default function ReportsPage({ embedded = false }: ReportsPageProps) {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number | undefined) => [value ? formatCurrency(value) : '0', 'Receita']}
+                    formatter={(value: number | undefined) => [value ? formatCurrency(value) : formatCurrency(0), 'Receita']}
                     labelStyle={{ color: '#fff' }}
                     contentStyle={{
                       backgroundColor: 'rgba(0,0,0,0.8)',
@@ -399,7 +399,7 @@ export default function ReportsPage({ embedded = false }: ReportsPageProps) {
                   />
                   <Tooltip
                     formatter={(value: number | undefined, name?: string) => [
-                      value ? formatCurrency(value) : '0',
+                      value ? formatCurrency(value) : formatCurrency(0),
                       name === 'revenue' ? 'Receita' : name === 'costs' ? 'Custos' : 'Margem'
                     ]}
                     labelStyle={{ color: '#fff' }}
@@ -457,7 +457,7 @@ export default function ReportsPage({ embedded = false }: ReportsPageProps) {
                   />
                   <Tooltip
                     formatter={(value: number | undefined, name?: string) => [
-                      value ? formatCurrency(value) : '0',
+                      value ? formatCurrency(value) : formatCurrency(0),
                       name === 'captacao' ? 'Captação' : name === 'edicao' ? 'Edição' : 'Total'
                     ]}
                     labelStyle={{ color: '#fff' }}
