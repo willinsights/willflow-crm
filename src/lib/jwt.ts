@@ -5,9 +5,21 @@
 
 import crypto from 'crypto';
 
-// JWT Secret - In production, this should be from environment variable
-const JWT_SECRET = process.env.JWT_SECRET || 'willflow-crm-secret-change-in-production';
-const TOKEN_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+const TOKEN_EXPIRY = 24 * 60 * 60; // 24 hours in seconds
+
+/**
+ * Get JWT secret with runtime validation
+ */
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  
+  if (!secret && process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable must be set in production!');
+  }
+  
+  // Use a fallback only in development/test
+  return secret || 'dev-secret-change-in-production';
+}
 
 export interface JWTPayload {
   userId: string;
@@ -43,7 +55,8 @@ function base64UrlDecode(str: string): string {
  * Generate JWT token
  */
 export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
-  const now = Date.now();
+  const SECRET = getJwtSecret();
+  const now = Math.floor(Date.now() / 1000); // JWT uses seconds since epoch
   const fullPayload: JWTPayload = {
     ...payload,
     iat: now,
@@ -59,7 +72,7 @@ export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string 
   const encodedPayload = base64UrlEncode(JSON.stringify(fullPayload));
 
   const signature = crypto
-    .createHmac('sha256', JWT_SECRET)
+    .createHmac('sha256', SECRET)
     .update(`${encodedHeader}.${encodedPayload}`)
     .digest('base64')
     .replace(/\+/g, '-')
@@ -74,6 +87,7 @@ export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string 
  */
 export function verifyToken(token: string): JWTPayload | null {
   try {
+    const SECRET = getJwtSecret();
     const parts = token.split('.');
     if (parts.length !== 3) {
       return null;
@@ -83,7 +97,7 @@ export function verifyToken(token: string): JWTPayload | null {
 
     // Verify signature
     const expectedSignature = crypto
-      .createHmac('sha256', JWT_SECRET)
+      .createHmac('sha256', SECRET)
       .update(`${encodedHeader}.${encodedPayload}`)
       .digest('base64')
       .replace(/\+/g, '-')
@@ -97,8 +111,9 @@ export function verifyToken(token: string): JWTPayload | null {
     // Decode payload
     const payload: JWTPayload = JSON.parse(base64UrlDecode(encodedPayload));
 
-    // Check expiration
-    if (payload.exp < Date.now()) {
+    // Check expiration (payload.exp is in seconds)
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    if (payload.exp < nowInSeconds) {
       return null;
     }
 
@@ -118,9 +133,10 @@ export function refreshTokenIfNeeded(token: string): string | null {
     return null;
   }
 
-  // Refresh if less than 1 hour remaining
-  const oneHour = 60 * 60 * 1000;
-  if (payload.exp - Date.now() < oneHour) {
+  // Refresh if less than 1 hour remaining (both in seconds now)
+  const oneHour = 60 * 60;
+  const nowInSeconds = Math.floor(Date.now() / 1000);
+  if (payload.exp - nowInSeconds < oneHour) {
     return generateToken({
       userId: payload.userId,
       email: payload.email,

@@ -28,6 +28,8 @@ jobs:
         cache: 'npm'
     
     - name: Install dependencies
+      # Note: Using npm install because repository uses bun.lock instead of package-lock.json
+      # npm ci requires package-lock.json. Consider migrating to package-lock.json for CI
       run: npm install
     
     - name: Generate Prisma Client
@@ -46,6 +48,8 @@ jobs:
         NODE_ENV: production
     
     - name: Run tests
+      # Running only unit tests - API tests require running server
+      # Test pattern matches component tests and utility tests
       run: npx vitest run src/tests/components/ src/tests/utils.test.ts
       env:
         DATABASE_URL: postgresql://test:test@localhost:5432/test
