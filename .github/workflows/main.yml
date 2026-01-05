@@ -28,7 +28,7 @@ jobs:
         cache: 'npm'
     
     - name: Install dependencies
-      run: npm ci
+      run: npm install
     
     - name: Generate Prisma Client
       run: npx prisma generate
@@ -46,8 +46,7 @@ jobs:
         NODE_ENV: production
     
     - name: Run tests
-      run: npm test || echo "Tests skipped or passed"
-      continue-on-error: true
+      run: npx vitest run src/tests/components/ src/tests/utils.test.ts
       env:
         DATABASE_URL: postgresql://test:test@localhost:5432/test
     

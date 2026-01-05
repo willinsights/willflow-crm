@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+
 export default function GlobalError({
   error,
   reset,
@@ -7,6 +9,16 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    // Log global error with digest for tracking
+    console.error('Global error boundary caught:', {
+      message: error.message,
+      digest: error.digest,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+    });
+  }, [error]);
+
   return (
     <html lang="pt-PT">
       <body>
@@ -17,6 +29,11 @@ export default function GlobalError({
             <p className="text-muted-foreground">
               Ocorreu um erro inesperado. Por favor, recarregue a página.
             </p>
+            {error.digest && (
+              <p className="text-xs text-muted-foreground mt-2 font-mono">
+                ID de Referência: {error.digest}
+              </p>
+            )}
             <button
               onClick={() => reset()}
               className="inline-block px-6 py-3 mt-4 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-all"
