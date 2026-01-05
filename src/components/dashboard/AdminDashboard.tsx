@@ -314,7 +314,7 @@ export default function AdminDashboard({
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gradient mb-2">Dashboard Principal</h1>
             <p className="text-sm md:text-base text-muted-foreground">
-              Visao Rapida • Acoes Rapidas • Alertas • Evolucao Financeira • Atividade Recente
+              Visão Rápida • Ações Rápidas • Alertas • Evolução Financeira • Atividade Recente
             </p>
           </div>
 
@@ -333,7 +333,7 @@ export default function AdminDashboard({
         <div>
           <h2 className="text-lg md:text-xl font-semibold mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-purple-400" />
-            Visao Rapida
+            Visão Rápida
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
           {isLoading ? (
@@ -382,7 +382,7 @@ export default function AdminDashboard({
           <CardHeader className="pb-3">
             <CardTitle className="text-base md:text-lg flex items-center gap-2">
               <Activity className="w-5 h-5 text-purple-400" />
-              Acoes Rapidas
+              Ações Rápidas
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -425,12 +425,12 @@ export default function AdminDashboard({
 
         {/* Secao 3: Atencao Hoje + Atividade Recente */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6" data-section="attention">
-          {/* ⚠️ Atencao Hoje */}
+          {/* ⚠️ Atenção Hoje */}
           <Card className="glass-card">
             <CardHeader className="pb-3">
               <CardTitle className="text-base md:text-lg flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-orange-400" />
-                ⚠️ Atencao Hoje
+                ⚠️ Atenção Hoje
                 {urgentItems.length > 0 && (
                   <Badge variant="destructive" className="ml-2">{urgentItems.length}</Badge>
                 )}
@@ -529,7 +529,7 @@ export default function AdminDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-purple-400" />
-              Evolucao Financeira (Ultimos 6 Meses)
+              Evolução Financeira (Últimos 6 Meses)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -538,8 +538,8 @@ export default function AdminDashboard({
             ) : revenueData.every(m => m.receita === 0 && m.custos === 0) ? (
               <div className="h-[300px] flex flex-col items-center justify-center text-center text-muted-foreground">
                 <BarChart3 className="w-12 h-12 mb-3 opacity-30" />
-                <p className="text-sm">Nenhum dado financeiro disponivel</p>
-                <p className="text-xs mt-1">Adicione projetos com valores financeiros para ver a evolucao</p>
+                <p className="text-sm">Nenhum dado financeiro disponível</p>
+                <p className="text-xs mt-1">Adicione projetos com valores financeiros para ver a evolução</p>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
