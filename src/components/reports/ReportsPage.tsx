@@ -400,7 +400,7 @@ export default function ReportsPage({ embedded = false }: ReportsPageProps) {
                   <Tooltip
                     formatter={(value: number | undefined, name: string | undefined) => [
                       value !== undefined ? formatCurrency(value) : '',
-                      name === 'revenue' ? 'Receita' : name === 'costs' ? 'Custos' : 'Margem'
+                      name === 'revenue' ? 'Receita' : name === 'costs' ? 'Custos' : name === 'margin' ? 'Margem' : ''
                     ]}
                     labelStyle={{ color: '#fff' }}
                     contentStyle={{
@@ -458,7 +458,7 @@ export default function ReportsPage({ embedded = false }: ReportsPageProps) {
                   <Tooltip
                     formatter={(value: number | undefined, name: string | undefined) => [
                       value !== undefined ? formatCurrency(value) : '',
-                      name === 'captacao' ? 'Captação' : name === 'edicao' ? 'Edição' : 'Total'
+                      name === 'captacao' ? 'Captação' : name === 'edicao' ? 'Edição' : name === 'total' ? 'Total' : ''
                     ]}
                     labelStyle={{ color: '#fff' }}
                     contentStyle={{
