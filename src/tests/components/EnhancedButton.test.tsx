@@ -10,7 +10,7 @@ describe('EnhancedButton', () => {
 
   it('deve mostrar loading spinner quando loading=true', () => {
     render(<EnhancedButton loading={true}>Salvar</EnhancedButton>);
-    expect(screen.getByText('Carregando...')).toBeInTheDocument();
+    expect(screen.getByText('A carregar...')).toBeInTheDocument();
   });
 
   it('deve mostrar texto customizado de loading', () => {

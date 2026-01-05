@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyPassword } from '@/lib/auth-utils';
+import { generateToken } from '@/lib/jwt';
 
 // Helper to log audit
 async function logAudit(
@@ -97,17 +98,37 @@ export async function POST(request: NextRequest) {
     // Registrar login bem sucedido
     await logAudit(user.id, 'login', true, null, request);
 
+    // Generate JWT token
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
     // Remover password do retorno
     const { password: _, ...userWithoutPassword } = user;
 
-    return NextResponse.json({
+    // Create response with token in cookie
+    const response = NextResponse.json({
       success: true,
       data: {
         user: userWithoutPassword,
+        token,
         mustChangePassword: user.mustChangePassword,
       },
       message: 'Login realizado com sucesso',
     });
+
+    // Set HTTP-only cookie for additional security
+    response.cookies.set('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60, // 24 hours
+      path: '/',
+    });
+
+    return response;
 
   } catch (error) {
     console.error('Erro no login:', error);
