@@ -21,12 +21,19 @@ import { Client } from '@/lib/types';
 interface CreateClientModalProps {
   client?: Client | null;
   onClose?: () => void;
+  children?: React.ReactNode;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export default function CreateClientModal({ client, onClose }: CreateClientModalProps) {
+export default function CreateClientModal({ client, onClose, children, isOpen, onOpenChange }: CreateClientModalProps) {
   const { createClient, updateClient } = useAppStore();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Support both controlled and uncontrolled modes
+  const open = isOpen !== undefined ? isOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
 
   const [formData, setFormData] = useState({
     name: '',
@@ -91,18 +98,24 @@ export default function CreateClientModal({ client, onClose }: CreateClientModal
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {client ? (
-          <Button variant="ghost" size="sm" className="w-full justify-start">
-            Editar
-          </Button>
-        ) : (
-          <Button className="gradient-purple hover:gradient-purple-hover text-white shadow-glow-sm">
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Cliente
-          </Button>
-        )}
-      </DialogTrigger>
+      {children ? (
+        <DialogTrigger asChild>
+          {children}
+        </DialogTrigger>
+      ) : (
+        <DialogTrigger asChild>
+          {client ? (
+            <Button variant="ghost" size="sm" className="w-full justify-start">
+              Editar
+            </Button>
+          ) : (
+            <Button className="gradient-purple hover:gradient-purple-hover text-white shadow-glow-sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Cliente
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="glass-strong border border-white/20 max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-gradient">
