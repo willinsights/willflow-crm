@@ -48,12 +48,32 @@ bunx prisma generate
 # Sincronizar schema
 bunx prisma db push
 
-# (Opcional) Popular dados iniciais
+# Popular com dados de teste completos
+export SEED_WITH_SAMPLE_DATA=true
 bunx prisma db seed
 
 # Iniciar servidor de desenvolvimento
 bun run dev
 ```
+
+## 🧪 Dados de Teste
+
+O sistema inclui **dados de teste abrangentes** para permitir testes eficazes:
+
+- **8 projetos** com diferentes status (planejamento, captação, edição, concluído)
+- **7 usuários** com perfis variados (admin, freelancers, editores, viewer)
+- **5 clientes** (premium, regulares, corporativos)
+- **Datas dinâmicas** para mês atual e próximos meses
+- **Notificações**, comentários, subtasks, arquivos e muito mais
+
+Para ativar os dados de teste:
+
+```bash
+export SEED_WITH_SAMPLE_DATA=true
+npm run db:seed
+```
+
+📖 **Ver documentação completa**: [SEED_DATA_GUIDE.md](./SEED_DATA_GUIDE.md)
 
 ## 🌐 Deploy
 
@@ -67,6 +87,7 @@ bun run dev
 
 ## 📚 Documentação
 
+- `SEED_DATA_GUIDE.md` - Guia completo de dados de teste
 - `DATABASE_SETUP.md` - Configuração do PostgreSQL
 - `RAILWAY_DEPLOY_GUIDE.md` - Deploy no Railway
 - `GITHUB_SETUP.md` - Setup do repositório
