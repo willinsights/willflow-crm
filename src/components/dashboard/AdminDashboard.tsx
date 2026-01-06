@@ -92,12 +92,12 @@ export default function AdminDashboard({
     }
   }, [projects]);
 
-  // Calculate monthly revenue trend
+  // Calculate monthly revenue trend (quarterly - 3 months)
   const revenueData = useMemo(() => {
     const months = [];
     const now = new Date();
 
-    for (let i = 5; i >= 0; i--) {
+    for (let i = 2; i >= 0; i--) {
       const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthName = month.toLocaleDateString('pt-PT', { month: 'short' });
 
@@ -121,7 +121,51 @@ export default function AdminDashboard({
     return months;
   }, [projects]);
 
-  // Urgent projects: deadlines this week + pending payments
+  // Calculate previous month KPIs for comparison
+  const previousMonthKPIs = useMemo(() => {
+    const now = new Date();
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+    const lastMonthProjects = projects.filter(p => {
+      const createdDate = new Date(p.createdAt);
+      return createdDate >= lastMonth && createdDate <= lastMonthEnd;
+    });
+
+    const totalToReceive = lastMonthProjects
+      .filter(p => p.paymentStatus !== 'recebido')
+      .reduce((sum, p) => sum + p.clientPrice, 0);
+
+    const totalToPay = lastMonthProjects
+      .filter(p => p.freelancerPaymentStatus !== 'pago')
+      .reduce((sum, p) => sum + p.captationCost + p.editionCost, 0);
+
+    const totalReceived = lastMonthProjects
+      .filter(p => p.paymentStatus === 'recebido')
+      .reduce((sum, p) => sum + p.clientPrice, 0);
+
+    const totalMargin = lastMonthProjects.reduce(
+      (sum, p) => sum + p.margin,
+      0
+    );
+
+    return { totalToReceive, totalToPay, totalMargin, totalReceived };
+  }, [projects]);
+
+  // Calculate percentage changes
+  const calculatePercentageChange = (current: number, previous: number): { value: string; isUp: boolean } => {
+    if (previous === 0) {
+      return { value: current > 0 ? 'Novo' : '0%', isUp: current > 0 };
+    }
+    const change = ((current - previous) / previous) * 100;
+    const isUp = change >= 0;
+    return {
+      value: `${isUp ? '+' : ''}${change.toFixed(1)}%`,
+      isUp
+    };
+  };
+
+  // Urgent projects: specific filters for requirements
   const urgentItems = useMemo(() => {
     const now = new Date();
     const items: Array<{
@@ -133,67 +177,79 @@ export default function AdminDashboard({
       icon: any;
       color: string;
       bgColor: string;
+      projectId?: string;
     }> = [];
 
-    // Projects with deadline this week
-    projects.forEach(p => {
-      if (!p.clientDueDate) return;
-      const due = new Date(p.clientDueDate);
+    // 3 Projects with deadline this week (clickable)
+    const projectsThisWeek = projects
+      .filter(p => {
+        if (!p.clientDueDate || p.phase === 'finalizados') return false;
+        const due = new Date(p.clientDueDate);
+        const days = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        return days > 0 && days <= 7;
+      })
+      .sort((a, b) => {
+        const daysA = Math.ceil((new Date(a.clientDueDate!).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const daysB = Math.ceil((new Date(b.clientDueDate!).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        return daysA - daysB;
+      })
+      .slice(0, 3);
+
+    projectsThisWeek.forEach(p => {
+      const due = new Date(p.clientDueDate!);
       const days = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      if (days > 0 && days <= 7 && p.phase !== 'finalizados') {
-        items.push({
-          type: 'deadline',
-          title: p.title,
-          subtitle: days === 1 ? 'Entrega amanha' : `Entrega em ${days} dias`,
-          daysLeft: days,
-          icon: Clock,
-          color: days <= 2 ? 'text-red-400' : days <= 4 ? 'text-orange-400' : 'text-yellow-400',
-          bgColor: days <= 2 ? 'bg-red-500/10' : days <= 4 ? 'bg-orange-500/10' : 'bg-yellow-500/10',
-        });
-      }
+      items.push({
+        type: 'deadline',
+        title: p.title,
+        subtitle: days === 1 ? 'Entrega amanhã' : `Entrega em ${days} dias`,
+        daysLeft: days,
+        icon: Clock,
+        color: days <= 2 ? 'text-red-400' : days <= 4 ? 'text-orange-400' : 'text-yellow-400',
+        bgColor: days <= 2 ? 'bg-red-500/10' : days <= 4 ? 'bg-orange-500/10' : 'bg-yellow-500/10',
+        projectId: p.id,
+      });
     });
 
-    // Client payments pending (due in 3 days)
-    projects.forEach(p => {
-      if (p.paymentStatus !== 'recebido' && p.clientPrice > 0) {
-        items.push({
-          type: 'payment_client',
-          title: `Pagamento pendente: ${p.client?.name || 'Cliente'}`,
-          subtitle: `${formatCurrency(p.clientPrice)} - ${p.title}`,
-          amount: p.clientPrice,
-          icon: CreditCard,
-          color: 'text-green-400',
-          bgColor: 'bg-green-500/10',
-        });
-      }
+    // 2 Most urgent pending payments (clickable)
+    const paymentsDueIn3Days = projects
+      .filter(p => p.paymentStatus !== 'recebido' && p.clientPrice > 0)
+      .slice(0, 2);
+
+    paymentsDueIn3Days.forEach(p => {
+      items.push({
+        type: 'payment_client',
+        title: `Pagamento pendente: ${p.client?.name || 'Cliente'}`,
+        subtitle: `${formatCurrency(p.clientPrice)} - ${p.title}`,
+        amount: p.clientPrice,
+        icon: CreditCard,
+        color: 'text-green-400',
+        bgColor: 'bg-green-500/10',
+        projectId: p.id,
+      });
     });
 
-    // Captacoes scheduled
-    projects.forEach(p => {
-      if (p.phase === 'captacao' && p.clientDueDate) {
-        const captDate = new Date(p.clientDueDate);
-        const days = Math.ceil((captDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        if (days >= 0 && days <= 3) {
-          items.push({
-            type: 'captacao',
-            title: p.title,
-            subtitle: days === 0 ? 'Captacao HOJE' : days === 1 ? 'Captacao amanha' : `Captacao em ${days} dias`,
-            daysLeft: days,
-            icon: Camera,
-            color: 'text-blue-400',
-            bgColor: 'bg-blue-500/10',
-          });
-        }
-      }
+    // 1 Captação scheduled for tomorrow (clickable)
+    const captacaoTomorrow = projects.find(p => {
+      if (p.phase !== 'captacao' || !p.clientDueDate) return false;
+      const captDate = new Date(p.clientDueDate);
+      const days = Math.ceil((captDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      return days === 1;
     });
 
-    // Sort by urgency
-    return items.sort((a, b) => {
-      if (a.daysLeft !== undefined && b.daysLeft !== undefined) {
-        return a.daysLeft - b.daysLeft;
-      }
-      return 0;
-    }).slice(0, 5);
+    if (captacaoTomorrow) {
+      items.push({
+        type: 'captacao',
+        title: captacaoTomorrow.title,
+        subtitle: 'Captação amanhã',
+        daysLeft: 1,
+        icon: Camera,
+        color: 'text-blue-400',
+        bgColor: 'bg-blue-500/10',
+        projectId: captacaoTomorrow.id,
+      });
+    }
+
+    return items;
   }, [projects, formatCurrency]);
 
   // Recent activity log (simulated based on project data)
@@ -206,6 +262,7 @@ export default function AdminDashboard({
       time: string;
       icon: any;
       color: string;
+      projectId: string;
     }> = [];
 
     // Get recent projects sorted by updatedAt
@@ -218,7 +275,7 @@ export default function AdminDashboard({
       const now = new Date();
       const diffHours = Math.floor((now.getTime() - updatedDate.getTime()) / (1000 * 60 * 60));
       const timeLabel = diffHours < 1 ? 'Agora' :
-                       diffHours < 24 ? `Ha ${diffHours}h` :
+                       diffHours < 24 ? `Há ${diffHours}h` :
                        diffHours < 48 ? 'Ontem' :
                        formatDate(updatedDate);
 
@@ -231,6 +288,7 @@ export default function AdminDashboard({
           time: timeLabel,
           icon: CheckCircle,
           color: 'text-green-400',
+          projectId: p.id,
         });
       } else if (p.paymentStatus === 'recebido') {
         activities.push({
@@ -241,16 +299,18 @@ export default function AdminDashboard({
           time: timeLabel,
           icon: Euro,
           color: 'text-green-400',
+          projectId: p.id,
         });
       } else if (p.phase === 'edicao') {
         activities.push({
           id: `${p.id}-editing`,
-          action: 'esta em edicao',
+          action: 'está em edição',
           target: p.title,
           user: users.find(u => u.id === p.responsavelEdicaoId)?.name || 'Editor',
           time: timeLabel,
           icon: Edit3,
           color: 'text-purple-400',
+          projectId: p.id,
         });
       }
     });
@@ -258,7 +318,7 @@ export default function AdminDashboard({
     return activities.slice(0, 5);
   }, [projects, users, formatCurrency, formatDate]);
 
-  // KPI Cards
+  // KPI Cards with real percentage calculations
   const kpiCards = [
     {
       title: 'Total a Receber',
@@ -266,8 +326,8 @@ export default function AdminDashboard({
       icon: Euro,
       color: 'text-green-400',
       bgColor: 'bg-green-500/10',
-      trend: '+15%',
-      trendUp: true,
+      trend: calculatePercentageChange(dashboardStats.financialKPIs.totalToReceive, previousMonthKPIs.totalToReceive).value,
+      trendUp: calculatePercentageChange(dashboardStats.financialKPIs.totalToReceive, previousMonthKPIs.totalToReceive).isUp,
       tooltip: 'Soma de todos os pagamentos pendentes de clientes',
     },
     {
@@ -276,8 +336,8 @@ export default function AdminDashboard({
       icon: AlertCircle,
       color: 'text-orange-400',
       bgColor: 'bg-orange-500/10',
-      trend: '-8%',
-      trendUp: false,
+      trend: calculatePercentageChange(dashboardStats.financialKPIs.totalToPay, previousMonthKPIs.totalToPay).value,
+      trendUp: calculatePercentageChange(dashboardStats.financialKPIs.totalToPay, previousMonthKPIs.totalToPay).isUp,
       tooltip: 'Soma de todos os pagamentos pendentes a freelancers',
     },
     {
@@ -286,9 +346,9 @@ export default function AdminDashboard({
       icon: TrendingUp,
       color: 'text-purple-400',
       bgColor: 'bg-purple-500/10',
-      trend: '+22%',
-      trendUp: true,
-      tooltip: 'Lucro total: Receita menos custos de captacao e edicao',
+      trend: calculatePercentageChange(dashboardStats.financialKPIs.totalMargin, previousMonthKPIs.totalMargin).value,
+      trendUp: calculatePercentageChange(dashboardStats.financialKPIs.totalMargin, previousMonthKPIs.totalMargin).isUp,
+      tooltip: 'Lucro total: Receita menos custos de captação e edição',
     },
     {
       title: 'Total Recebido',
@@ -296,9 +356,9 @@ export default function AdminDashboard({
       icon: CheckCircle,
       color: 'text-blue-400',
       bgColor: 'bg-blue-500/10',
-      trend: '+18%',
-      trendUp: true,
-      tooltip: 'Soma de todos os pagamentos ja recebidos de clientes',
+      trend: calculatePercentageChange(dashboardStats.financialKPIs.totalReceived, previousMonthKPIs.totalReceived).value,
+      trendUp: calculatePercentageChange(dashboardStats.financialKPIs.totalReceived, previousMonthKPIs.totalReceived).isUp,
+      tooltip: 'Soma de todos os pagamentos já recebidos de clientes',
     }
   ];
 
@@ -306,6 +366,8 @@ export default function AdminDashboard({
   const quickActions = [
     { label: 'Novo Projeto', icon: Plus, color: 'gradient-purple', action: 'create-project', description: 'Criar novo projeto audiovisual' },
     { label: 'Pagamentos Pendentes', icon: Wallet, color: 'bg-green-500/20 hover:bg-green-500/30 text-green-400', action: 'payments', description: 'Ver pagamentos a receber' },
+    { label: 'Ver Calendário', icon: CalendarDays, color: 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400', action: 'calendar', description: 'Visualizar agenda e prazos' },
+    { label: 'Ver Relatórios', icon: FileText, color: 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400', action: 'reports', description: 'Acessar relatórios financeiros' },
   ];
 
   return (
@@ -318,7 +380,7 @@ export default function AdminDashboard({
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gradient mb-2">Dashboard Principal</h1>
             <p className="text-sm md:text-base text-muted-foreground">
-              Visão Rápida • Ações Rápidas • Alertas • Evolução Financeira • Atividade Recente
+              Visão Rápida • Ações Rápidas • Projetos Urgentes • Evolução Financeira • Atividade Recente
             </p>
           </div>
 
@@ -420,7 +482,7 @@ export default function AdminDashboard({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {quickActions.map((action, index) => {
                 const Icon = action.icon;
                 return (
@@ -439,9 +501,15 @@ export default function AdminDashboard({
                           window.dispatchEvent(new CustomEvent('open-create-project'));
                         }
                       } else if (action.action === 'payments') {
-                        // Scroll to attention section or navigate to payments
-                        const attentionSection = document.querySelector('[data-section="attention"]');
-                        attentionSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        // Scroll to urgent projects section
+                        const urgentSection = document.querySelector('[data-section="urgent"]');
+                        urgentSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      } else if (action.action === 'calendar') {
+                        // Navigate to calendar page or scroll to deadline section
+                        router.push('/dashboard?view=calendar');
+                      } else if (action.action === 'reports') {
+                        // Navigate to reports page
+                        router.push('/reports');
                       }
                     }}
                   >
@@ -457,14 +525,14 @@ export default function AdminDashboard({
           </CardContent>
         </Card>
 
-        {/* Secao 3: Atencao Hoje + Atividade Recente */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6" data-section="attention">
-          {/* ⚠️ Atenção Hoje */}
+        {/* Secao 3: Projetos Urgentes + Atividade Recente */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6" data-section="urgent">
+          {/* 🚀 Projetos Urgentes */}
           <Card className="glass-card">
             <CardHeader className="pb-3">
               <CardTitle className="text-base md:text-lg flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-orange-400" />
-                ⚠️ Atenção Hoje
+                🚀 Projetos Urgentes
                 {urgentItems.length > 0 && (
                   <Badge variant="destructive" className="ml-2">{urgentItems.length}</Badge>
                 )}
@@ -489,7 +557,12 @@ export default function AdminDashboard({
                     return (
                       <div
                         key={index}
-                        className={`p-3 rounded-lg border border-white/10 ${item.bgColor} flex items-center gap-3`}
+                        className={`p-3 rounded-lg border border-white/10 ${item.bgColor} flex items-center gap-3 cursor-pointer hover:scale-[1.02] transition-transform`}
+                        onClick={() => {
+                          if (item.projectId) {
+                            router.push(`/projects/${item.projectId}`);
+                          }
+                        }}
                       >
                         <div className={`p-2 rounded-lg bg-white/5`}>
                           <Icon className={`w-4 h-4 ${item.color}`} />
@@ -536,7 +609,12 @@ export default function AdminDashboard({
                     return (
                       <div
                         key={activity.id}
-                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors"
+                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                        onClick={() => {
+                          if (activity.projectId) {
+                            router.push(`/projects/${activity.projectId}`);
+                          }
+                        }}
                       >
                         <div className="p-1.5 rounded-full bg-white/5 mt-0.5">
                           <Icon className={`w-3 h-3 ${activity.color}`} />
@@ -563,7 +641,7 @@ export default function AdminDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-purple-400" />
-              Evolução Financeira (Últimos 6 Meses)
+              Evolução Financeira (Trimestre Atual)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -598,26 +676,6 @@ export default function AdminDashboard({
             )}
           </CardContent>
         </Card>
-
-        {/* Secao 5: Stats Rapidas */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          <Card className="glass-card text-center p-4">
-            <div className="text-3xl font-bold text-purple-400">{dashboardStats.activeProjects}</div>
-            <p className="text-xs text-muted-foreground mt-1">Projetos Ativos</p>
-          </Card>
-          <Card className="glass-card text-center p-4">
-            <div className="text-3xl font-bold text-orange-400">{projectsByPhase.captacao.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">Em Captacao</p>
-          </Card>
-          <Card className="glass-card text-center p-4">
-            <div className="text-3xl font-bold text-yellow-400">{projectsByPhase.edicao.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">Em Edicao</p>
-          </Card>
-          <Card className="glass-card text-center p-4">
-            <div className="text-3xl font-bold text-green-400">{projectsByPhase.finalizados.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">Finalizados</p>
-          </Card>
-        </div>
       </div>
     </TooltipProvider>
   );
