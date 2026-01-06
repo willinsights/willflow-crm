@@ -155,7 +155,7 @@ export default function AdminDashboard({
   // Calculate percentage changes
   const calculatePercentageChange = (current: number, previous: number): { value: string; isUp: boolean } => {
     if (previous === 0) {
-      return { value: current > 0 ? '+100%' : '0%', isUp: current > 0 };
+      return { value: current > 0 ? 'Novo' : '0%', isUp: current > 0 };
     }
     const change = ((current - previous) / previous) * 100;
     const isUp = change >= 0;
@@ -210,7 +210,7 @@ export default function AdminDashboard({
       });
     });
 
-    // 2 Payments due in 3 days (clickable)
+    // 2 Most urgent pending payments (clickable)
     const paymentsDueIn3Days = projects
       .filter(p => p.paymentStatus !== 'recebido' && p.clientPrice > 0)
       .slice(0, 2);
