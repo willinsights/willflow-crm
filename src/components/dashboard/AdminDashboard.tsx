@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   TrendingUp,
   Euro,
@@ -26,9 +25,7 @@ import {
   CreditCard,
   Eye,
   Upload,
-  Briefcase,
-  LayoutGrid,
-  LayoutList
+  Briefcase
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -51,11 +48,11 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { useLocale } from '@/lib/LocaleContext';
-import { useView } from '@/lib/ViewContext';
 import { exportDashboardCSV } from '@/lib/export-utils';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { Project, Client, User, DashboardStats } from '@/lib/types';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import TaskDrawer from '@/components/projects/TaskDrawer';
 
 const COLORS = ['#9139e4', '#c084fc', '#f59e0b', '#14b8a6', '#ec4899', '#8b5cf6'];
 
@@ -69,6 +66,7 @@ interface AdminDashboardProps {
     edicao: Project[];
     finalizados: Project[];
   };
+  onViewChange?: (view: string) => void;
 }
 
 export default function AdminDashboard({
@@ -77,11 +75,11 @@ export default function AdminDashboard({
   users,
   dashboardStats,
   projectsByPhase,
+  onViewChange,
 }: AdminDashboardProps) {
   const { formatCurrency, formatDate } = useLocale();
-  const { viewMode, toggleViewMode, isCompact, isDetailed } = useView();
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   // Simulate loading state for initial render
   useEffect(() => {
@@ -385,33 +383,6 @@ export default function AdminDashboard({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* View Mode Toggle */}
-            <UITooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleViewMode}
-                  className="glass border-white/20 hover:bg-white/10 w-fit"
-                >
-                  {isCompact ? (
-                    <>
-                      <LayoutList className="h-4 w-4 mr-2 text-purple-400" />
-                      Vista Detalhada
-                    </>
-                  ) : (
-                    <>
-                      <LayoutGrid className="h-4 w-4 mr-2 text-green-400" />
-                      Vista Compacta
-                    </>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="glass-strong border-white/20">
-                <p>{isCompact ? 'Mostrar mais informações' : 'Mostrar menos informações'}</p>
-              </TooltipContent>
-            </UITooltip>
-
             {/* Export CSV */}
             <Button
               variant="outline"
@@ -493,7 +464,7 @@ export default function AdminDashboard({
                     onClick={() => {
                       if (action.action === 'create-project') {
                         // Trigger the create project modal
-                        const modalTrigger = document.querySelector('[data-state]') as HTMLButtonElement;
+                        const modalTrigger = document.querySelector('[data-create-project]') as HTMLButtonElement;
                         if (modalTrigger) {
                           modalTrigger.click();
                         } else {
@@ -501,15 +472,14 @@ export default function AdminDashboard({
                           window.dispatchEvent(new CustomEvent('open-create-project'));
                         }
                       } else if (action.action === 'payments') {
-                        // Scroll to urgent projects section
-                        const urgentSection = document.querySelector('[data-section="urgent"]');
-                        urgentSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        // Navigate to financeiro page
+                        window.dispatchEvent(new CustomEvent('navigate-to-view', { detail: { view: 'financeiro' } }));
                       } else if (action.action === 'calendar') {
-                        // Navigate to calendar page or scroll to deadline section
-                        router.push('/dashboard?view=calendar');
+                        // Navigate to calendar page
+                        window.dispatchEvent(new CustomEvent('navigate-to-view', { detail: { view: 'calendario' } }));
                       } else if (action.action === 'reports') {
                         // Navigate to reports page
-                        router.push('/reports');
+                        window.dispatchEvent(new CustomEvent('navigate-to-view', { detail: { view: 'relatorios' } }));
                       }
                     }}
                   >
@@ -560,7 +530,7 @@ export default function AdminDashboard({
                         className={`p-3 rounded-lg border border-white/10 ${item.bgColor} flex items-center gap-3 cursor-pointer hover:scale-[1.02] transition-transform`}
                         onClick={() => {
                           if (item.projectId) {
-                            router.push(`/projects/${item.projectId}`);
+                            setSelectedProjectId(item.projectId);
                           }
                         }}
                       >
@@ -609,12 +579,7 @@ export default function AdminDashboard({
                     return (
                       <div
                         key={activity.id}
-                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
-                        onClick={() => {
-                          if (activity.projectId) {
-                            router.push(`/projects/${activity.projectId}`);
-                          }
-                        }}
+                        className="flex items-start gap-3 p-2 rounded-lg"
                       >
                         <div className="p-1.5 rounded-full bg-white/5 mt-0.5">
                           <Icon className={`w-3 h-3 ${activity.color}`} />
@@ -677,6 +642,16 @@ export default function AdminDashboard({
           </CardContent>
         </Card>
       </div>
+
+      {/* Task Drawer - Opens when urgent project is clicked */}
+      <TaskDrawer
+        open={!!selectedProjectId}
+        taskId={selectedProjectId}
+        onClose={() => setSelectedProjectId(null)}
+        onTaskUpdate={(taskId, updates) => {
+          console.log('Project updated from urgent list:', taskId, updates);
+        }}
+      />
     </TooltipProvider>
   );
 }
