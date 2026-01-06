@@ -495,7 +495,10 @@ export default function AdminDashboard({
             </h2>
             
             {/* Date Filter */}
-            <Select value={dateFilter} onValueChange={(value: any) => setDateFilter(value)}>
+            <Select 
+              value={dateFilter} 
+              onValueChange={(value: 'current' | 'previous' | 'last3' | 'quarter') => setDateFilter(value)}
+            >
               <SelectTrigger className="w-[180px] glass border-white/20">
                 <SelectValue placeholder="Período" />
               </SelectTrigger>
@@ -568,14 +571,8 @@ export default function AdminDashboard({
                     className={`h-auto py-6 flex flex-col gap-3 ${action.color} ${action.color.includes('gradient') ? 'text-white shadow-glow-sm' : ''}`}
                     onClick={() => {
                       if (action.action === 'create-project') {
-                        // Trigger the create project modal
-                        const modalTrigger = document.querySelector('[data-create-project]') as HTMLButtonElement;
-                        if (modalTrigger) {
-                          modalTrigger.click();
-                        } else {
-                          // Fallback: dispatch custom event
-                          window.dispatchEvent(new CustomEvent('open-create-project'));
-                        }
+                        // Dispatch custom event to trigger create project modal
+                        window.dispatchEvent(new CustomEvent('open-create-project'));
                       } else if (action.action === 'payments') {
                         // Navigate to financeiro page
                         window.dispatchEvent(new CustomEvent('navigate-to-view', { detail: { view: 'financeiro' } }));
