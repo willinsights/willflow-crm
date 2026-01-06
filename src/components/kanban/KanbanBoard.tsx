@@ -116,7 +116,7 @@ const FIXED_LAST_COLUMNS: Record<string, string> = {
 export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
   const { formatCurrency } = useLocale();
   const { toast } = useToast();
-  const { isCompact } = useView();
+  const { isCompact, toggleViewMode } = useView();
   const {
     projectsByPhase,
     filteredProjects,
@@ -725,6 +725,35 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
           <Breadcrumbs items={[{ label: 'Projetos' }, { label: phaseLabels[phase] }]} />
 
           <div className="flex items-center gap-2">
+            {/* Vista Detalhada button - Only for captacao and edicao */}
+            {(phase === 'captacao' || phase === 'edicao') && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleViewMode}
+                    className="glass border-white/20 hover:bg-white/10"
+                  >
+                    {isCompact ? (
+                      <>
+                        <LayoutList className="h-4 w-4 mr-2 text-purple-400" />
+                        Vista Detalhada
+                      </>
+                    ) : (
+                      <>
+                        <LayoutGrid className="h-4 w-4 mr-2 text-green-400" />
+                        Vista Compacta
+                      </>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="glass-strong border-white/20">
+                  <p>{isCompact ? 'Mostrar mais informações' : 'Mostrar menos informações'}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+
             {/* Show hidden columns button */}
             {hiddenColumns.length > 0 && (
               <DropdownMenu>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import DashboardRouter from '@/components/dashboard/DashboardRouter';
 import OnboardingModal, { useOnboarding } from '@/components/onboarding/OnboardingModal';
@@ -22,6 +22,20 @@ export default function Home() {
   const [activeView, setActiveView] = useState<string>('dashboard');
   const { isAuthenticated, isLoading, login, logout } = useAuth();
   const { showOnboarding, completeOnboarding } = useOnboarding();
+
+  // Listen for custom navigation events from dashboard
+  useEffect(() => {
+    const handleNavigate = (event: CustomEvent<{ view: string }>) => {
+      if (event.detail?.view) {
+        setActiveView(event.detail.view);
+      }
+    };
+
+    window.addEventListener('navigate-to-view', handleNavigate as EventListener);
+    return () => {
+      window.removeEventListener('navigate-to-view', handleNavigate as EventListener);
+    };
+  }, []);
 
   // Show loading state
   if (isLoading) {

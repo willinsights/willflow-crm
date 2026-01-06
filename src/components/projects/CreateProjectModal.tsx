@@ -117,6 +117,18 @@ export default function CreateProjectModal({
     loadCategories();
   }, []);
 
+  // Listen for custom event to open modal
+  useEffect(() => {
+    const handleOpenModal = () => {
+      setOpen(true);
+    };
+
+    window.addEventListener('open-create-project', handleOpenModal);
+    return () => {
+      window.removeEventListener('open-create-project', handleOpenModal);
+    };
+  }, [setOpen]);
+
   const loadCategories = async () => {
     setLoadingCategories(true);
     try {

@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   TrendingUp,
   Euro,
@@ -26,14 +25,19 @@ import {
   CreditCard,
   Eye,
   Upload,
-  Briefcase,
-  LayoutGrid,
-  LayoutList
+  Briefcase
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { CardSkeleton, ListItemSkeleton, TimelineItemSkeleton, ChartSkeleton } from '@/components/ui/skeleton';
 import {
   BarChart,
@@ -51,11 +55,11 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { useLocale } from '@/lib/LocaleContext';
-import { useView } from '@/lib/ViewContext';
 import { exportDashboardCSV } from '@/lib/export-utils';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { Project, Client, User, DashboardStats } from '@/lib/types';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import TaskDrawer from '@/components/projects/TaskDrawer';
 
 const COLORS = ['#9139e4', '#c084fc', '#f59e0b', '#14b8a6', '#ec4899', '#8b5cf6'];
 
@@ -69,6 +73,7 @@ interface AdminDashboardProps {
     edicao: Project[];
     finalizados: Project[];
   };
+  onViewChange?: (view: string) => void;
 }
 
 export default function AdminDashboard({
@@ -77,11 +82,12 @@ export default function AdminDashboard({
   users,
   dashboardStats,
   projectsByPhase,
+  onViewChange,
 }: AdminDashboardProps) {
   const { formatCurrency, formatDate } = useLocale();
-  const { viewMode, toggleViewMode, isCompact, isDetailed } = useView();
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [dateFilter, setDateFilter] = useState<'current' | 'previous' | 'last3' | 'quarter'>('current');
 
   // Simulate loading state for initial render
   useEffect(() => {
@@ -92,12 +98,94 @@ export default function AdminDashboard({
     }
   }, [projects]);
 
-  // Calculate monthly revenue trend (quarterly - 3 months)
+  // Helper function to get date range based on filter
+  const getDateRange = (filter: 'current' | 'previous' | 'last3' | 'quarter') => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    switch (filter) {
+      case 'current':
+        // Current month (from 1st to today)
+        return {
+          start: new Date(currentYear, currentMonth, 1),
+          end: now,
+        };
+      
+      case 'previous':
+        // Previous month (full month)
+        return {
+          start: new Date(currentYear, currentMonth - 1, 1),
+          end: new Date(currentYear, currentMonth, 0),
+        };
+      
+      case 'last3':
+        // Last 3 months (including current)
+        return {
+          start: new Date(currentYear, currentMonth - 2, 1),
+          end: now,
+        };
+      
+      case 'quarter':
+        // Current quarter
+        const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
+        return {
+          start: new Date(currentYear, quarterStartMonth, 1),
+          end: now,
+        };
+      
+      default:
+        return {
+          start: new Date(currentYear, currentMonth, 1),
+          end: now,
+        };
+    }
+  };
+
+  // Calculate KPIs based on selected date filter
+  const currentKPIs = useMemo(() => {
+    const { start, end } = getDateRange(dateFilter);
+
+    const filteredProjects = projects.filter(p => {
+      const createdDate = new Date(p.createdAt);
+      return createdDate >= start && createdDate <= end;
+    });
+
+    const totalToReceive = filteredProjects
+      .filter(p => p.paymentStatus !== 'recebido')
+      .reduce((sum, p) => sum + p.clientPrice, 0);
+
+    const totalToPay = filteredProjects
+      .filter(p => p.freelancerPaymentStatus !== 'pago')
+      .reduce((sum, p) => sum + p.captationCost + p.editionCost, 0);
+
+    const totalReceived = filteredProjects
+      .filter(p => p.paymentStatus === 'recebido')
+      .reduce((sum, p) => sum + p.clientPrice, 0);
+
+    const totalMargin = filteredProjects.reduce(
+      (sum, p) => sum + p.margin,
+      0
+    );
+
+    return { totalToReceive, totalToPay, totalMargin, totalReceived };
+  }, [projects, dateFilter]);
+
+  // Calculate monthly revenue trend based on filter
   const revenueData = useMemo(() => {
     const months = [];
     const now = new Date();
 
-    for (let i = 2; i >= 0; i--) {
+    let numMonths = 3; // Default for quarter
+    if (dateFilter === 'current' || dateFilter === 'previous') {
+      numMonths = 1;
+    } else if (dateFilter === 'last3') {
+      numMonths = 3;
+    } else if (dateFilter === 'quarter') {
+      numMonths = 3;
+    }
+
+    for (let i = numMonths - 1; i >= 0; i--) {
       const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthName = month.toLocaleDateString('pt-PT', { month: 'short' });
 
@@ -119,7 +207,7 @@ export default function AdminDashboard({
     }
 
     return months;
-  }, [projects]);
+  }, [projects, dateFilter]);
 
   // Calculate previous month KPIs for comparison
   const previousMonthKPIs = useMemo(() => {
@@ -322,42 +410,42 @@ export default function AdminDashboard({
   const kpiCards = [
     {
       title: 'Total a Receber',
-      value: formatCurrency(dashboardStats.financialKPIs.totalToReceive),
+      value: formatCurrency(currentKPIs.totalToReceive),
       icon: Euro,
       color: 'text-green-400',
       bgColor: 'bg-green-500/10',
-      trend: calculatePercentageChange(dashboardStats.financialKPIs.totalToReceive, previousMonthKPIs.totalToReceive).value,
-      trendUp: calculatePercentageChange(dashboardStats.financialKPIs.totalToReceive, previousMonthKPIs.totalToReceive).isUp,
+      trend: calculatePercentageChange(currentKPIs.totalToReceive, previousMonthKPIs.totalToReceive).value,
+      trendUp: calculatePercentageChange(currentKPIs.totalToReceive, previousMonthKPIs.totalToReceive).isUp,
       tooltip: 'Soma de todos os pagamentos pendentes de clientes',
     },
     {
       title: 'Total a Pagar',
-      value: formatCurrency(dashboardStats.financialKPIs.totalToPay),
+      value: formatCurrency(currentKPIs.totalToPay),
       icon: AlertCircle,
       color: 'text-orange-400',
       bgColor: 'bg-orange-500/10',
-      trend: calculatePercentageChange(dashboardStats.financialKPIs.totalToPay, previousMonthKPIs.totalToPay).value,
-      trendUp: calculatePercentageChange(dashboardStats.financialKPIs.totalToPay, previousMonthKPIs.totalToPay).isUp,
+      trend: calculatePercentageChange(currentKPIs.totalToPay, previousMonthKPIs.totalToPay).value,
+      trendUp: calculatePercentageChange(currentKPIs.totalToPay, previousMonthKPIs.totalToPay).isUp,
       tooltip: 'Soma de todos os pagamentos pendentes a freelancers',
     },
     {
       title: 'Margem Total',
-      value: formatCurrency(dashboardStats.financialKPIs.totalMargin),
+      value: formatCurrency(currentKPIs.totalMargin),
       icon: TrendingUp,
       color: 'text-purple-400',
       bgColor: 'bg-purple-500/10',
-      trend: calculatePercentageChange(dashboardStats.financialKPIs.totalMargin, previousMonthKPIs.totalMargin).value,
-      trendUp: calculatePercentageChange(dashboardStats.financialKPIs.totalMargin, previousMonthKPIs.totalMargin).isUp,
+      trend: calculatePercentageChange(currentKPIs.totalMargin, previousMonthKPIs.totalMargin).value,
+      trendUp: calculatePercentageChange(currentKPIs.totalMargin, previousMonthKPIs.totalMargin).isUp,
       tooltip: 'Lucro total: Receita menos custos de captação e edição',
     },
     {
       title: 'Total Recebido',
-      value: formatCurrency(dashboardStats.financialKPIs.totalReceived),
+      value: formatCurrency(currentKPIs.totalReceived),
       icon: CheckCircle,
       color: 'text-blue-400',
       bgColor: 'bg-blue-500/10',
-      trend: calculatePercentageChange(dashboardStats.financialKPIs.totalReceived, previousMonthKPIs.totalReceived).value,
-      trendUp: calculatePercentageChange(dashboardStats.financialKPIs.totalReceived, previousMonthKPIs.totalReceived).isUp,
+      trend: calculatePercentageChange(currentKPIs.totalReceived, previousMonthKPIs.totalReceived).value,
+      trendUp: calculatePercentageChange(currentKPIs.totalReceived, previousMonthKPIs.totalReceived).isUp,
       tooltip: 'Soma de todos os pagamentos já recebidos de clientes',
     }
   ];
@@ -385,33 +473,6 @@ export default function AdminDashboard({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* View Mode Toggle */}
-            <UITooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleViewMode}
-                  className="glass border-white/20 hover:bg-white/10 w-fit"
-                >
-                  {isCompact ? (
-                    <>
-                      <LayoutList className="h-4 w-4 mr-2 text-purple-400" />
-                      Vista Detalhada
-                    </>
-                  ) : (
-                    <>
-                      <LayoutGrid className="h-4 w-4 mr-2 text-green-400" />
-                      Vista Compacta
-                    </>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="glass-strong border-white/20">
-                <p>{isCompact ? 'Mostrar mais informações' : 'Mostrar menos informações'}</p>
-              </TooltipContent>
-            </UITooltip>
-
             {/* Export CSV */}
             <Button
               variant="outline"
@@ -427,10 +488,28 @@ export default function AdminDashboard({
 
         {/* Secao 1: Visao Rapida - KPI Cards with Tooltips */}
         <div>
-          <h2 className="text-lg md:text-xl font-semibold mb-4 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-purple-400" />
-            Visão Rápida
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg md:text-xl font-semibold flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-purple-400" />
+              Visão Rápida
+            </h2>
+            
+            {/* Date Filter */}
+            <Select 
+              value={dateFilter} 
+              onValueChange={(value) => setDateFilter(value as typeof dateFilter)}
+            >
+              <SelectTrigger className="w-[180px] glass border-white/20">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent className="glass-strong border-white/20">
+                <SelectItem value="current">Mês atual</SelectItem>
+                <SelectItem value="previous">Mês anterior</SelectItem>
+                <SelectItem value="last3">Últimos 3 meses</SelectItem>
+                <SelectItem value="quarter">Trimestre atual</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
           {isLoading ? (
             <>
@@ -492,24 +571,17 @@ export default function AdminDashboard({
                     className={`h-auto py-6 flex flex-col gap-3 ${action.color} ${action.color.includes('gradient') ? 'text-white shadow-glow-sm' : ''}`}
                     onClick={() => {
                       if (action.action === 'create-project') {
-                        // Trigger the create project modal
-                        const modalTrigger = document.querySelector('[data-state]') as HTMLButtonElement;
-                        if (modalTrigger) {
-                          modalTrigger.click();
-                        } else {
-                          // Fallback: dispatch custom event
-                          window.dispatchEvent(new CustomEvent('open-create-project'));
-                        }
+                        // Dispatch custom event to trigger create project modal
+                        window.dispatchEvent(new CustomEvent('open-create-project'));
                       } else if (action.action === 'payments') {
-                        // Scroll to urgent projects section
-                        const urgentSection = document.querySelector('[data-section="urgent"]');
-                        urgentSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        // Navigate to financeiro page
+                        window.dispatchEvent(new CustomEvent('navigate-to-view', { detail: { view: 'financeiro' } }));
                       } else if (action.action === 'calendar') {
-                        // Navigate to calendar page or scroll to deadline section
-                        router.push('/dashboard?view=calendar');
+                        // Navigate to calendar page
+                        window.dispatchEvent(new CustomEvent('navigate-to-view', { detail: { view: 'calendario' } }));
                       } else if (action.action === 'reports') {
                         // Navigate to reports page
-                        router.push('/reports');
+                        window.dispatchEvent(new CustomEvent('navigate-to-view', { detail: { view: 'relatorios' } }));
                       }
                     }}
                   >
@@ -560,7 +632,7 @@ export default function AdminDashboard({
                         className={`p-3 rounded-lg border border-white/10 ${item.bgColor} flex items-center gap-3 cursor-pointer hover:scale-[1.02] transition-transform`}
                         onClick={() => {
                           if (item.projectId) {
-                            router.push(`/projects/${item.projectId}`);
+                            setSelectedProjectId(item.projectId);
                           }
                         }}
                       >
@@ -609,12 +681,7 @@ export default function AdminDashboard({
                     return (
                       <div
                         key={activity.id}
-                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
-                        onClick={() => {
-                          if (activity.projectId) {
-                            router.push(`/projects/${activity.projectId}`);
-                          }
-                        }}
+                        className="flex items-start gap-3 p-2 rounded-lg"
                       >
                         <div className="p-1.5 rounded-full bg-white/5 mt-0.5">
                           <Icon className={`w-3 h-3 ${activity.color}`} />
@@ -641,7 +708,12 @@ export default function AdminDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-purple-400" />
-              Evolução Financeira (Trimestre Atual)
+              Evolução Financeira (
+                {dateFilter === 'current' && 'Mês Atual'}
+                {dateFilter === 'previous' && 'Mês Anterior'}
+                {dateFilter === 'last3' && 'Últimos 3 Meses'}
+                {dateFilter === 'quarter' && 'Trimestre Atual'}
+              )
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -677,6 +749,13 @@ export default function AdminDashboard({
           </CardContent>
         </Card>
       </div>
+
+      {/* Task Drawer - Opens when urgent project is clicked */}
+      <TaskDrawer
+        open={!!selectedProjectId}
+        taskId={selectedProjectId}
+        onClose={() => setSelectedProjectId(null)}
+      />
     </TooltipProvider>
   );
 }
