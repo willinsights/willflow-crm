@@ -497,7 +497,7 @@ export default function AdminDashboard({
             {/* Date Filter */}
             <Select 
               value={dateFilter} 
-              onValueChange={(value: 'current' | 'previous' | 'last3' | 'quarter') => setDateFilter(value)}
+              onValueChange={(value) => setDateFilter(value as typeof dateFilter)}
             >
               <SelectTrigger className="w-[180px] glass border-white/20">
                 <SelectValue placeholder="Período" />
@@ -755,9 +755,6 @@ export default function AdminDashboard({
         open={!!selectedProjectId}
         taskId={selectedProjectId}
         onClose={() => setSelectedProjectId(null)}
-        onTaskUpdate={(taskId, updates) => {
-          console.log('Project updated from urgent list:', taskId, updates);
-        }}
       />
     </TooltipProvider>
   );

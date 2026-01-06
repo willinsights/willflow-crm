@@ -25,8 +25,8 @@ export default function Home() {
 
   // Listen for custom navigation events from dashboard
   useEffect(() => {
-    const handleNavigate = (event: CustomEvent) => {
-      if (event.detail && event.detail.view) {
+    const handleNavigate = (event: CustomEvent<{ view: string }>) => {
+      if (event.detail?.view) {
         setActiveView(event.detail.view);
       }
     };
