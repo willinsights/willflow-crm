@@ -17,6 +17,7 @@ import {
   Building2,
   Copy,
   Check,
+  Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,6 +59,7 @@ interface PaymentControlProps {
   clients: Client[];
   users?: UserType[];
   onMarkAsPaid?: (projectId: string, type: 'client' | 'freelancer') => void;
+  isUpdating?: string | null;
 }
 
 type StatusFilter = 'all' | 'pending' | 'received' | 'overdue' | 'to-invoice';
@@ -68,6 +70,7 @@ export default function PaymentControl({
   clients,
   users = [],
   onMarkAsPaid,
+  isUpdating,
 }: PaymentControlProps) {
   const { formatCurrency } = useLocale();
   const { isCompact } = useView();
@@ -604,9 +607,14 @@ export default function PaymentControl({
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => onMarkAsPaid(project.id, 'client')}
+                                      disabled={isUpdating === project.id}
                                       className="h-8 px-2 text-green-400"
                                     >
-                                      <CheckCircle className="w-4 h-4" />
+                                      {isUpdating === project.id ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                      ) : (
+                                        <CheckCircle className="w-4 h-4" />
+                                      )}
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>Marcar como Pago</TooltipContent>
@@ -748,9 +756,14 @@ export default function PaymentControl({
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => onMarkAsPaid(project.id, 'freelancer')}
+                                    disabled={isUpdating === project.id}
                                     className="h-8 px-2 text-green-400"
                                   >
-                                    <CheckCircle className="w-4 h-4" />
+                                    {isUpdating === project.id ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <CheckCircle className="w-4 h-4" />
+                                    )}
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>Marcar como Pago</TooltipContent>
