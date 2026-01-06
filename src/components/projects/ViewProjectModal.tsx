@@ -33,6 +33,8 @@ import { Project } from '@/lib/types';
 import { statusLabels } from '@/lib/data';
 import TaskDetailsModal from '@/components/projects/TaskDetailsModal';
 import { useLocale } from '@/lib/LocaleContext';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 interface ViewProjectModalProps {
   project: Project;
@@ -104,6 +106,7 @@ export default function ViewProjectModal({ project, trigger }: ViewProjectModalP
   };
 
   return (
+    <TooltipProvider>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
@@ -203,6 +206,7 @@ export default function ViewProjectModal({ project, trigger }: ViewProjectModalP
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-purple-400" />
               Status
+              <InfoTooltip content="Indica o progresso atual do projeto, como 'Em andamento' ou 'Concluído'." />
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -288,7 +292,10 @@ export default function ViewProjectModal({ project, trigger }: ViewProjectModalP
               </div>
 
               <div className="glass rounded-lg p-4 space-y-2">
-                <div className="text-muted-foreground text-sm">Margem</div>
+                <div className="text-muted-foreground text-sm flex items-center gap-1">
+                  Margem
+                  <InfoTooltip content="Diferença entre o valor cobrado ao cliente e o custo total do projeto." />
+                </div>
                 <p className={`font-bold text-xl ${project.margin >= 0 ? 'text-purple-400' : 'text-red-400'}`}>
                   {formatCurrency(project.margin)}
                 </p>
@@ -301,6 +308,7 @@ export default function ViewProjectModal({ project, trigger }: ViewProjectModalP
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-purple-400" />
               Status de Pagamento
+              <InfoTooltip content="Especifica o estado do pagamento, como 'Pendente' ou 'Pago'." />
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -513,5 +521,6 @@ export default function ViewProjectModal({ project, trigger }: ViewProjectModalP
         />
       )}
     </Dialog>
+    </TooltipProvider>
   );
 }
