@@ -50,12 +50,12 @@ export default function FinancePage() {
         setTimeout(() => window.location.reload(), 1500);
       } else {
         sonnerToast.dismiss(loadingToast);
-        showError('Erro ao Atualizar', 'Nao foi possivel atualizar o status de pagamento');
+        showError('Erro ao Atualizar', 'Não foi possível atualizar o status de pagamento');
       }
     } catch (error) {
       console.error('Erro ao marcar como pago:', error);
       sonnerToast.dismiss(loadingToast);
-      showError('Erro de Conexao', 'Verifique sua conexao e tente novamente');
+      showError('Erro de Conexão', 'Verifique sua conexão e tente novamente');
     } finally {
       setIsUpdating(null);
     }
