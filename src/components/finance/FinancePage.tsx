@@ -13,6 +13,7 @@ import PaymentControl from './PaymentControl';
 import InvoicesReceipts from './InvoicesReceipts';
 import ReportsPage from '@/components/reports/ReportsPage';
 import ToastNotifications, { useToastNotifications } from '@/components/notifications/ToastNotifications';
+import { toast as sonnerToast } from 'sonner';
 
 export default function FinancePage() {
   const { projects, clients, users } = useAppStore();
@@ -22,6 +23,11 @@ export default function FinancePage() {
 
   const handleMarkAsPaid = useCallback(async (projectId: string, type: 'client' | 'freelancer') => {
     setIsUpdating(projectId);
+    const project = projects.find(p => p.id === projectId);
+    const loadingToast = sonnerToast.loading(
+      type === 'client' ? 'A marcar pagamento do cliente...' : 'A marcar pagamento ao freelancer...'
+    );
+    
     try {
       const response = await fetch(`/api/projects/${projectId}`, {
         method: 'PUT',
@@ -35,19 +41,21 @@ export default function FinancePage() {
       const data = await response.json();
 
       if (data.success) {
-        const project = projects.find(p => p.id === projectId);
+        sonnerToast.dismiss(loadingToast);
         showSuccess(
-          type === 'client' ? 'Pagamento Recebido' : 'Pagamento Efetuado',
+          type === 'client' ? 'Pagamento recebido ✅' : 'Pagamento efetuado ✅',
           `${project?.title || 'Projeto'} - ${type === 'client' ? 'Cliente pagou' : 'Freelancer pago'}`
         );
         // Reload after a short delay to show the toast
         setTimeout(() => window.location.reload(), 1500);
       } else {
-        showError('Erro ao Atualizar', 'Nao foi possivel atualizar o status de pagamento');
+        sonnerToast.dismiss(loadingToast);
+        showError('Erro ao Atualizar', 'Não foi possível atualizar o status de pagamento');
       }
     } catch (error) {
       console.error('Erro ao marcar como pago:', error);
-      showError('Erro de Conexao', 'Verifique sua conexao e tente novamente');
+      sonnerToast.dismiss(loadingToast);
+      showError('Erro de Conexão', 'Verifique sua conexão e tente novamente');
     } finally {
       setIsUpdating(null);
     }
@@ -121,6 +129,7 @@ export default function FinancePage() {
             clients={clients}
             users={users}
             onMarkAsPaid={handleMarkAsPaid}
+            isUpdating={isUpdating}
           />
         </TabsContent>
 

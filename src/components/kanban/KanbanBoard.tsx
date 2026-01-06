@@ -90,6 +90,7 @@ import { useLocale } from '@/lib/LocaleContext';
 import { useView } from '@/lib/ViewContext';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
+import { toast as sonnerToast } from 'sonner';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import EditProjectModal from '@/components/projects/EditProjectModal';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
@@ -573,9 +574,14 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
       return;
     }
 
+    // Show loading toast
+    const loadingToast = sonnerToast.loading('A mover projeto...');
+    
     try {
       await updateProjectStatus(projectId, phase, newStatus);
       
+      // Dismiss loading and show success
+      sonnerToast.dismiss(loadingToast);
       toast({
         title: 'Projeto movido ✅',
         description: `"${project.title}" foi movido para ${statusLabels[newStatus] || newStatus}`,
@@ -594,6 +600,8 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
         }
       }
     } catch (error) {
+      // Dismiss loading and show error
+      sonnerToast.dismiss(loadingToast);
       toast({
         title: 'Erro ao mover projeto',
         description: error instanceof Error ? error.message : 'Ocorreu um erro ao alterar o status',

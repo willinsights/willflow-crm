@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAppStore } from '@/lib/useAppStore';
+import { toast as sonnerToast } from 'sonner';
 
 interface Comment {
   id: string;
@@ -106,11 +107,18 @@ export default function CommentsTab({ taskId, canEdit }: CommentsTabProps) {
 
         setComments([...comments, comment]);
         setNewComment('');
+        sonnerToast.success('Comentário adicionado ✅');
       } else {
         console.error('Erro ao criar comentário:', result.error);
+        sonnerToast.error('Erro ao adicionar comentário', {
+          description: 'Não foi possível adicionar o comentário'
+        });
       }
     } catch (error) {
       console.error('Erro ao enviar comentário:', error);
+      sonnerToast.error('Erro ao adicionar comentário', {
+        description: 'Verifique sua conexão e tente novamente'
+      });
     } finally {
       setSending(false);
     }
@@ -150,6 +158,11 @@ export default function CommentsTab({ taskId, canEdit }: CommentsTabProps) {
           c.id === id ? previousComment : c
         ));
         console.error('Erro ao editar comentário:', result.error);
+        sonnerToast.error('Erro ao editar comentário', {
+          description: 'Não foi possível salvar as alterações'
+        });
+      } else {
+        sonnerToast.success('Comentário atualizado ✅');
       }
     } catch (error) {
       console.error('Erro ao editar comentário:', error);
@@ -157,6 +170,9 @@ export default function CommentsTab({ taskId, canEdit }: CommentsTabProps) {
       setComments(comments.map(c =>
         c.id === id ? previousComment : c
       ));
+      sonnerToast.error('Erro ao editar comentário', {
+        description: 'Verifique sua conexão e tente novamente'
+      });
     }
 
     setEditContent('');
@@ -177,10 +193,18 @@ export default function CommentsTab({ taskId, canEdit }: CommentsTabProps) {
       if (!result.success) {
         setComments(previousComments);
         console.error('Erro ao eliminar comentário:', result.error);
+        sonnerToast.error('Erro ao eliminar comentário', {
+          description: 'Não foi possível eliminar o comentário'
+        });
+      } else {
+        sonnerToast.success('Comentário eliminado ✅');
       }
     } catch (error) {
       console.error('Erro ao eliminar comentário:', error);
       setComments(previousComments);
+      sonnerToast.error('Erro ao eliminar comentário', {
+        description: 'Verifique sua conexão e tente novamente'
+      });
     }
   };
 
