@@ -27,6 +27,8 @@ import {
   Eye,
   Upload,
   Briefcase,
+  LayoutGrid,
+  LayoutList
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -49,6 +51,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { useLocale } from '@/lib/LocaleContext';
+import { useView } from '@/lib/ViewContext';
 import { exportDashboardCSV } from '@/lib/export-utils';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { Project, Client, User, DashboardStats } from '@/lib/types';
@@ -76,6 +79,7 @@ export default function AdminDashboard({
   projectsByPhase,
 }: AdminDashboardProps) {
   const { formatCurrency, formatDate } = useLocale();
+  const { viewMode, toggleViewMode, isCompact, isDetailed } = useView();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -318,15 +322,45 @@ export default function AdminDashboard({
             </p>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => exportDashboardCSV(projects, clients, dashboardStats)}
-            className="glass border-white/20 hover:bg-white/10 w-fit"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Exportar CSV
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* View Mode Toggle */}
+            <UITooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleViewMode}
+                  className="glass border-white/20 hover:bg-white/10 w-fit"
+                >
+                  {isCompact ? (
+                    <>
+                      <LayoutList className="h-4 w-4 mr-2 text-purple-400" />
+                      Vista Detalhada
+                    </>
+                  ) : (
+                    <>
+                      <LayoutGrid className="h-4 w-4 mr-2 text-green-400" />
+                      Vista Compacta
+                    </>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="glass-strong border-white/20">
+                <p>{isCompact ? 'Mostrar mais informações' : 'Mostrar menos informações'}</p>
+              </TooltipContent>
+            </UITooltip>
+
+            {/* Export CSV */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportDashboardCSV(projects, clients, dashboardStats)}
+              className="glass border-white/20 hover:bg-white/10 w-fit"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Exportar CSV
+            </Button>
+          </div>
         </div>
 
         {/* Secao 1: Visao Rapida - KPI Cards with Tooltips */}
