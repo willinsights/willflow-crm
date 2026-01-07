@@ -1,4 +1,7 @@
 import { PrismaClient } from '@prisma/client'
+// Note: Using relative import as seed.ts is in prisma/ directory, not src/
+// The @/ alias only works within the src/ directory
+import { hashPassword } from '../src/lib/auth-utils'
 
 const prisma = new PrismaClient()
 
@@ -36,11 +39,13 @@ async function main() {
   await prisma.user.deleteMany()
 
   // Criar usuário administrador
+  const adminPassword = 'admin123';
   const admin = await prisma.user.create({
     data: {
       id: '1',
       name: 'Administrador',
       email: 'admin@in-sights.pt',
+      password: hashPassword(adminPassword),
       role: 'admin',
       canViewFinance: true,
       canEditProjects: true,
@@ -52,6 +57,8 @@ async function main() {
   })
 
   console.log('✅ Criado 1 usuário administrador')
+  console.log(`   Email: admin@in-sights.pt`)
+  console.log(`   Senha: ${adminPassword}`)
 
   const shouldPopulate = process.env.SEED_WITH_SAMPLE_DATA === 'true'
 
@@ -63,17 +70,19 @@ async function main() {
     // ========================================
     console.log('👥 Criando usuários...')
     
+    const filmmaker1Password = 'filmmaker123';
     const filmmaker1 = await prisma.user.create({
       data: {
         name: 'João Silva',
         email: 'joao.silva@exemplo.com',
+        password: hashPassword(filmmaker1Password),
         role: 'freelancer_captacao',
         collaboratorType: 'filmmaker',
         canViewFinance: false,
         canEditProjects: false,
         canViewAllProjects: false,
         isActive: true,
-        mustChangePassword: false,
+        mustChangePassword: true,
         iban: 'PT50000201231234567890154',
         bankName: 'CGD',
         nif: '123456789',
@@ -81,17 +90,19 @@ async function main() {
       },
     })
 
+    const photographer1Password = 'photographer123';
     const photographer1 = await prisma.user.create({
       data: {
         name: 'Maria Santos',
         email: 'maria.santos@exemplo.com',
+        password: hashPassword(photographer1Password),
         role: 'freelancer_captacao',
         collaboratorType: 'photographer',
         canViewFinance: false,
         canEditProjects: false,
         canViewAllProjects: false,
         isActive: true,
-        mustChangePassword: false,
+        mustChangePassword: true,
         iban: 'PT50000201231234567890155',
         bankName: 'Millennium BCP',
         nif: '987654321',
@@ -99,17 +110,19 @@ async function main() {
       },
     })
 
+    const bothCreatorPassword = 'creator123';
     const bothCreator = await prisma.user.create({
       data: {
         name: 'Pedro Costa',
         email: 'pedro.costa@exemplo.com',
+        password: hashPassword(bothCreatorPassword),
         role: 'freelancer_captacao',
         collaboratorType: 'both',
         canViewFinance: false,
         canEditProjects: false,
         canViewAllProjects: false,
         isActive: true,
-        mustChangePassword: false,
+        mustChangePassword: true,
         iban: 'PT50000201231234567890156',
         bankName: 'Santander',
         nif: '456789123',
@@ -117,16 +130,18 @@ async function main() {
       },
     })
 
+    const editor1Password = 'editor123';
     const editor1 = await prisma.user.create({
       data: {
         name: 'Ana Ferreira',
         email: 'ana.ferreira@exemplo.com',
+        password: hashPassword(editor1Password),
         role: 'editor_edicao',
         canViewFinance: false,
         canEditProjects: true,
         canViewAllProjects: false,
         isActive: true,
-        mustChangePassword: false,
+        mustChangePassword: true,
         iban: 'PT50000201231234567890157',
         bankName: 'Novobanco',
         nif: '321654987',
@@ -134,16 +149,18 @@ async function main() {
       },
     })
 
+    const editor2Password = 'editor456';
     const editor2 = await prisma.user.create({
       data: {
         name: 'Carlos Mendes',
         email: 'carlos.mendes@exemplo.com',
+        password: hashPassword(editor2Password),
         role: 'editor_edicao',
         canViewFinance: false,
         canEditProjects: true,
         canViewAllProjects: false,
         isActive: true,
-        mustChangePassword: false,
+        mustChangePassword: true,
         iban: 'PT50000201231234567890158',
         bankName: 'BPI',
         nif: '789123456',
@@ -151,20 +168,28 @@ async function main() {
       },
     })
 
+    const viewerPassword = 'viewer123';
     const viewer = await prisma.user.create({
       data: {
         name: 'Sofia Oliveira',
         email: 'sofia.oliveira@exemplo.com',
+        password: hashPassword(viewerPassword),
         role: 'viewer',
         canViewFinance: false,
         canEditProjects: false,
         canViewAllProjects: true,
         isActive: true,
-        mustChangePassword: false,
+        mustChangePassword: true,
       },
     })
 
     console.log('✅ Criados 7 usuários com diferentes perfis')
+    console.log('   João Silva (filmmaker): filmmaker123')
+    console.log('   Maria Santos (photographer): photographer123')
+    console.log('   Pedro Costa (both): creator123')
+    console.log('   Ana Ferreira (editor): editor123')
+    console.log('   Carlos Mendes (editor): editor456')
+    console.log('   Sofia Oliveira (viewer): viewer123')
 
     // ========================================
     // CRIAR CLIENTES DIVERSOS
