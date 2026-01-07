@@ -18,23 +18,62 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Validate phase parameter
+    const validPhases = ['CAPTACAO', 'EDICAO', 'FINALIZADOS'];
+    const phaseUpper = phase.toUpperCase();
+    if (!validPhases.includes(phaseUpper)) {
+      return NextResponse.json(
+        { success: false, error: `Invalid phase. Must be one of: ${validPhases.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    console.log(`[Kanban Columns] Fetching columns for phase: ${phaseUpper}, org: ${organizationId}`);
+
+    // Check database connection
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+    } catch (dbError) {
+      console.error('[Kanban Columns] Database connection error:', dbError);
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Database connection failed',
+          details: dbError instanceof Error ? dbError.message : 'Unknown database error'
+        },
+        { status: 503 }
+      );
+    }
+
     const columns = await prisma.kanbanColumn.findMany({
       where: {
         organizationId,
-        phase: phase.toUpperCase(),
+        phase: phaseUpper,
         isActive: true,
       },
       orderBy: { position: 'asc' },
     });
+
+    console.log(`[Kanban Columns] Found ${columns.length} columns for phase ${phaseUpper}`);
 
     return NextResponse.json({
       success: true,
       data: columns,
     });
   } catch (error) {
-    console.error('Error fetching kanban columns:', error);
+    console.error('[Kanban Columns] Error fetching kanban columns:', error);
+    // Log detailed error information
+    if (error instanceof Error) {
+      console.error('[Kanban Columns] Error name:', error.name);
+      console.error('[Kanban Columns] Error message:', error.message);
+      console.error('[Kanban Columns] Error stack:', error.stack);
+    }
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch columns' },
+      { 
+        success: false, 
+        error: 'Failed to fetch columns',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

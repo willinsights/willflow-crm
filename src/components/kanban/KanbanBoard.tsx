@@ -163,13 +163,56 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     try {
       setColumnsLoading(true);
       const phaseUpper = phase.toUpperCase();
+      console.log(`[KanbanBoard] Loading columns for phase: ${phaseUpper}`);
+      
       const res = await fetch(`/api/kanban/columns?phase=${phaseUpper}&organizationId=${organizationId}`);
+      
+      if (!res.ok) {
+        console.error(`[KanbanBoard] API returned error status: ${res.status}`);
+        const errorData = await res.json().catch(() => ({ error: 'Failed to parse error response' }));
+        console.error('[KanbanBoard] Error details:', errorData);
+        
+        // If it's a server error, try to bootstrap
+        if (res.status === 500 || res.status === 503) {
+          console.log('[KanbanBoard] Server error detected, attempting to bootstrap...');
+          const bootstrapRes = await fetch('/api/kanban/columns/bootstrap', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ organizationId }),
+          });
+          
+          if (bootstrapRes.ok) {
+            console.log('[KanbanBoard] Bootstrap successful, reloading columns...');
+            const reloadRes = await fetch(`/api/kanban/columns?phase=${phaseUpper}&organizationId=${organizationId}`);
+            const reloadData = await reloadRes.json();
+            if (reloadData.success && reloadData.data) {
+              setColumns(reloadData.data);
+              console.log(`[KanbanBoard] Loaded ${reloadData.data.length} columns after bootstrap`);
+              return;
+            }
+          } else {
+            const bootstrapError = await bootstrapRes.json().catch(() => ({ error: 'Bootstrap failed' }));
+            console.error('[KanbanBoard] Bootstrap failed:', bootstrapError);
+          }
+        }
+        
+        toast({
+          title: 'Erro ao carregar colunas',
+          description: errorData.details || errorData.error || 'Erro desconhecido ao comunicar com o servidor',
+          variant: 'error'
+        });
+        return;
+      }
+      
       const data = await res.json();
+      console.log(`[KanbanBoard] API response:`, data);
       
       if (data.success && data.data && data.data.length > 0) {
         setColumns(data.data);
+        console.log(`[KanbanBoard] Loaded ${data.data.length} columns`);
       } else {
         // No columns found - bootstrap them
+        console.log('[KanbanBoard] No columns found, bootstrapping...');
         const bootstrapRes = await fetch('/api/kanban/columns/bootstrap', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -177,20 +220,35 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
         });
         
         const bootstrapData = await bootstrapRes.json();
+        console.log('[KanbanBoard] Bootstrap response:', bootstrapData);
+        
         if (bootstrapData.success) {
           // Reload columns after bootstrap
           const reloadRes = await fetch(`/api/kanban/columns?phase=${phaseUpper}&organizationId=${organizationId}`);
           const reloadData = await reloadRes.json();
-          if (reloadData.success) {
+          if (reloadData.success && reloadData.data) {
             setColumns(reloadData.data);
+            console.log(`[KanbanBoard] Loaded ${reloadData.data.length} columns after bootstrap`);
+            toast({
+              title: 'Colunas inicializadas ✅',
+              description: 'As colunas padrão do Kanban foram criadas com sucesso',
+              variant: 'success'
+            });
           }
+        } else {
+          console.error('[KanbanBoard] Bootstrap failed:', bootstrapData);
+          toast({
+            title: 'Erro ao inicializar colunas',
+            description: bootstrapData.details || bootstrapData.error || 'Não foi possível criar as colunas padrão',
+            variant: 'error'
+          });
         }
       }
     } catch (error) {
-      console.error('Error loading columns:', error);
+      console.error('[KanbanBoard] Error loading columns:', error);
       toast({
         title: 'Erro ao carregar colunas',
-        description: 'Ocorreu um erro ao carregar as colunas do Kanban',
+        description: error instanceof Error ? error.message : 'Ocorreu um erro inesperado ao carregar as colunas do Kanban',
         variant: 'error'
       });
     } finally {

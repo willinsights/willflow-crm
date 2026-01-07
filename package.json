@@ -12,6 +12,7 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
+    "test:kanban-api": "tsx scripts/test-kanban-api.ts",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
@@ -19,6 +20,8 @@
     "db:studio": "prisma studio",
     "db:setup": "tsx scripts/setup-database.ts",
     "db:check-railway": "tsx scripts/check-railway-db.ts",
+    "db:init-kanban": "tsx scripts/init-kanban-columns.ts",
+    "db:generate-test-data": "tsx scripts/generate-kanban-test-data.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {
