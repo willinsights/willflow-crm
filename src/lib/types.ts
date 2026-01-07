@@ -1,19 +1,24 @@
 export type ProjectStatus =
+  | 'a-agendar'
   | 'agendado'
+  | 'em-execucao'
+  | 'a-iniciar'
+  | 'em-edicao'
+  | 'em-revisao'
+  | 'entregue'
+  // Old statuses for backward compatibility
   | 'em-gravacao'
   | 'upload-nas'
   | 'concluido'
   | 'receber-ficheiros'
   | 'decupagem'
-  | 'em-edicao'
   | 'feedback'
   | 'revisao-cliente'
-  | 'entregue'
   | 'finalizado';
 
 // Novos status separados por fase
-export type StatusCaptacao = 'agendado' | 'em-gravacao' | 'upload-nas' | 'concluido';
-export type StatusEdicao = 'receber-ficheiros' | 'decupagem' | 'em-edicao' | 'feedback' | 'revisao-cliente' | 'entregue';
+export type StatusCaptacao = 'a-agendar' | 'agendado' | 'em-execucao' | 'entregue' | 'em-gravacao' | 'upload-nas' | 'concluido';
+export type StatusEdicao = 'a-iniciar' | 'em-edicao' | 'em-revisao' | 'entregue' | 'receber-ficheiros' | 'decupagem' | 'feedback' | 'revisao-cliente';
 
 export type VideoType = 'hotel' | 'experiencia' | 'drone' | 'reels' | 'outro';
 

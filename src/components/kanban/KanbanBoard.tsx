@@ -881,18 +881,21 @@ function DroppableColumn({
   onEditChange,
   onSaveEdit,
   onCancelEdit,
-  isCustomName,
-  onResetName,
-  isCompletedColumn,
+  isDeliveredColumn,
+  isLocked,
   canDelete,
   onDelete,
   isDraggable = true,
 }: {
   id: string;
   title: string;
-  defaultTitle: string;
   count: number;
   children: React.ReactNode;
+  phase?: ProjectPhase;
+  isEditing: boolean;
+  editingName: string;
+  onStartEdit: () => void;
+  onEditChange: (name: string) => void;
   onSaveEdit: () => void;
   onCancelEdit: () => void;
   isDeliveredColumn?: boolean;
@@ -940,9 +943,9 @@ function DroppableColumn({
         isOver ? 'ring-2 ring-purple-500/50 scale-105' : ''
       }`}
     >
-      <div className={`glass-card h-full flex flex-col ${completedColumnStyles}`}>
+      <div className={`glass-card h-full flex flex-col ${deliveredColumnStyles}`}>
         <div className={`p-3 md:p-4 border-b flex-shrink-0 ${
-          isCompletedColumn
+          isDeliveredColumn
             ? 'border-green-500/30 bg-gradient-to-r from-green-500/20 to-emerald-500/10'
             : 'border-white/10'
         }`}>
@@ -982,26 +985,25 @@ function DroppableColumn({
                 </div>
               ) : (
                 <>
-                  {isCompletedColumn && (
+                  {isDeliveredColumn && (
                     <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
                   )}
                   <h3 className={`font-semibold text-sm md:text-base truncate ${
-                    isCompletedColumn ? 'text-green-400' : 'text-foreground'
+                    isDeliveredColumn ? 'text-green-400' : 'text-foreground'
                   }`}>
                     {title}
-                    {isCustomName && <span className="text-primary ml-1">*</span>}
                   </h3>
                   <Badge
                     variant="outline"
                     className={`text-xs flex-shrink-0 ${
-                      isCompletedColumn ? 'border-green-500/50 text-green-400' : ''
+                      isDeliveredColumn ? 'border-green-500/50 text-green-400' : ''
                     }`}
                   >
                     {count}
                   </Badge>
 
-                  {/* Info tooltip for completed column */}
-                  {isCompletedColumn && (
+                  {/* Info tooltip for delivered column */}
+                  {isDeliveredColumn && (
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-green-400/70 hover:text-green-400">
@@ -1045,56 +1047,24 @@ function DroppableColumn({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="glass-strong border-white/20 w-56">
-                  {/* Edit column name */}
-                  <DropdownMenuItem onClick={onStartEdit} className="cursor-pointer">
-                    <Edit2 className="w-4 h-4 mr-2" />
-                    Editar nome da coluna
-                  </DropdownMenuItem>
-
-                  {/* Reset to default name */}
-                  {isCustomName && (
-                    <DropdownMenuItem onClick={onResetName} className="cursor-pointer text-muted-foreground">
-                      <RotateCcw className="w-4 h-4 mr-2" />
-                      Restaurar nome original ({defaultTitle})
+                  {/* Edit column name - only for non-locked columns */}
+                  {!isLocked && (
+                    <DropdownMenuItem onClick={onStartEdit} className="cursor-pointer">
+                      <Edit2 className="w-4 h-4 mr-2" />
+                      Editar nome da coluna
                     </DropdownMenuItem>
                   )}
 
-                  <DropdownMenuSeparator />
-
-                  {/* Move all to next status */}
-                  {currentIndex < allStatuses.length - 1 && count > 0 && (
-                    <DropdownMenuItem
-                      onClick={() => onMoveAllCards(id, allStatuses[currentIndex + 1])}
-                      className="cursor-pointer"
-                    >
-                      <ArrowRight className="w-4 h-4 mr-2" />
-                      Mover todos para próximo
+                  {/* Info about locked column */}
+                  {isLocked && (
+                    <DropdownMenuItem disabled className="cursor-not-allowed text-muted-foreground">
+                      <Lock className="w-4 h-4 mr-2" />
+                      Coluna bloqueada
                     </DropdownMenuItem>
                   )}
 
-                  {/* Move all to any status */}
-                  {count > 0 && (
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger>
-                        <Send className="w-4 h-4 mr-2" />
-                        Mover todos para...
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent className="glass-strong border-white/20">
-                        {allStatuses.filter(s => s !== id).map(status => (
-                          <DropdownMenuItem
-                            key={status}
-                            onClick={() => onMoveAllCards(id, status)}
-                            className="cursor-pointer"
-                          >
-                            {statusLabels[status] || status}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-                  )}
-
-                  {/* Delete column */}
-                  {canDelete && (
+                  {/* Delete column - only for non-locked columns */}
+                  {canDelete && !isLocked && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
@@ -1112,8 +1082,8 @@ function DroppableColumn({
           </div>
         </div>
 
-        {/* Completed column info banner */}
-        {isCompletedColumn && (
+        {/* Delivered column info banner */}
+        {isDeliveredColumn && (
           <div className="px-3 py-2 bg-gradient-to-r from-green-500/10 to-transparent border-b border-green-500/20">
             <p className="text-[10px] text-green-400/80 flex items-center gap-1.5">
               <ArrowRightCircle className="w-3 h-3" />
@@ -1134,14 +1104,14 @@ function DraggableProjectCard({
   phase,
   onCardClick,
   onMoveToPhase,
-  allStatuses,
+  columns,
   isCompact = false,
 }: {
   project: Project;
   phase: ProjectPhase;
   onCardClick: (project: Project) => void;
   onMoveToPhase: (projectId: string, phase: ProjectPhase) => void;
-  allStatuses: string[];
+  columns: Array<{ id: string; title: string; systemKey: string | null }>;
   isCompact?: boolean;
 }) {
   const {
@@ -1169,7 +1139,7 @@ function DraggableProjectCard({
         phase={phase}
         onCardClick={onCardClick}
         onMoveToPhase={onMoveToPhase}
-        allStatuses={allStatuses}
+        columns={columns}
         isCompact={isCompact}
         dragAttributes={attributes}
         dragListeners={listeners}
@@ -1185,7 +1155,7 @@ function ProjectCard({
   isDragging = false,
   onCardClick,
   onMoveToPhase,
-  allStatuses,
+  columns,
   isCompact = false,
   dragAttributes,
   dragListeners,
@@ -1196,7 +1166,7 @@ function ProjectCard({
   isCompact?: boolean;
   onCardClick?: (project: Project) => void;
   onMoveToPhase?: (projectId: string, phase: ProjectPhase) => void;
-  allStatuses?: string[];
+  columns?: Array<{ id: string; title: string; systemKey: string | null }>;
   dragAttributes?: any;
   dragListeners?: any;
 }) {
@@ -1213,7 +1183,13 @@ function ProjectCard({
     onCardClick?.(project);
   };
 
-  const handleQuickStatusChange = async (newStatus: string) => {
+  const handleQuickStatusChange = async (columnId: string) => {
+    const column = columns?.find(c => c.id === columnId);
+    if (!column) return;
+    
+    // Convert column title to status key (temporary until projects use column IDs)
+    const newStatus = column.title.toLowerCase().replace(/\s+/g, '-');
+    
     try {
       await updateProjectStatus(project.id, phase, newStatus);
     } catch (error) {
@@ -1270,20 +1246,24 @@ function ProjectCard({
                 <DropdownMenuSeparator />
 
                 {/* Quick status change */}
-                {allStatuses && allStatuses.length > 0 && (
+                {columns && columns.length > 0 && (
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                       <ArrowRight className="w-4 h-4 mr-2" />
-                      Mover para status...
+                      Mover para coluna...
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent className="glass-strong border-white/20">
-                      {allStatuses.filter(s => s !== currentStatus).map(status => (
+                      {columns.filter(col => {
+                        // Filter out current column
+                        const colStatusKey = col.title.toLowerCase().replace(/\s+/g, '-');
+                        return colStatusKey !== currentStatus;
+                      }).map(col => (
                         <DropdownMenuItem
-                          key={status}
-                          onClick={() => handleQuickStatusChange(status)}
+                          key={col.id}
+                          onClick={() => handleQuickStatusChange(col.id)}
                           className="cursor-pointer"
                         >
-                          {statusLabels[status] || status}
+                          {col.title}
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuSubContent>
