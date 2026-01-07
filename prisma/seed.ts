@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client'
+// Note: Using relative import as seed.ts is in prisma/ directory, not src/
+// The @/ alias only works within the src/ directory
 import { hashPassword } from '../src/lib/auth-utils'
 
 const prisma = new PrismaClient()

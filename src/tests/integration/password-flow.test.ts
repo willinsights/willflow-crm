@@ -121,7 +121,8 @@ describe('Password Flow Integration Tests', () => {
   
   describe('Email Normalization Consistency', () => {
     it('should handle email normalization consistently across flows', () => {
-      // This tests the fix mentioned in RESUMO_CORRECOES.md
+      // Email normalization ensures that emails are stored and compared consistently
+      // (lowercase + trim) to prevent authentication issues
       const emails = [
         'test@example.com',
         'Test@Example.com',
