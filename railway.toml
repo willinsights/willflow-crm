@@ -5,22 +5,22 @@
 builder = "NIXPACKS"
 
 [build.nixpacksPlan.phases.setup]
-nixPkgs = ["nodejs-20_x", "bun", "openssl"]
+nixPkgs = ["nodejs-20_x", "openssl"]
 
 [build.nixpacksPlan.phases.install]
 cmds = [
-  "bun install --no-save"
+  "npm ci --legacy-peer-deps || npm install --legacy-peer-deps"
 ]
 
 [build.nixpacksPlan.phases.build]
 cmds = [
-  "bunx prisma generate",
-  "bunx prisma db push --accept-data-loss || echo 'DB migration skipped - using mock data fallback'",
-  "bun run build"
+  "npx prisma generate",
+  "npx prisma db push --accept-data-loss || echo 'DB migration skipped - using mock data fallback'",
+  "npm run build"
 ]
 
 [start]
-cmd = "bun run start"
+cmd = "npm run start"
 
 [deploy]
 healthcheckPath = "/api/health"
