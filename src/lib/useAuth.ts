@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { User, UserRole } from './types';
 
-// Check if we're in development environment
-const isDevelopment = process.env.NODE_ENV === 'development';
-
 // Credenciais de demonstração (fallback quando API não está disponível)
 const DEMO_CREDENTIALS = [
   {
@@ -113,43 +110,31 @@ export function useAuth() {
         return { success: false, error: data.error || 'Email ou senha incorretos' };
       }
 
-      // Fallback para credenciais demo apenas em desenvolvimento
-      if (isDevelopment) {
-        console.log('API indisponível, usando credenciais demo (apenas em desenvolvimento)...');
-      } else {
-        // Em produção, retornar erro de conexão
-        return { success: false, error: 'Erro de conexão com o servidor. Tente novamente.' };
-      }
+      // Fallback para credenciais demo se API falhar (erro de servidor)
+      console.log('API indisponível, usando credenciais demo...');
 
     } catch (error) {
-      if (isDevelopment) {
-        console.log('Erro ao conectar com API, usando credenciais demo (apenas em desenvolvimento)...');
-      } else {
-        // Em produção, retornar erro de conexão
-        return { success: false, error: 'Erro de conexão com o servidor. Tente novamente.' };
-      }
+      console.log('Erro ao conectar com API, usando credenciais demo...');
     }
 
-    // Fallback: verificar credenciais demo (apenas em desenvolvimento)
-    if (isDevelopment) {
-      const demoCredential = DEMO_CREDENTIALS.find(
-        cred => cred.email.toLowerCase() === email.toLowerCase() && cred.password === password
-      );
+    // Fallback: verificar credenciais demo
+    const demoCredential = DEMO_CREDENTIALS.find(
+      cred => cred.email.toLowerCase() === email.toLowerCase() && cred.password === password
+    );
 
-      if (demoCredential) {
-        const authData = {
-          user: demoCredential.user,
-          mustChangePassword: false,
-          timestamp: new Date().toISOString()
-        };
+    if (demoCredential) {
+      const authData = {
+        user: demoCredential.user,
+        mustChangePassword: false,
+        timestamp: new Date().toISOString()
+      };
 
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
-        setCurrentUser(demoCredential.user);
-        setIsAuthenticated(true);
-        setMustChangePassword(false);
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
+      setCurrentUser(demoCredential.user);
+      setIsAuthenticated(true);
+      setMustChangePassword(false);
 
-        return { success: true };
-      }
+      return { success: true };
     }
 
     return { success: false, error: 'Email ou senha incorretos' };
