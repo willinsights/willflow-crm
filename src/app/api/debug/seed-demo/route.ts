@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
     // SECURITY: Restrict to dev/staging only
     // ========================================
     const nodeEnv = process.env.NODE_ENV || 'production';
+    // Note: 'test' is included for automated testing purposes only
     const allowedEnvs = ['development', 'dev', 'staging', 'test'];
     
     if (!allowedEnvs.includes(nodeEnv.toLowerCase())) {
@@ -135,7 +136,8 @@ export async function POST(request: NextRequest) {
     const adminPassword = 'admin123';
     const admin = await prisma.user.create({
       data: {
-        id: '1',
+        // Using a predictable ID for seed data - will be cleared on re-seed
+        id: 'seed-admin-1',
         name: 'Administrador',
         email: 'admin@in-sights.pt',
         password: hashPassword(adminPassword),

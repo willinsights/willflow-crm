@@ -96,7 +96,8 @@ async function main() {
   const adminPassword = 'admin123';
   const admin = await prisma.user.create({
     data: {
-      id: '1',
+      // Using a predictable ID for seed data
+      id: 'seed-admin-1',
       name: 'Administrador',
       email: 'admin@in-sights.pt',
       password: hashPassword(adminPassword),

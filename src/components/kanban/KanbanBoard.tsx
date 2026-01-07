@@ -742,6 +742,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
   };
 
   // Check if there are NO projects in any column
+  // Note: columns.length > 0 ensures Kanban columns have been initialized
   const hasNoProjects = projects.length === 0 && columns.length > 0;
 
   return (
