@@ -239,13 +239,22 @@ curl -X POST http://localhost:3000/api/kanban/columns/bootstrap \
 4. **Manutenibilidade:** Scripts facilitam gestão do banco de dados
 5. **Documentação:** Guias completos para diferentes cenários
 
-## 📚 Próximos Passos
+## 📝 Próximos Passos Recomendados
 
+### Para Desenvolvimento
 - [ ] Executar testes em ambiente de desenvolvimento
 - [ ] Validar correção em ambiente de staging
 - [ ] Testar com dados reais
-- [ ] Monitorar logs em produção
-- [ ] Criar testes automatizados (opcional)
+
+### Para Produção
+- [ ] Monitorar logs em produção após deploy
+- [ ] Verificar que bootstrap automático funciona corretamente
+- [ ] Confirmar que não há regressões
+
+### Melhorias Futuras (Opcional)
+- [ ] Criar testes automatizados para API
+- [ ] Adicionar métricas de performance
+- [ ] Implementar cache para colunas
 
 ## 🆘 Suporte
 

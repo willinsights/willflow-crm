@@ -118,7 +118,7 @@ async function main() {
           name: 'Admin Teste',
           email: 'admin@example.com',
           role: 'admin',
-          password: 'hashed_password_here',
+          password: '$2b$10$TEST.DUMMY.HASH.FOR.TESTING.PURPOSES.ONLY', // Dummy hash - not a real password
           canViewFinance: true,
           canEditProjects: true,
           canViewAllProjects: true,
