@@ -139,6 +139,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
   interface KanbanColumnData {
     id: string;
     title: string;
+    statusKey: string | null;
     position: number;
     isLocked: boolean;
     systemKey: string | null;
@@ -523,10 +524,12 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     const column = columns.find(c => c.id === columnId);
     if (!column) return [];
     
+    // Use statusKey if available, otherwise fall back to title-based matching
+    const statusToMatch = column.statusKey || column.title.toLowerCase().replace(/\s+/g, '-');
+    
     return projects.filter(project => {
       const currentStatus = phase === 'captacao' ? project.statusCaptacao : project.statusEdicao;
-      // Match by column title for now (TODO: update to use column ID when projects are migrated)
-      return currentStatus === column.title.toLowerCase().replace(/\s+/g, '-');
+      return currentStatus === statusToMatch;
     });
   };
 
@@ -606,9 +609,8 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
       return;
     }
 
-    // Convert column title to status key for now
-    // TODO: Update when migrating projects to use column IDs
-    const newStatus = targetColumn.title.toLowerCase().replace(/\s+/g, '-');
+    // Use statusKey if available, otherwise fall back to title-based matching
+    const newStatus = targetColumn.statusKey || targetColumn.title.toLowerCase().replace(/\s+/g, '-');
     const currentStatus = phase === 'captacao' ? project.statusCaptacao : project.statusEdicao;
 
     if (currentStatus === newStatus) {

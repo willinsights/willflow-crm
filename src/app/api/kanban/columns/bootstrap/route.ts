@@ -2,18 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 // Default columns for each phase based on requirements
+// Note: Column titles are stored in user-friendly Portuguese format with proper accents
+// The mapping to status keys happens in the frontend
 const DEFAULT_COLUMNS = {
   CAPTACAO: [
-    { title: 'A agendar', position: 0, isLocked: false, systemKey: null },
-    { title: 'Agendado', position: 1, isLocked: false, systemKey: null },
-    { title: 'Em execução', position: 2, isLocked: false, systemKey: null },
-    { title: 'Entregue', position: 3, isLocked: true, systemKey: 'DELIVERED' },
+    { title: 'A agendar', position: 0, isLocked: false, systemKey: null, statusKey: 'a-agendar' },
+    { title: 'Agendado', position: 1, isLocked: false, systemKey: null, statusKey: 'agendado' },
+    { title: 'Em execução', position: 2, isLocked: false, systemKey: null, statusKey: 'em-execucao' },
+    { title: 'Entregue', position: 3, isLocked: true, systemKey: 'DELIVERED', statusKey: 'entregue' },
   ],
   EDICAO: [
-    { title: 'A iniciar', position: 0, isLocked: false, systemKey: null },
-    { title: 'Em edição', position: 1, isLocked: false, systemKey: null },
-    { title: 'Em revisão', position: 2, isLocked: false, systemKey: null },
-    { title: 'Entregue', position: 3, isLocked: true, systemKey: 'DELIVERED' },
+    { title: 'A iniciar', position: 0, isLocked: false, systemKey: null, statusKey: 'a-iniciar' },
+    { title: 'Em edição', position: 1, isLocked: false, systemKey: null, statusKey: 'em-edicao' },
+    { title: 'Em revisão', position: 2, isLocked: false, systemKey: null, statusKey: 'em-revisao' },
+    { title: 'Entregue', position: 3, isLocked: true, systemKey: 'DELIVERED', statusKey: 'entregue' },
   ],
 };
 
@@ -72,6 +74,7 @@ export async function POST(request: NextRequest) {
               organizationId,
               phase,
               title: col.title,
+              statusKey: col.statusKey,
               position: col.position,
               isLocked: col.isLocked,
               systemKey: col.systemKey,
@@ -79,7 +82,7 @@ export async function POST(request: NextRequest) {
             },
           });
           columns.push(column);
-          console.log(`[Kanban Bootstrap] Created column: ${col.title} (${phase})`);
+          console.log(`[Kanban Bootstrap] Created column: ${col.title} (${phase}) -> statusKey: ${col.statusKey}`);
         } catch (colError) {
           console.error(`[Kanban Bootstrap] Error creating column ${col.title}:`, colError);
           // Continue with other columns even if one fails
