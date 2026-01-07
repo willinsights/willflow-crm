@@ -16,114 +16,153 @@ function getDateOffset(days: number): Date {
 async function main() {
   console.log('🌱 Iniciando seed do banco de dados...')
 
-  // Limpar banco de dados em ordem correta devido às relações
-  console.log('🧹 Limpando banco de dados...')
-  await prisma.kanbanColumn.deleteMany()
-  await prisma.notification.deleteMany()
-  await prisma.projectActivity.deleteMany()
-  await prisma.projectComment.deleteMany()
-  await prisma.projectChecklist.deleteMany()
-  await prisma.projectMedia.deleteMany()
-  await prisma.projectFile.deleteMany()
-  await prisma.budgetItem.deleteMany()
-  await prisma.clientNote.deleteMany()
-  await prisma.communication.deleteMany()
-  await prisma.subtaskActivity.deleteMany()
-  await prisma.subtaskAttachment.deleteMany()
-  await prisma.subtaskComment.deleteMany()
-  await prisma.subtaskChecklist.deleteMany()
-  await prisma.subtask.deleteMany()
-  await prisma.project.deleteMany()
-  await prisma.category.deleteMany()
-  await prisma.client.deleteMany()
-  await prisma.loginAudit.deleteMany()
-  await prisma.user.deleteMany()
+  const shouldCleanDatabase = process.env.SEED_CLEAN_DATABASE === 'true'
+  
+  if (shouldCleanDatabase) {
+    // Limpar banco de dados em ordem correta devido às relações
+    console.log('🧹 Limpando banco de dados...')
+    await prisma.kanbanColumn.deleteMany()
+    await prisma.notification.deleteMany()
+    await prisma.projectActivity.deleteMany()
+    await prisma.projectComment.deleteMany()
+    await prisma.projectChecklist.deleteMany()
+    await prisma.projectMedia.deleteMany()
+    await prisma.projectFile.deleteMany()
+    await prisma.budgetItem.deleteMany()
+    await prisma.clientNote.deleteMany()
+    await prisma.communication.deleteMany()
+    await prisma.subtaskActivity.deleteMany()
+    await prisma.subtaskAttachment.deleteMany()
+    await prisma.subtaskComment.deleteMany()
+    await prisma.subtaskChecklist.deleteMany()
+    await prisma.subtask.deleteMany()
+    await prisma.project.deleteMany()
+    await prisma.category.deleteMany()
+    await prisma.client.deleteMany()
+    await prisma.loginAudit.deleteMany()
+    await prisma.user.deleteMany()
+    console.log('✅ Banco de dados limpo')
+  } else {
+    console.log('ℹ️  Modo idempotente - Verificando dados existentes...')
+  }
 
   // ========================================
   // BOOTSTRAP KANBAN COLUMNS
   // ========================================
-  console.log('📋 Criando colunas padrão do Kanban...')
+  console.log('📋 Verificando colunas do Kanban...')
   
   const organizationId = 'default'
   
-  // Colunas para Captação
-  const captacaoColumns = [
-    { title: 'A agendar', position: 0, isLocked: false, systemKey: null },
-    { title: 'Agendado', position: 1, isLocked: false, systemKey: null },
-    { title: 'Em execução', position: 2, isLocked: false, systemKey: null },
-    { title: 'Entregue', position: 3, isLocked: true, systemKey: 'DELIVERED' },
-  ]
+  // Check if Kanban columns already exist
+  const existingColumns = await prisma.kanbanColumn.findMany({
+    where: { organizationId }
+  })
   
-  for (const col of captacaoColumns) {
-    await prisma.kanbanColumn.create({
-      data: {
-        organizationId,
-        phase: 'CAPTACAO',
-        title: col.title,
-        position: col.position,
-        isLocked: col.isLocked,
-        systemKey: col.systemKey,
-        isActive: true,
-      },
-    })
+  if (existingColumns.length === 0) {
+    console.log('📋 Criando colunas padrão do Kanban...')
+    
+    // Colunas para Captação
+    const captacaoColumns = [
+      { title: 'A agendar', statusKey: 'a-agendar', position: 0, isLocked: false, systemKey: null },
+      { title: 'Agendado', statusKey: 'agendado', position: 1, isLocked: false, systemKey: null },
+      { title: 'Em execução', statusKey: 'em-execucao', position: 2, isLocked: false, systemKey: null },
+      { title: 'Entregue', statusKey: 'entregue', position: 3, isLocked: true, systemKey: 'DELIVERED' },
+    ]
+    
+    for (const col of captacaoColumns) {
+      await prisma.kanbanColumn.create({
+        data: {
+          organizationId,
+          phase: 'CAPTACAO',
+          title: col.title,
+          statusKey: col.statusKey,
+          position: col.position,
+          isLocked: col.isLocked,
+          systemKey: col.systemKey,
+          isActive: true,
+        },
+      })
+    }
+    
+    // Colunas para Edição
+    const edicaoColumns = [
+      { title: 'A iniciar', statusKey: 'a-iniciar', position: 0, isLocked: false, systemKey: null },
+      { title: 'Em edição', statusKey: 'em-edicao', position: 1, isLocked: false, systemKey: null },
+      { title: 'Em revisão', statusKey: 'em-revisao', position: 2, isLocked: false, systemKey: null },
+      { title: 'Entregue', statusKey: 'entregue', position: 3, isLocked: true, systemKey: 'DELIVERED' },
+    ]
+    
+    for (const col of edicaoColumns) {
+      await prisma.kanbanColumn.create({
+        data: {
+          organizationId,
+          phase: 'EDICAO',
+          title: col.title,
+          statusKey: col.statusKey,
+          position: col.position,
+          isLocked: col.isLocked,
+          systemKey: col.systemKey,
+          isActive: true,
+        },
+      })
+    }
+    
+    console.log('✅ Criadas colunas do Kanban (Captação: 4, Edição: 4)')
+  } else {
+    console.log(`✅ Colunas do Kanban já existem (${existingColumns.length} encontradas)`)
   }
-  
-  // Colunas para Edição
-  const edicaoColumns = [
-    { title: 'A iniciar', position: 0, isLocked: false, systemKey: null },
-    { title: 'Em edição', position: 1, isLocked: false, systemKey: null },
-    { title: 'Em revisão', position: 2, isLocked: false, systemKey: null },
-    { title: 'Entregue', position: 3, isLocked: true, systemKey: 'DELIVERED' },
-  ]
-  
-  for (const col of edicaoColumns) {
-    await prisma.kanbanColumn.create({
-      data: {
-        organizationId,
-        phase: 'EDICAO',
-        title: col.title,
-        position: col.position,
-        isLocked: col.isLocked,
-        systemKey: col.systemKey,
-        isActive: true,
-      },
-    })
-  }
-  
-  console.log('✅ Criadas colunas do Kanban (Captação: 4, Edição: 4)')
 
   // Criar usuário administrador
   const adminPassword = 'admin123';
-  const admin = await prisma.user.create({
-    data: {
-      // Using a predictable ID for seed data
-      id: 'seed-admin-1',
-      name: 'Administrador',
-      email: 'admin@in-sights.pt',
-      password: hashPassword(adminPassword),
-      role: 'admin',
-      canViewFinance: true,
-      canEditProjects: true,
-      canViewAllProjects: true,
-      isActive: true,
-      mustChangePassword: false,
-      lastLogin: new Date(),
-    },
+  
+  // Check if admin already exists
+  let admin = await prisma.user.findUnique({
+    where: { email: 'admin@in-sights.pt' }
   })
-
-  console.log('✅ Criado 1 usuário administrador')
-  console.log(`   Email: admin@in-sights.pt`)
-  console.log(`   Senha: ${adminPassword}`)
+  
+  if (!admin) {
+    console.log('👤 Criando usuário administrador...')
+    admin = await prisma.user.create({
+      data: {
+        // Using a predictable ID for seed data
+        id: 'seed-admin-1',
+        name: 'Administrador',
+        email: 'admin@in-sights.pt',
+        password: hashPassword(adminPassword),
+        role: 'admin',
+        canViewFinance: true,
+        canEditProjects: true,
+        canViewAllProjects: true,
+        isActive: true,
+        mustChangePassword: false,
+        lastLogin: new Date(),
+      },
+    })
+    console.log('✅ Criado 1 usuário administrador')
+    console.log(`   Email: admin@in-sights.pt`)
+    console.log(`   Senha: ${adminPassword}`)
+  } else {
+    console.log('✅ Usuário administrador já existe')
+  }
 
   const shouldPopulate = process.env.SEED_WITH_SAMPLE_DATA === 'true'
 
   if (shouldPopulate) {
-    console.log('📦 Populando banco com dados completos de exemplo...')
+    console.log('📦 Verificando dados de exemplo...')
+    
+    // Check if sample data already exists
+    const existingSampleProjects = await prisma.project.count()
+    
+    if (existingSampleProjects > 0 && !shouldCleanDatabase) {
+      console.log(`✅ Dados de exemplo já existem (${existingSampleProjects} projetos encontrados)`)
+      console.log('   Use SEED_CLEAN_DATABASE=true para limpar e recriar os dados')
+    } else {
+      console.log('📦 Populando banco com dados completos de exemplo...')
 
-    // ========================================
-    // CRIAR USUÁRIOS DIVERSOS
-    // ========================================
-    console.log('👥 Criando usuários...')
+      // ========================================
+      // CRIAR USUÁRIOS DIVERSOS
+      // ========================================
+      console.log('👥 Criando usuários...')
     
     const filmmaker1Password = 'filmmaker123';
     const filmmaker1 = await prisma.user.create({
@@ -1306,8 +1345,9 @@ async function main() {
     console.log('✅ Criados comentários em subtasks')
 
     console.log('✨ Seed completado com dados completos e realistas!')
+    }
   } else {
-    console.log('✨ Seed completado - Sistema limpo!')
+    console.log('✨ Seed completado - Sistema básico configurado!')
   }
 }
 
