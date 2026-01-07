@@ -16,11 +16,12 @@ import CalendarPage from '@/components/calendar/CalendarPage';
 import SettingsPage from '@/components/settings/SettingsPage';
 import RoleTestPanel from '@/components/debug/RoleTestPanel';
 import LoginPage from '@/components/auth/LoginPage';
+import ChangePasswordModal from '@/components/auth/ChangePasswordModal';
 import { useAuth } from '@/lib/useAuth';
 
 export default function Home() {
   const [activeView, setActiveView] = useState<string>('dashboard');
-  const { isAuthenticated, isLoading, login, logout } = useAuth();
+  const { isAuthenticated, isLoading, mustChangePassword, login, logout, changePassword } = useAuth();
   const { showOnboarding, completeOnboarding } = useOnboarding();
 
   // Listen for custom navigation events from dashboard
@@ -96,6 +97,16 @@ export default function Home() {
   return (
     <>
       <OnboardingModal open={showOnboarding} onComplete={completeOnboarding} />
+      <ChangePasswordModal
+        isOpen={isAuthenticated && mustChangePassword}
+        isMandatory={true}
+        onChangePassword={async (currentPassword, newPassword) => {
+          return await changePassword(currentPassword, newPassword);
+        }}
+        onClose={() => {
+          // Modal is mandatory, so this should not close it
+        }}
+      />
       <AppLayout activeView={activeView} onViewChange={setActiveView} onLogout={logout}>
       {renderContent()}
     </AppLayout>

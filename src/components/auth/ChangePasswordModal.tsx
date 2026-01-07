@@ -64,7 +64,8 @@ export default function ChangePasswordModal({
 
     setIsLoading(true);
 
-    const result = await onChangePassword(currentPassword, newPassword);
+    // If mandatory, no need to pass current password (user is using generated password)
+    const result = await onChangePassword(isMandatory ? '' : currentPassword, newPassword);
 
     if (result.success) {
       setSuccess(true);
