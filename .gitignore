@@ -31,3 +31,8 @@ yarn-error.log*
 # Lock files - usar apenas bun.lock
 yarn.lock
 package-lock.json
+
+# Database
+*.db
+*.db-journal
+prisma/dev.db*
