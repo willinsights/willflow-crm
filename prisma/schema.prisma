@@ -424,7 +424,7 @@ model KanbanColumn {
   id             String   @id @default(uuid())
   organizationId String   @default("default") // ID da organização
   phase          String   // CAPTACAO | EDICAO
-  title          String   // Nome da coluna
+  title          String   @default("Default Title") // Nome da coluna
   position       Int      @default(0) // Posição na ordem
   isLocked       Boolean  @default(false) // Se a coluna está bloqueada (não pode ser movida/removida)
   systemKey      String?  // Chave do sistema (DELIVERED para 'Entregue')
