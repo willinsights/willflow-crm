@@ -91,8 +91,9 @@ export async function PUT(
 
     // Check email uniqueness if email is being changed
     if (body.email && body.email !== existingUser.email) {
+      const normalizedEmail = body.email.toLowerCase().trim();
       const emailExists = await prisma.user.findUnique({
-        where: { email: body.email }
+        where: { email: normalizedEmail }
       });
 
       if (emailExists) {
@@ -101,6 +102,9 @@ export async function PUT(
           { status: 400 }
         );
       }
+      
+      // Update body.email with normalized version
+      body.email = normalizedEmail;
     }
 
     // Update permissions based on role if role is changing
