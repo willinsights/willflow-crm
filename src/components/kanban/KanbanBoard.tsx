@@ -34,6 +34,8 @@ import {
   Lock,
   LayoutGrid,
   LayoutList,
+  FolderKanban,
+  Package,
 } from 'lucide-react';
 import {
   DndContext,
@@ -93,6 +95,7 @@ import { useToast } from '@/components/ui/toast';
 import { toast as sonnerToast } from 'sonner';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import EditProjectModal from '@/components/projects/EditProjectModal';
+import CreateProjectModal from '@/components/projects/CreateProjectModal';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import TaskDrawer from '@/components/projects/TaskDrawer';
 
@@ -738,6 +741,9 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     finalizados: 'Finalizados'
   };
 
+  // Check if there are NO projects in any column
+  const hasNoProjects = projects.length === 0 && columns.length > 0;
+
   return (
     <TooltipProvider>
       <div className="space-y-6">
@@ -787,17 +793,55 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
           </div>
         </div>
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:flex lg:gap-4 xl:gap-6 lg:overflow-x-auto pb-4 gap-4 items-start">
-            <SortableContext
-              items={reorderableColumns.map(c => c.id)}
-              strategy={horizontalListSortingStrategy}
-            >
+        {/* Empty State - Show when no projects exist */}
+        {hasNoProjects ? (
+          <div className="glass-card p-12 text-center">
+            <div className="max-w-md mx-auto space-y-6">
+              <div className="flex justify-center">
+                <div className="relative">
+                  <FolderKanban className="w-20 h-20 text-muted-foreground opacity-40" />
+                  <Package className="w-8 h-8 text-purple-400 absolute -bottom-1 -right-1 opacity-60" />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold text-foreground">
+                  Ainda não há projetos aqui
+                </h3>
+                <p className="text-muted-foreground">
+                  Comece criando o seu primeiro projeto em {phaseLabels[phase].toLowerCase()}
+                </p>
+              </div>
+
+              <div className="flex justify-center gap-3">
+                <CreateProjectModal>
+                  <Button size="lg" className="gap-2">
+                    <Plus className="w-5 h-5" />
+                    Criar Primeiro Projeto
+                  </Button>
+                </CreateProjectModal>
+              </div>
+
+              <div className="pt-4 border-t border-white/10">
+                <p className="text-xs text-muted-foreground">
+                  As colunas do Kanban foram inicializadas. Crie projetos para organizar o seu fluxo de trabalho.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Kanban Board with Projects */
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:flex lg:gap-4 xl:gap-6 lg:overflow-x-auto pb-4 gap-4 items-start">
+              <SortableContext
+                items={reorderableColumns.map(c => c.id)}
+                strategy={horizontalListSortingStrategy}
+              >
               {columns.map((column, index) => {
                 const columnProjects = getProjectsByColumnId(column.id);
                 const isDeliveredColumn = column.systemKey === DELIVERED_SYSTEM_KEY;
@@ -872,6 +916,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
             ) : null}
           </DragOverlay>
         </DndContext>
+        )}
 
         <TaskDrawer
           open={!!selectedProject}
