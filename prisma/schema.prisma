@@ -421,17 +421,21 @@ model ProjectMedia {
 // ✨ V112 - Configuração de Colunas do Kanban
 
 model KanbanColumn {
-  id          String   @id @default(uuid())
-  phase       String   // captacao, edicao, finalizados
-  statusKey   String   // key original (ex: "em-edicao")
-  customName  String?  // nome personalizado (ex: "Em Produção")
-  color       String?  // cor personalizada
-  order       Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(uuid())
+  organizationId String   @default("default") // ID da organização
+  phase          String   // CAPTACAO | EDICAO
+  title          String   // Nome da coluna
+  position       Int      @default(0) // Posição na ordem
+  isLocked       Boolean  @default(false) // Se a coluna está bloqueada (não pode ser movida/removida)
+  systemKey      String?  // Chave do sistema (DELIVERED para 'Entregue')
+  color          String?  // Cor personalizada
+  isActive       Boolean  @default(true) // Se a coluna está ativa (visível)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  @@unique([phase, statusKey])
+  @@unique([organizationId, phase, systemKey])
+  @@unique([organizationId, phase, title])
+  @@index([organizationId, phase])
   @@index([phase])
   @@map("kanban_columns")
 }

@@ -165,18 +165,23 @@ export const mockCategories: Category[] = [
 
 // Labels para status
 export const statusLabels: Record<string, string> = {
-  // Captação
+  // Captação - Novo fluxo
+  'a-agendar': 'A agendar',
   'agendado': 'Agendado',
+  'em-execucao': 'Em execução',
+  'entregue': 'Entregue',
+  // Edição - Novo fluxo
+  'a-iniciar': 'A iniciar',
+  'em-edicao': 'Em edição',
+  'em-revisao': 'Em revisão',
+  // Mantidos para retrocompatibilidade (podem ser removidos após migração)
   'em-gravacao': 'Em Gravação',
   'upload-nas': 'Upload NAS',
   'concluido': 'Concluído',
-  // Edição
   'receber-ficheiros': 'Receber Ficheiros',
   'decupagem': 'Decupagem',
-  'em-edicao': 'Em Edição',
   'feedback': 'Feedback',
   'revisao-cliente': 'Revisão Cliente',
-  'entregue': 'Entregue',
   'finalizado': 'Finalizado'
 };
 

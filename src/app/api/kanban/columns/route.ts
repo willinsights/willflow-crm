@@ -1,54 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// Default status labels
-const defaultStatusLabels: Record<string, string> = {
-  // Captação
-  'agendado': 'Agendado',
-  'em-gravacao': 'Em Gravação',
-  'upload-nas': 'Upload NAS',
-  'concluido': 'Concluído',
-  // Edição
-  'receber-ficheiros': 'Receber Ficheiros',
-  'decupagem': 'Decupagem',
-  'em-edicao': 'Em Edição',
-  'feedback': 'Feedback',
-  'revisao-cliente': 'Revisão Cliente',
-  'entregue': 'Entregue',
-  'finalizado': 'Finalizado'
-};
-
-// GET - List all column configurations
+/**
+ * GET - List columns for a phase and organization
+ * Query params: phase (CAPTACAO | EDICAO), organizationId (default: 'default')
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const phase = searchParams.get('phase');
+    const organizationId = searchParams.get('organizationId') || 'default';
 
-    const where = phase ? { phase } : {};
+    if (!phase) {
+      return NextResponse.json(
+        { success: false, error: 'Phase parameter is required' },
+        { status: 400 }
+      );
+    }
 
     const columns = await prisma.kanbanColumn.findMany({
-      where,
-      orderBy: [{ phase: 'asc' }, { order: 'asc' }]
-    });
-
-    // Merge with defaults
-    const mergedColumns = Object.entries(defaultStatusLabels).map(([key, defaultName]) => {
-      const customColumn = columns.find(c => c.statusKey === key);
-      return {
-        statusKey: key,
-        name: customColumn?.customName || defaultName,
-        defaultName,
-        color: customColumn?.color || null,
-        order: customColumn?.order ?? 0,
-        isActive: customColumn?.isActive ?? true,
-        isCustom: !!customColumn?.customName
-      };
+      where: {
+        organizationId,
+        phase: phase.toUpperCase(),
+        isActive: true,
+      },
+      orderBy: { position: 'asc' },
     });
 
     return NextResponse.json({
       success: true,
-      data: mergedColumns,
-      customColumns: columns
+      data: columns,
     });
   } catch (error) {
     console.error('Error fetching kanban columns:', error);
@@ -59,80 +40,284 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create or update column configuration
+/**
+ * POST - Create or update a column
+ * Body: { organizationId, phase, title, position, color }
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { phase, statusKey, customName, color, order, isActive } = body;
+    const { 
+      organizationId = 'default', 
+      phase, 
+      title, 
+      position,
+      color,
+      columnId, // If updating existing column
+    } = body;
 
-    if (!phase || !statusKey) {
+    if (!phase || !title) {
       return NextResponse.json(
-        { success: false, error: 'Phase and statusKey are required' },
+        { success: false, error: 'Phase and title are required' },
         { status: 400 }
       );
     }
 
-    const column = await prisma.kanbanColumn.upsert({
-      where: {
-        phase_statusKey: { phase, statusKey }
-      },
-      update: {
-        customName: customName || null,
-        color: color || null,
-        order: order ?? 0,
-        isActive: isActive ?? true
-      },
-      create: {
-        phase,
-        statusKey,
-        customName: customName || null,
-        color: color || null,
-        order: order ?? 0,
-        isActive: isActive ?? true
+    const phaseUpper = phase.toUpperCase();
+
+    // Check if trying to create/modify a locked column
+    if (title === 'Entregue' || body.systemKey === 'DELIVERED') {
+      // Check if this is the locked DELIVERED column
+      const existingDelivered = await prisma.kanbanColumn.findFirst({
+        where: {
+          organizationId,
+          phase: phaseUpper,
+          systemKey: 'DELIVERED',
+        },
+      });
+
+      if (existingDelivered && (!columnId || existingDelivered.id !== columnId)) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'A coluna "Entregue" já existe e não pode ser modificada'
+          },
+          { status: 400 }
+        );
       }
+
+      // Don't allow renaming the DELIVERED column
+      if (columnId && existingDelivered && existingDelivered.id === columnId && title !== 'Entregue') {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'A coluna "Entregue" não pode ser renomeada'
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Get the DELIVERED column position to ensure nothing is placed after it
+    const deliveredColumn = await prisma.kanbanColumn.findFirst({
+      where: {
+        organizationId,
+        phase: phaseUpper,
+        systemKey: 'DELIVERED',
+      },
     });
+
+    if (deliveredColumn && position !== undefined && position > deliveredColumn.position) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Não é possível criar colunas após a coluna "Entregue"'
+        },
+        { status: 400 }
+      );
+    }
+
+    let column;
+
+    if (columnId) {
+      // Update existing column
+      const existingColumn = await prisma.kanbanColumn.findUnique({
+        where: { id: columnId },
+      });
+
+      if (!existingColumn) {
+        return NextResponse.json(
+          { success: false, error: 'Column not found' },
+          { status: 404 }
+        );
+      }
+
+      // Don't allow modifying locked columns
+      if (existingColumn.isLocked) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'A coluna "Entregue" está bloqueada e não pode ser modificada'
+          },
+          { status: 400 }
+        );
+      }
+
+      column = await prisma.kanbanColumn.update({
+        where: { id: columnId },
+        data: {
+          title: title || existingColumn.title,
+          position: position !== undefined ? position : existingColumn.position,
+          color: color !== undefined ? color : existingColumn.color,
+        },
+      });
+    } else {
+      // Create new column
+      // Calculate position if not provided
+      const finalPosition = position !== undefined ? position : (deliveredColumn ? deliveredColumn.position : 99);
+
+      column = await prisma.kanbanColumn.create({
+        data: {
+          organizationId,
+          phase: phaseUpper,
+          title,
+          position: finalPosition,
+          color,
+          isLocked: false,
+          systemKey: null,
+          isActive: true,
+        },
+      });
+
+      // If we inserted before DELIVERED, shift DELIVERED position
+      if (deliveredColumn && finalPosition < deliveredColumn.position) {
+        await prisma.kanbanColumn.update({
+          where: { id: deliveredColumn.id },
+          data: { position: deliveredColumn.position + 1 },
+        });
+      }
+    }
 
     return NextResponse.json({
       success: true,
-      data: column
+      data: column,
     });
   } catch (error) {
-    console.error('Error updating kanban column:', error);
+    console.error('Error creating/updating kanban column:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to update column' },
+      { 
+        success: false, 
+        error: 'Failed to create/update column',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
 }
 
-// DELETE - Reset column to default
+/**
+ * PUT - Reorder columns
+ * Body: { organizationId, phase, columnIds: string[] }
+ */
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { organizationId = 'default', phase, columnIds } = body;
+
+    if (!phase || !columnIds || !Array.isArray(columnIds)) {
+      return NextResponse.json(
+        { success: false, error: 'Phase and columnIds array are required' },
+        { status: 400 }
+      );
+    }
+
+    const phaseUpper = phase.toUpperCase();
+
+    // Get all columns for this phase
+    const columns = await prisma.kanbanColumn.findMany({
+      where: {
+        organizationId,
+        phase: phaseUpper,
+      },
+    });
+
+    // Find the DELIVERED column
+    const deliveredColumn = columns.find(c => c.systemKey === 'DELIVERED');
+
+    // Ensure DELIVERED is last
+    if (deliveredColumn) {
+      const deliveredIndex = columnIds.indexOf(deliveredColumn.id);
+      if (deliveredIndex !== -1 && deliveredIndex !== columnIds.length - 1) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'A coluna "Entregue" deve permanecer na última posição'
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Update positions
+    const updatePromises = columnIds.map((id, index) =>
+      prisma.kanbanColumn.update({
+        where: { id },
+        data: { position: index },
+      })
+    );
+
+    await Promise.all(updatePromises);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Columns reordered successfully',
+    });
+  } catch (error) {
+    console.error('Error reordering kanban columns:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Failed to reorder columns',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE - Delete a column (only non-locked columns)
+ * Query params: columnId
+ */
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const phase = searchParams.get('phase');
-    const statusKey = searchParams.get('statusKey');
+    const columnId = searchParams.get('columnId');
 
-    if (!phase || !statusKey) {
+    if (!columnId) {
       return NextResponse.json(
-        { success: false, error: 'Phase and statusKey are required' },
+        { success: false, error: 'Column ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const column = await prisma.kanbanColumn.findUnique({
+      where: { id: columnId },
+    });
+
+    if (!column) {
+      return NextResponse.json(
+        { success: false, error: 'Column not found' },
+        { status: 404 }
+      );
+    }
+
+    if (column.isLocked || column.systemKey === 'DELIVERED') {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'A coluna "Entregue" não pode ser removida'
+        },
         { status: 400 }
       );
     }
 
     await prisma.kanbanColumn.delete({
-      where: {
-        phase_statusKey: { phase, statusKey }
-      }
+      where: { id: columnId },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Column reset to default'
+      message: 'Column deleted successfully',
     });
   } catch (error) {
-    console.error('Error resetting kanban column:', error);
+    console.error('Error deleting kanban column:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to reset column' },
+      { 
+        success: false, 
+        error: 'Failed to delete column',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

@@ -18,6 +18,7 @@ async function main() {
 
   // Limpar banco de dados em ordem correta devido às relações
   console.log('🧹 Limpando banco de dados...')
+  await prisma.kanbanColumn.deleteMany()
   await prisma.notification.deleteMany()
   await prisma.projectActivity.deleteMany()
   await prisma.projectComment.deleteMany()
@@ -37,6 +38,59 @@ async function main() {
   await prisma.client.deleteMany()
   await prisma.loginAudit.deleteMany()
   await prisma.user.deleteMany()
+
+  // ========================================
+  // BOOTSTRAP KANBAN COLUMNS
+  // ========================================
+  console.log('📋 Criando colunas padrão do Kanban...')
+  
+  const organizationId = 'default'
+  
+  // Colunas para Captação
+  const captacaoColumns = [
+    { title: 'A agendar', position: 0, isLocked: false, systemKey: null },
+    { title: 'Agendado', position: 1, isLocked: false, systemKey: null },
+    { title: 'Em execução', position: 2, isLocked: false, systemKey: null },
+    { title: 'Entregue', position: 3, isLocked: true, systemKey: 'DELIVERED' },
+  ]
+  
+  for (const col of captacaoColumns) {
+    await prisma.kanbanColumn.create({
+      data: {
+        organizationId,
+        phase: 'CAPTACAO',
+        title: col.title,
+        position: col.position,
+        isLocked: col.isLocked,
+        systemKey: col.systemKey,
+        isActive: true,
+      },
+    })
+  }
+  
+  // Colunas para Edição
+  const edicaoColumns = [
+    { title: 'A iniciar', position: 0, isLocked: false, systemKey: null },
+    { title: 'Em edição', position: 1, isLocked: false, systemKey: null },
+    { title: 'Em revisão', position: 2, isLocked: false, systemKey: null },
+    { title: 'Entregue', position: 3, isLocked: true, systemKey: 'DELIVERED' },
+  ]
+  
+  for (const col of edicaoColumns) {
+    await prisma.kanbanColumn.create({
+      data: {
+        organizationId,
+        phase: 'EDICAO',
+        title: col.title,
+        position: col.position,
+        isLocked: col.isLocked,
+        systemKey: col.systemKey,
+        isActive: true,
+      },
+    })
+  }
+  
+  console.log('✅ Criadas colunas do Kanban (Captação: 4, Edição: 4)')
 
   // Criar usuário administrador
   const adminPassword = 'admin123';

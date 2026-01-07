@@ -100,19 +100,15 @@ interface KanbanBoardProps {
   phase?: ProjectPhase;
 }
 
-// Default statuses for each phase
+// Default statuses for each phase - NEW STRUCTURE
 const DEFAULT_STATUSES: Record<string, string[]> = {
-  captacao: ['agendado', 'em-gravacao', 'upload-nas', 'concluido'],
-  edicao: ['receber-ficheiros', 'decupagem', 'em-edicao', 'feedback', 'revisao-cliente', 'entregue'],
+  captacao: ['a-agendar', 'agendado', 'em-execucao', 'entregue'],
+  edicao: ['a-iniciar', 'em-edicao', 'em-revisao', 'entregue'],
   finalizados: ['entregue'],
 };
 
-// Fixed columns that cannot be reordered (always last)
-const FIXED_LAST_COLUMNS: Record<string, string> = {
-  captacao: 'concluido',
-  edicao: 'entregue',
-  finalizados: 'entregue',
-};
+// System key for the locked "Entregue" column
+const DELIVERED_SYSTEM_KEY = 'DELIVERED';
 
 export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
   const { formatCurrency } = useLocale();
@@ -136,124 +132,129 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
   const [dragType, setDragType] = useState<'card' | 'column' | null>(null);
   const [draggedColumnId, setDraggedColumnId] = useState<string | null>(null);
 
-  // Column customization state
-  const [customColumnNames, setCustomColumnNames] = useState<Record<string, string>>({});
-  const [customColumns, setCustomColumns] = useState<string[]>([]);
-  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
-  const [columnOrder, setColumnOrder] = useState<string[]>([]);
+  // Column state - NEW STRUCTURE
+  interface KanbanColumnData {
+    id: string;
+    title: string;
+    position: number;
+    isLocked: boolean;
+    systemKey: string | null;
+    color: string | null;
+    isActive: boolean;
+  }
+
+  const [columns, setColumns] = useState<KanbanColumnData[]>([]);
+  const [columnsLoading, setColumnsLoading] = useState(true);
   const [editingColumn, setEditingColumn] = useState<string | null>(null);
   const [editingColumnName, setEditingColumnName] = useState('');
 
   // New column dialog
   const [showNewColumnDialog, setShowNewColumnDialog] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
-  const [newColumnKey, setNewColumnKey] = useState('');
 
-  // Load custom column names and order on mount
+  const organizationId = 'default'; // TODO: Get from context/auth when multi-tenant
+
+  // Load columns from API (with bootstrap if needed)
   useEffect(() => {
-    loadCustomColumnNames();
+    loadColumns();
   }, [phase]);
 
-  const loadCustomColumnNames = async () => {
+  const loadColumns = async () => {
     try {
-      const res = await fetch(`/api/kanban/columns?phase=${phase}`);
+      setColumnsLoading(true);
+      const phaseUpper = phase.toUpperCase();
+      const res = await fetch(`/api/kanban/columns?phase=${phaseUpper}&organizationId=${organizationId}`);
       const data = await res.json();
-      if (data.success && data.customColumns) {
-        const names: Record<string, string> = {};
-        const custom: string[] = [];
-        const hidden: string[] = [];
-        const orderMap: Record<string, number> = {};
-
-        data.customColumns.forEach((col: any) => {
-          if (col.customName) {
-            names[col.statusKey] = col.customName;
-          }
-          // Check for custom-created columns (not in defaults)
-          if (!DEFAULT_STATUSES[phase]?.includes(col.statusKey)) {
-            custom.push(col.statusKey);
-          }
-          // Check for hidden/deleted columns
-          if (col.isActive === false) {
-            hidden.push(col.statusKey);
-          }
-          // Store order
-          if (col.order !== undefined && col.order !== null) {
-            orderMap[col.statusKey] = col.order;
-          }
+      
+      if (data.success && data.data && data.data.length > 0) {
+        setColumns(data.data);
+      } else {
+        // No columns found - bootstrap them
+        const bootstrapRes = await fetch('/api/kanban/columns/bootstrap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ organizationId }),
         });
-
-        setCustomColumnNames(names);
-        setCustomColumns(custom);
-        setHiddenColumns(hidden);
-
-        // Build ordered list
-        const defaults = DEFAULT_STATUSES[phase] || [];
-        const allCols = [...defaults, ...custom].filter(s => !hidden.includes(s));
-
-        // Sort by saved order if available
-        const sortedCols = allCols.sort((a, b) => {
-          const orderA = orderMap[a] ?? 999;
-          const orderB = orderMap[b] ?? 999;
-          return orderA - orderB;
-        });
-
-        // Ensure fixed column is always last
-        const fixedCol = FIXED_LAST_COLUMNS[phase];
-        if (fixedCol && sortedCols.includes(fixedCol)) {
-          const filtered = sortedCols.filter(c => c !== fixedCol);
-          setColumnOrder([...filtered, fixedCol]);
-        } else {
-          setColumnOrder(sortedCols);
+        
+        const bootstrapData = await bootstrapRes.json();
+        if (bootstrapData.success) {
+          // Reload columns after bootstrap
+          const reloadRes = await fetch(`/api/kanban/columns?phase=${phaseUpper}&organizationId=${organizationId}`);
+          const reloadData = await reloadRes.json();
+          if (reloadData.success) {
+            setColumns(reloadData.data);
+          }
         }
       }
     } catch (error) {
-      console.error('Error loading custom column names:', error);
-      // Fallback to default order
-      const defaults = DEFAULT_STATUSES[phase] || [];
-      setColumnOrder(defaults);
+      console.error('Error loading columns:', error);
+      toast({
+        title: 'Erro ao carregar colunas',
+        description: 'Ocorreu um erro ao carregar as colunas do Kanban',
+        variant: 'error'
+      });
+    } finally {
+      setColumnsLoading(false);
     }
   };
 
-  const getColumnName = (statusKey: string) => {
-    return customColumnNames[statusKey] || statusLabels[statusKey] || statusKey;
+  const getColumnName = (columnId: string) => {
+    const column = columns.find(c => c.id === columnId);
+    return column?.title || columnId;
   };
 
-  const handleSaveColumnName = async (statusKey: string, newName: string) => {
+  const isColumnLocked = (columnId: string) => {
+    const column = columns.find(c => c.id === columnId);
+    return column?.isLocked || column?.systemKey === DELIVERED_SYSTEM_KEY || false;
+  };
+
+  const handleSaveColumnName = async (columnId: string, newName: string) => {
+    const column = columns.find(c => c.id === columnId);
+    if (!column) return;
+
+    // Block renaming of locked/DELIVERED columns
+    if (column.isLocked || column.systemKey === DELIVERED_SYSTEM_KEY) {
+      toast({
+        title: 'Operação não permitida',
+        description: 'A coluna "Entregue" não pode ser renomeada',
+        variant: 'error'
+      });
+      setEditingColumn(null);
+      return;
+    }
+
     try {
       const res = await fetch('/api/kanban/columns', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phase,
-          statusKey,
-          customName: newName.trim() || null
+          organizationId,
+          phase: phase.toUpperCase(),
+          title: newName.trim(),
+          columnId: column.id,
+          position: column.position,
+          color: column.color,
         })
       });
 
       if (res.ok) {
-        if (newName.trim()) {
-          setCustomColumnNames(prev => ({ ...prev, [statusKey]: newName.trim() }));
+        const data = await res.json();
+        if (data.success) {
+          // Update local state
+          setColumns(prev => prev.map(c => 
+            c.id === columnId ? { ...c, title: newName.trim() } : c
+          ));
           toast({
             title: 'Nome atualizado ✅',
             description: `A coluna foi renomeada para "${newName.trim()}"`,
             variant: 'success'
           });
-        } else {
-          setCustomColumnNames(prev => {
-            const copy = { ...prev };
-            delete copy[statusKey];
-            return copy;
-          });
-          toast({
-            title: 'Nome restaurado ✅',
-            description: 'O nome original da coluna foi restaurado',
-            variant: 'success'
-          });
         }
       } else {
+        const errorData = await res.json();
         toast({
           title: 'Erro ao salvar',
-          description: 'Não foi possível atualizar o nome da coluna',
+          description: errorData.error || 'Não foi possível atualizar o nome da coluna',
           variant: 'error'
         });
       }
@@ -271,64 +272,64 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
   // Save column order to database
   const saveColumnOrder = useCallback(async (newOrder: string[]) => {
     try {
-      // Save order for each column
-      await Promise.all(
-        newOrder.map((statusKey, index) =>
-          fetch('/api/kanban/columns', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              phase,
-              statusKey,
-              order: index
-            })
-          })
-        )
-      );
+      const res = await fetch('/api/kanban/columns', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organizationId,
+          phase: phase.toUpperCase(),
+          columnIds: newOrder,
+        })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        toast({
+          title: 'Erro ao reordenar',
+          description: errorData.error || 'Não foi possível reordenar as colunas',
+          variant: 'error'
+        });
+      }
     } catch (error) {
       console.error('Error saving column order:', error);
+      toast({
+        title: 'Erro ao reordenar',
+        description: 'Ocorreu um erro ao salvar a ordem das colunas',
+        variant: 'error'
+      });
     }
-  }, [phase]);
+  }, [phase, organizationId, toast]);
 
   // Create a new custom column
   const handleCreateColumn = async () => {
     if (!newColumnName.trim()) return;
 
-    // Generate a key from the name
-    const key = newColumnKey.trim() || newColumnName.toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
+    // Find DELIVERED column to insert before it
+    const deliveredColumn = columns.find(c => c.systemKey === DELIVERED_SYSTEM_KEY);
+    const newPosition = deliveredColumn ? deliveredColumn.position : columns.length;
 
     try {
       const res = await fetch('/api/kanban/columns', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phase,
-          statusKey: key,
-          customName: newColumnName.trim(),
+          organizationId,
+          phase: phase.toUpperCase(),
+          title: newColumnName.trim(),
+          position: newPosition,
           isActive: true,
-          order: columnOrder.length
         })
       });
 
-      if (res.ok) {
-        setCustomColumns(prev => [...prev, key]);
-        setCustomColumnNames(prev => ({ ...prev, [key]: newColumnName.trim() }));
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        // Reload columns to get updated list
+        await loadColumns();
+        
         setShowNewColumnDialog(false);
         setNewColumnName('');
-        setNewColumnKey('');
-        setColumnOrder(prev => {
-          // Insert before fixed column if exists
-          const fixedCol = FIXED_LAST_COLUMNS[phase];
-          if (fixedCol && prev.includes(fixedCol)) {
-            const idx = prev.indexOf(fixedCol);
-            return [...prev.slice(0, idx), key, ...prev.slice(idx)];
-          }
-          return [...prev, key];
-        });
+        
         toast({
           title: 'Coluna criada ✅',
           description: `A coluna "${newColumnName.trim()}" foi adicionada com sucesso`,
@@ -337,7 +338,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
       } else {
         toast({
           title: 'Erro ao criar coluna',
-          description: 'Não foi possível criar a coluna',
+          description: data.error || 'Não foi possível criar a coluna',
           variant: 'error'
         });
       }
@@ -352,106 +353,63 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
   };
 
   // Delete/hide a column
-  const handleDeleteColumn = async (statusKey: string) => {
-    const projectsInColumn = getProjectsByStatus(statusKey);
+  const handleDeleteColumn = async (columnId: string) => {
+    const column = columns.find(c => c.id === columnId);
+    if (!column) return;
 
-    if (projectsInColumn.length > 0) {
-      alert(`Não é possível apagar esta coluna. Existem ${projectsInColumn.length} projetos nela. Mova os projetos primeiro.`);
+    // Block deletion of locked columns
+    if (column.isLocked || column.systemKey === DELIVERED_SYSTEM_KEY) {
+      toast({
+        title: 'Operação não permitida',
+        description: 'A coluna "Entregue" não pode ser removida',
+        variant: 'error'
+      });
       return;
     }
 
-    if (!confirm(`Tem certeza que deseja apagar a coluna "${getColumnName(statusKey)}"?`)) {
+    // Check if there are projects in this column
+    const projectsInColumn = getProjectsByColumnId(columnId);
+
+    if (projectsInColumn.length > 0) {
+      toast({
+        title: 'Não é possível apagar',
+        description: `Existem ${projectsInColumn.length} projetos nesta coluna. Mova os projetos primeiro.`,
+        variant: 'error'
+      });
+      return;
+    }
+
+    if (!confirm(`Tem certeza que deseja apagar a coluna "${column.title}"?`)) {
       return;
     }
 
     try {
-      // If it's a custom column, delete it completely
-      if (customColumns.includes(statusKey)) {
-        const res = await fetch(`/api/kanban/columns?phase=${phase}&statusKey=${statusKey}`, {
-          method: 'DELETE'
-        });
+      const res = await fetch(`/api/kanban/columns?columnId=${columnId}`, {
+        method: 'DELETE'
+      });
 
-        if (res.ok) {
-          setCustomColumns(prev => prev.filter(c => c !== statusKey));
-          setCustomColumnNames(prev => {
-            const copy = { ...prev };
-            delete copy[statusKey];
-            return copy;
-          });
-          setColumnOrder(prev => prev.filter(c => c !== statusKey));
-          toast({
-            title: 'Coluna removida ✅',
-            description: `A coluna "${getColumnName(statusKey)}" foi removida`,
-            variant: 'success'
-          });
-        }
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        // Remove from local state
+        setColumns(prev => prev.filter(c => c.id !== columnId));
+        toast({
+          title: 'Coluna removida ✅',
+          description: `A coluna "${column.title}" foi removida`,
+          variant: 'success'
+        });
       } else {
-        // For default columns, just hide them
-        const res = await fetch('/api/kanban/columns', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            phase,
-            statusKey,
-            isActive: false
-          })
+        toast({
+          title: 'Erro ao remover coluna',
+          description: data.error || 'Ocorreu um erro ao remover a coluna',
+          variant: 'error'
         });
-
-        if (res.ok) {
-          setHiddenColumns(prev => [...prev, statusKey]);
-          setColumnOrder(prev => prev.filter(c => c !== statusKey));
-          toast({
-            title: 'Coluna ocultada ✅',
-            description: `A coluna "${getColumnName(statusKey)}" foi ocultada`,
-            variant: 'success'
-          });
-        }
       }
     } catch (error) {
       console.error('Error deleting column:', error);
       toast({
         title: 'Erro ao remover coluna',
         description: 'Ocorreu um erro ao remover a coluna',
-        variant: 'error'
-      });
-    }
-  };
-
-  // Restore a hidden column
-  const handleRestoreColumn = async (statusKey: string) => {
-    try {
-      const res = await fetch('/api/kanban/columns', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phase,
-          statusKey,
-          isActive: true
-        })
-      });
-
-      if (res.ok) {
-        setHiddenColumns(prev => prev.filter(c => c !== statusKey));
-        setColumnOrder(prev => {
-          // Insert before fixed column if exists
-          const fixedCol = FIXED_LAST_COLUMNS[phase];
-          if (fixedCol && prev.includes(fixedCol)) {
-            const idx = prev.indexOf(fixedCol);
-            return [...prev.slice(0, idx), statusKey, ...prev.slice(idx)];
-          }
-          return [...prev, statusKey];
-        });
-        toast({
-          title: 'Coluna restaurada ✅',
-          description: `A coluna "${statusLabels[statusKey] || statusKey}" foi restaurada`,
-          variant: 'success'
-        });
-      }
-    } catch (error) {
-      console.error('Error restoring column:', error);
-      toast({
-        title: 'Erro ao restaurar coluna',
-        description: 'Ocorreu um erro ao restaurar a coluna',
         variant: 'error'
       });
     }
@@ -496,18 +454,18 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     ? filteredProjects.filter(p => p.phase === phase)
     : (projectsByPhase[phase] || []);
 
-  // Use columnOrder state instead of computing statuses
-  const statuses = columnOrder.length > 0 ? columnOrder : (DEFAULT_STATUSES[phase] || []);
+  // Get reorderable columns (exclude locked columns)
+  const reorderableColumns = columns.filter(c => !c.isLocked && c.systemKey !== DELIVERED_SYSTEM_KEY);
+  const lockedColumns = columns.filter(c => c.isLocked || c.systemKey === DELIVERED_SYSTEM_KEY);
 
-  // Get reorderable columns (exclude fixed last column)
-  const fixedLastColumn = FIXED_LAST_COLUMNS[phase];
-  const reorderableColumns = statuses.filter(s => s !== fixedLastColumn);
-  const fixedColumns = fixedLastColumn && statuses.includes(fixedLastColumn) ? [fixedLastColumn] : [];
-
-  const getProjectsByStatus = (status: string) => {
+  const getProjectsByColumnId = (columnId: string) => {
+    const column = columns.find(c => c.id === columnId);
+    if (!column) return [];
+    
     return projects.filter(project => {
       const currentStatus = phase === 'captacao' ? project.statusCaptacao : project.statusEdicao;
-      return currentStatus === status;
+      // Match by column title for now (TODO: update to use column ID when projects are migrated)
+      return currentStatus === column.title.toLowerCase().replace(/\s+/g, '-');
     });
   };
 
@@ -516,7 +474,17 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     const id = active.id as string;
 
     // Check if dragging a column or a card
-    if (statuses.includes(id) && !fixedColumns.includes(id)) {
+    const column = columns.find(c => c.id === id);
+    if (column) {
+      if (column.isLocked || column.systemKey === DELIVERED_SYSTEM_KEY) {
+        // Block dragging locked columns
+        toast({
+          title: 'Operação não permitida',
+          description: 'A coluna "Entregue" está bloqueada e não pode ser movida',
+          variant: 'error'
+        });
+        return;
+      }
       setDragType('column');
       setDraggedColumnId(id);
     } else {
@@ -537,26 +505,36 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
 
     // Handle column reordering
     if (dragType === 'column') {
-      const activeIndex = reorderableColumns.indexOf(active.id as string);
-      const overIndex = reorderableColumns.indexOf(over.id as string);
+      const activeColumn = reorderableColumns.find(c => c.id === active.id as string);
+      const overColumn = reorderableColumns.find(c => c.id === over.id as string);
 
-      if (activeIndex !== -1 && overIndex !== -1 && activeIndex !== overIndex) {
-        const newReorderableOrder = arrayMove(reorderableColumns, activeIndex, overIndex);
-        const newFullOrder = [...newReorderableOrder, ...fixedColumns];
+      if (activeColumn && overColumn) {
+        const activeIndex = reorderableColumns.findIndex(c => c.id === active.id);
+        const overIndex = reorderableColumns.findIndex(c => c.id === over.id);
 
-        setColumnOrder(newFullOrder);
-        await saveColumnOrder(newFullOrder);
+        if (activeIndex !== -1 && overIndex !== -1 && activeIndex !== overIndex) {
+          const newReorderableOrder = arrayMove(reorderableColumns, activeIndex, overIndex);
+          const newColumnIds = [...newReorderableOrder.map(c => c.id), ...lockedColumns.map(c => c.id)];
+
+          // Update local state optimistically
+          const reorderedColumns = [...newReorderableOrder, ...lockedColumns];
+          setColumns(reorderedColumns);
+          
+          // Save to backend
+          await saveColumnOrder(newColumnIds);
+        }
       }
 
       resetDragState();
       return;
     }
 
-    // Handle card dragging (existing logic)
+    // Handle card dragging
     const projectId = active.id as string;
-    const newStatus = over.id as string;
-
-    if (!statuses.includes(newStatus)) {
+    const targetColumnId = over.id as string;
+    
+    const targetColumn = columns.find(c => c.id === targetColumnId);
+    if (!targetColumn) {
       resetDragState();
       return;
     }
@@ -567,6 +545,9 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
       return;
     }
 
+    // Convert column title to status key for now
+    // TODO: Update when migrating projects to use column IDs
+    const newStatus = targetColumn.title.toLowerCase().replace(/\s+/g, '-');
     const currentStatus = phase === 'captacao' ? project.statusCaptacao : project.statusEdicao;
 
     if (currentStatus === newStatus) {
@@ -584,19 +565,19 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
       sonnerToast.dismiss(loadingToast);
       toast({
         title: 'Projeto movido ✅',
-        description: `"${project.title}" foi movido para ${statusLabels[newStatus] || newStatus}`,
+        description: `"${project.title}" foi movido para ${targetColumn.title}`,
         variant: 'success'
       });
 
-      // If moving to "concluido" in captacao, handle automatic phase transition
-      if (phase === 'captacao' && newStatus === 'concluido') {
+      // If moving to "Entregue", handle automatic phase transition
+      if (targetColumn.systemKey === DELIVERED_SYSTEM_KEY) {
         const needsEditing = project.responsavelEdicaoId ||
           ['hotel', 'experiencia', 'reels'].includes(project.videoType);
 
-        if (needsEditing) {
+        if (phase === 'captacao' && needsEditing) {
           console.log('Project will continue to Edição phase');
         } else {
-          console.log('Project is captacao-only');
+          console.log('Project marked as delivered');
         }
       }
     } catch (error) {
@@ -629,11 +610,11 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
       let newStatusEdicao = project.statusEdicao;
 
       if (targetPhase === 'captacao') {
-        newStatusCaptacao = 'agendado';
+        newStatusCaptacao = 'a-agendar'; // Updated to new status
       } else if (targetPhase === 'edicao') {
-        newStatusEdicao = 'receber-ficheiros';
+        newStatusEdicao = 'a-iniciar'; // Updated to new status
         if (phase === 'captacao') {
-          newStatusCaptacao = 'concluido';
+          newStatusCaptacao = 'entregue'; // Mark captacao as delivered
         }
       } else if (targetPhase === 'finalizados') {
         newStatusEdicao = 'entregue';
@@ -684,34 +665,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     }
   };
 
-  // Move all cards in a column to another status
-  const handleMoveAllCards = async (fromStatus: string, toStatus: string) => {
-    const cardsToMove = getProjectsByStatus(fromStatus);
-    if (cardsToMove.length === 0) return;
-
-    if (!confirm(`Mover ${cardsToMove.length} projetos de "${getColumnName(fromStatus)}" para "${getColumnName(toStatus)}"?`)) {
-      return;
-    }
-
-    try {
-      for (const project of cardsToMove) {
-        await updateProjectStatus(project.id, phase, toStatus);
-      }
-      toast({
-        title: 'Projetos movidos ✅',
-        description: `${cardsToMove.length} projetos foram movidos para ${statusLabels[toStatus] || toStatus}`,
-        variant: 'success'
-      });
-    } catch (error) {
-      toast({
-        title: 'Erro ao mover projetos',
-        description: 'Ocorreu um erro ao mover os projetos',
-        variant: 'error'
-      });
-    }
-  };
-
-  if (loading) {
+  if (loading || columnsLoading) {
     return (
       <div className="glass-card p-8 text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
@@ -762,29 +716,6 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
               </Tooltip>
             )}
 
-            {/* Show hidden columns button */}
-            {hiddenColumns.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="glass">
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    Restaurar colunas ({hiddenColumns.length})
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="glass-strong border-white/20">
-                  {hiddenColumns.map(col => (
-                    <DropdownMenuItem
-                      key={col}
-                      onClick={() => handleRestoreColumn(col)}
-                      className="cursor-pointer"
-                    >
-                      {statusLabels[col] || col}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
             {/* Add new column button */}
             <Button
               variant="outline"
@@ -806,58 +737,57 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
         >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:flex lg:gap-4 xl:gap-6 lg:overflow-x-auto pb-4 gap-4 items-start">
             <SortableContext
-              items={reorderableColumns}
+              items={reorderableColumns.map(c => c.id)}
               strategy={horizontalListSortingStrategy}
             >
-              {statuses.map((status, index) => {
-                const statusProjects = getProjectsByStatus(status);
-                const isCompletedColumn = phase === 'captacao' && status === 'concluido';
-                const isCustomColumn = customColumns.includes(status);
-                const canDelete = isCustomColumn || (!DEFAULT_STATUSES[phase]?.includes(status));
-
-                // Fixed columns (last) are not draggable
-                const isFixed = fixedColumns.includes(status);
+              {columns.map((column, index) => {
+                const columnProjects = getProjectsByColumnId(column.id);
+                const isDeliveredColumn = column.systemKey === DELIVERED_SYSTEM_KEY;
+                const isLocked = column.isLocked || isDeliveredColumn;
 
                 return (
                   <DroppableColumn
-                    key={status}
-                    id={status}
-                    title={getColumnName(status)}
-                    defaultTitle={statusLabels[status] || status}
-                    count={statusProjects.length}
+                    key={column.id}
+                    id={column.id}
+                    title={column.title}
+                    count={columnProjects.length}
                     phase={phase}
-                    allStatuses={statuses}
-                    currentIndex={index}
-                    onMoveAllCards={handleMoveAllCards}
-                    isEditing={editingColumn === status}
+                    isEditing={editingColumn === column.id}
                     editingName={editingColumnName}
                     onStartEdit={() => {
-                      setEditingColumn(status);
-                      setEditingColumnName(getColumnName(status));
+                      if (isLocked) {
+                        toast({
+                          title: 'Operação não permitida',
+                          description: 'A coluna "Entregue" não pode ser renomeada',
+                          variant: 'error'
+                        });
+                        return;
+                      }
+                      setEditingColumn(column.id);
+                      setEditingColumnName(column.title);
                     }}
                     onEditChange={setEditingColumnName}
-                    onSaveEdit={() => handleSaveColumnName(status, editingColumnName)}
+                    onSaveEdit={() => handleSaveColumnName(column.id, editingColumnName)}
                     onCancelEdit={() => setEditingColumn(null)}
-                    isCustomName={!!customColumnNames[status]}
-                    onResetName={() => handleSaveColumnName(status, '')}
-                    isCompletedColumn={isCompletedColumn}
-                    canDelete={canDelete || statusProjects.length === 0}
-                    onDelete={() => handleDeleteColumn(status)}
-                    isDraggable={!isFixed}
+                    isDeliveredColumn={isDeliveredColumn}
+                    isLocked={isLocked}
+                    canDelete={!isLocked && columnProjects.length === 0}
+                    onDelete={() => handleDeleteColumn(column.id)}
+                    isDraggable={!isLocked}
                   >
                     <SortableContext
-                      items={statusProjects.map(p => p.id)}
+                      items={columnProjects.map(p => p.id)}
                       strategy={verticalListSortingStrategy}
                     >
                       <div className="space-y-3">
-                        {statusProjects.map((project) => (
+                        {columnProjects.map((project) => (
                           <DraggableProjectCard
                             key={project.id}
                             project={project}
                             phase={phase}
                             onCardClick={setSelectedProject}
                             onMoveToPhase={handleMoveToPhase}
-                            allStatuses={statuses}
+                            columns={columns}
                             isCompact={isCompact}
                           />
                         ))}
@@ -921,21 +851,6 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Identificador (opcional)
-                </label>
-                <Input
-                  value={newColumnKey}
-                  onChange={(e) => setNewColumnKey(e.target.value)}
-                  placeholder="Gerado automaticamente se vazio"
-                  className="glass"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Usado internamente. Deixe vazio para gerar automaticamente.
-                </p>
-              </div>
-
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="ghost" onClick={() => setShowNewColumnDialog(false)}>
                   Cancelar
@@ -957,52 +872,42 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
 function DroppableColumn({
   id,
   title,
-  defaultTitle,
   count,
   children,
   phase,
-  allStatuses,
-  currentIndex,
-  onMoveAllCards,
   isEditing,
   editingName,
   onStartEdit,
   onEditChange,
   onSaveEdit,
   onCancelEdit,
-  isCustomName,
-  onResetName,
-  isCompletedColumn,
+  isDeliveredColumn,
+  isLocked,
   canDelete,
   onDelete,
   isDraggable = true,
 }: {
   id: string;
   title: string;
-  defaultTitle: string;
   count: number;
   children: React.ReactNode;
-  phase: ProjectPhase;
-  allStatuses: string[];
-  currentIndex: number;
-  onMoveAllCards: (from: string, to: string) => void;
+  phase?: ProjectPhase;
   isEditing: boolean;
   editingName: string;
   onStartEdit: () => void;
   onEditChange: (name: string) => void;
   onSaveEdit: () => void;
   onCancelEdit: () => void;
-  isCustomName: boolean;
-  onResetName: () => void;
-  isCompletedColumn?: boolean;
+  isDeliveredColumn?: boolean;
+  isLocked?: boolean;
   canDelete?: boolean;
   onDelete?: () => void;
   isDraggable?: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
-  // Special styles for completed column in captacao
-  const completedColumnStyles = isCompletedColumn
+  // Special styles for delivered column
+  const deliveredColumnStyles = isDeliveredColumn
     ? 'ring-2 ring-green-500/30 bg-gradient-to-b from-green-500/10 to-transparent'
     : '';
 
@@ -1038,9 +943,9 @@ function DroppableColumn({
         isOver ? 'ring-2 ring-purple-500/50 scale-105' : ''
       }`}
     >
-      <div className={`glass-card h-full flex flex-col ${completedColumnStyles}`}>
+      <div className={`glass-card h-full flex flex-col ${deliveredColumnStyles}`}>
         <div className={`p-3 md:p-4 border-b flex-shrink-0 ${
-          isCompletedColumn
+          isDeliveredColumn
             ? 'border-green-500/30 bg-gradient-to-r from-green-500/20 to-emerald-500/10'
             : 'border-white/10'
         }`}>
@@ -1080,26 +985,25 @@ function DroppableColumn({
                 </div>
               ) : (
                 <>
-                  {isCompletedColumn && (
+                  {isDeliveredColumn && (
                     <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
                   )}
                   <h3 className={`font-semibold text-sm md:text-base truncate ${
-                    isCompletedColumn ? 'text-green-400' : 'text-foreground'
+                    isDeliveredColumn ? 'text-green-400' : 'text-foreground'
                   }`}>
                     {title}
-                    {isCustomName && <span className="text-primary ml-1">*</span>}
                   </h3>
                   <Badge
                     variant="outline"
                     className={`text-xs flex-shrink-0 ${
-                      isCompletedColumn ? 'border-green-500/50 text-green-400' : ''
+                      isDeliveredColumn ? 'border-green-500/50 text-green-400' : ''
                     }`}
                   >
                     {count}
                   </Badge>
 
-                  {/* Info tooltip for completed column */}
-                  {isCompletedColumn && (
+                  {/* Info tooltip for delivered column */}
+                  {isDeliveredColumn && (
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-green-400/70 hover:text-green-400">
@@ -1143,56 +1047,24 @@ function DroppableColumn({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="glass-strong border-white/20 w-56">
-                  {/* Edit column name */}
-                  <DropdownMenuItem onClick={onStartEdit} className="cursor-pointer">
-                    <Edit2 className="w-4 h-4 mr-2" />
-                    Editar nome da coluna
-                  </DropdownMenuItem>
-
-                  {/* Reset to default name */}
-                  {isCustomName && (
-                    <DropdownMenuItem onClick={onResetName} className="cursor-pointer text-muted-foreground">
-                      <RotateCcw className="w-4 h-4 mr-2" />
-                      Restaurar nome original ({defaultTitle})
+                  {/* Edit column name - only for non-locked columns */}
+                  {!isLocked && (
+                    <DropdownMenuItem onClick={onStartEdit} className="cursor-pointer">
+                      <Edit2 className="w-4 h-4 mr-2" />
+                      Editar nome da coluna
                     </DropdownMenuItem>
                   )}
 
-                  <DropdownMenuSeparator />
-
-                  {/* Move all to next status */}
-                  {currentIndex < allStatuses.length - 1 && count > 0 && (
-                    <DropdownMenuItem
-                      onClick={() => onMoveAllCards(id, allStatuses[currentIndex + 1])}
-                      className="cursor-pointer"
-                    >
-                      <ArrowRight className="w-4 h-4 mr-2" />
-                      Mover todos para próximo
+                  {/* Info about locked column */}
+                  {isLocked && (
+                    <DropdownMenuItem disabled className="cursor-not-allowed text-muted-foreground">
+                      <Lock className="w-4 h-4 mr-2" />
+                      Coluna bloqueada
                     </DropdownMenuItem>
                   )}
 
-                  {/* Move all to any status */}
-                  {count > 0 && (
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger>
-                        <Send className="w-4 h-4 mr-2" />
-                        Mover todos para...
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent className="glass-strong border-white/20">
-                        {allStatuses.filter(s => s !== id).map(status => (
-                          <DropdownMenuItem
-                            key={status}
-                            onClick={() => onMoveAllCards(id, status)}
-                            className="cursor-pointer"
-                          >
-                            {statusLabels[status] || status}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-                  )}
-
-                  {/* Delete column */}
-                  {canDelete && (
+                  {/* Delete column - only for non-locked columns */}
+                  {canDelete && !isLocked && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
@@ -1210,8 +1082,8 @@ function DroppableColumn({
           </div>
         </div>
 
-        {/* Completed column info banner */}
-        {isCompletedColumn && (
+        {/* Delivered column info banner */}
+        {isDeliveredColumn && (
           <div className="px-3 py-2 bg-gradient-to-r from-green-500/10 to-transparent border-b border-green-500/20">
             <p className="text-[10px] text-green-400/80 flex items-center gap-1.5">
               <ArrowRightCircle className="w-3 h-3" />
@@ -1232,14 +1104,14 @@ function DraggableProjectCard({
   phase,
   onCardClick,
   onMoveToPhase,
-  allStatuses,
+  columns,
   isCompact = false,
 }: {
   project: Project;
   phase: ProjectPhase;
   onCardClick: (project: Project) => void;
   onMoveToPhase: (projectId: string, phase: ProjectPhase) => void;
-  allStatuses: string[];
+  columns: Array<{ id: string; title: string; systemKey: string | null }>;
   isCompact?: boolean;
 }) {
   const {
@@ -1267,7 +1139,7 @@ function DraggableProjectCard({
         phase={phase}
         onCardClick={onCardClick}
         onMoveToPhase={onMoveToPhase}
-        allStatuses={allStatuses}
+        columns={columns}
         isCompact={isCompact}
         dragAttributes={attributes}
         dragListeners={listeners}
@@ -1283,7 +1155,7 @@ function ProjectCard({
   isDragging = false,
   onCardClick,
   onMoveToPhase,
-  allStatuses,
+  columns,
   isCompact = false,
   dragAttributes,
   dragListeners,
@@ -1294,7 +1166,7 @@ function ProjectCard({
   isCompact?: boolean;
   onCardClick?: (project: Project) => void;
   onMoveToPhase?: (projectId: string, phase: ProjectPhase) => void;
-  allStatuses?: string[];
+  columns?: Array<{ id: string; title: string; systemKey: string | null }>;
   dragAttributes?: any;
   dragListeners?: any;
 }) {
@@ -1311,7 +1183,13 @@ function ProjectCard({
     onCardClick?.(project);
   };
 
-  const handleQuickStatusChange = async (newStatus: string) => {
+  const handleQuickStatusChange = async (columnId: string) => {
+    const column = columns?.find(c => c.id === columnId);
+    if (!column) return;
+    
+    // Convert column title to status key (temporary until projects use column IDs)
+    const newStatus = column.title.toLowerCase().replace(/\s+/g, '-');
+    
     try {
       await updateProjectStatus(project.id, phase, newStatus);
     } catch (error) {
@@ -1368,20 +1246,24 @@ function ProjectCard({
                 <DropdownMenuSeparator />
 
                 {/* Quick status change */}
-                {allStatuses && allStatuses.length > 0 && (
+                {columns && columns.length > 0 && (
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                       <ArrowRight className="w-4 h-4 mr-2" />
-                      Mover para status...
+                      Mover para coluna...
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent className="glass-strong border-white/20">
-                      {allStatuses.filter(s => s !== currentStatus).map(status => (
+                      {columns.filter(col => {
+                        // Filter out current column
+                        const colStatusKey = col.title.toLowerCase().replace(/\s+/g, '-');
+                        return colStatusKey !== currentStatus;
+                      }).map(col => (
                         <DropdownMenuItem
-                          key={status}
-                          onClick={() => handleQuickStatusChange(status)}
+                          key={col.id}
+                          onClick={() => handleQuickStatusChange(col.id)}
                           className="cursor-pointer"
                         >
-                          {statusLabels[status] || status}
+                          {col.title}
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuSubContent>
