@@ -36,24 +36,24 @@ cd willflow-crm
 
 ```bash
 # Instalar dependências
-bun install
+npm install
 
 # Configurar database
 cp .env.example .env
 # Editar .env com sua DATABASE_URL
 
 # Gerar Prisma Client
-bunx prisma generate
+npx prisma generate
 
 # Sincronizar schema
-bunx prisma db push
+npx prisma db push
 
 # Popular com dados de teste completos
 export SEED_WITH_SAMPLE_DATA=true
-bunx prisma db seed
+npm run db:seed
 
 # Iniciar servidor de desenvolvimento
-bun run dev
+npm run dev
 ```
 
 ## 🧪 Dados de Teste
@@ -85,8 +85,32 @@ npm run db:seed
 ✅ **Status**: Auto-deploy configurado
 🔗 Faz deploy automaticamente a cada push na branch `main`
 
+⚠️ **Importante**: A configuração de deploy foi otimizada para usar `npm` e `node` de forma consistente.
+
+#### Processo de Build no Railway:
+1. `npm install --legacy-peer-deps` - Instala dependências
+2. `npx prisma generate` - Gera Prisma Client
+3. `npx prisma db push` - Aplica schema no banco
+4. `npm run build` - Cria build de produção do Next.js
+5. `npm run start` - Inicia servidor de produção
+
+📖 **Ver documentação completa de deploy**: [DEPLOY_GUIDE.md](./DEPLOY_GUIDE.md)
+
+### Reset do Banco de Dados
+
+Para resetar completamente o banco de dados com dados fictícios:
+
+```bash
+# Local
+npm run db:reset
+
+# Railway (via CLI)
+railway run npm run db:reset
+```
+
 ## 📚 Documentação
 
+- `DEPLOY_GUIDE.md` - 🆕 **Guia completo de deploy e troubleshooting**
 - `SEED_DATA_GUIDE.md` - Guia completo de dados de teste
 - `DATABASE_SETUP.md` - Configuração do PostgreSQL
 - `RAILWAY_DEPLOY_GUIDE.md` - Deploy no Railway
