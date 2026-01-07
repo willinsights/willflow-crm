@@ -11,6 +11,17 @@ export const KANBAN_CONSTANTS = {
   DEFAULT_ORGANIZATION: 'default',
 } as const;
 
+/**
+ * Default status keys for each phase
+ * These define the standard workflow statuses that should be used when creating
+ * new projects or initializing columns.
+ * 
+ * @example
+ * ```typescript
+ * // Use when creating a new project in captacao phase
+ * const initialStatus = DEFAULT_STATUSES.CAPTACAO.initial; // 'a-agendar'
+ * ```
+ */
 export const DEFAULT_STATUSES = {
   CAPTACAO: {
     initial: 'a-agendar',

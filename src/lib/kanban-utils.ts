@@ -31,6 +31,17 @@ export function getStatusKeyFromColumn(column: KanbanColumnData): string {
 
 /**
  * Verifica se um projeto pertence a uma coluna específica
+ * 
+ * @param projectStatus - The current status of the project
+ * @param column - The kanban column to check against
+ * @returns true if the project status matches the column's status key
+ * 
+ * @example
+ * ```typescript
+ * const project = { statusCaptacao: 'agendado' };
+ * const column = { title: 'Agendado', statusKey: 'agendado', ... };
+ * const matches = matchProjectToColumn(project.statusCaptacao, column); // true
+ * ```
  */
 export function matchProjectToColumn(
   projectStatus: string | null | undefined,
