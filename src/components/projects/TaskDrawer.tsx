@@ -38,6 +38,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAppStore } from '@/lib/useAppStore';
 import { useLocale } from '@/lib/LocaleContext';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 // Lazy load heavy components
 const ChecklistTab = lazy(() => import('./tabs/ChecklistTab'));
@@ -331,6 +333,7 @@ export default function TaskDrawer({ open, taskId, onClose, onTaskUpdate }: Task
   if (!task && !loading) return null;
 
   return (
+    <TooltipProvider>
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl h-[90vh] p-0 flex flex-col overflow-hidden">
         {loading ? (
@@ -581,7 +584,10 @@ export default function TaskDrawer({ open, taskId, onClose, onTaskUpdate }: Task
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">ID Personalizado</label>
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        ID Personalizado
+                        <InfoTooltip content="ID exclusivo definido pelo utilizador para identificar o projeto." />
+                      </label>
                       <Input
                         value={task?.customId || ''}
                         onChange={(e) => handleFieldChange('customId', e.target.value)}
@@ -604,7 +610,10 @@ export default function TaskDrawer({ open, taskId, onClose, onTaskUpdate }: Task
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground">Margem</label>
+                        <label className="text-xs text-muted-foreground flex items-center gap-1">
+                          Margem
+                          <InfoTooltip content="Diferença entre o valor cobrado ao cliente e o custo total do projeto." />
+                        </label>
                         <div className="text-lg font-bold text-purple-600">
                           {formatCurrency(task?.margin || 0)}
                         </div>
@@ -646,5 +655,6 @@ export default function TaskDrawer({ open, taskId, onClose, onTaskUpdate }: Task
         )}
       </DialogContent>
     </Dialog>
+    </TooltipProvider>
   );
 }

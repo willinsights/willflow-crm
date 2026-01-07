@@ -15,6 +15,8 @@ import ProjectFiles from './ProjectFiles';
 import ProjectBudget from './ProjectBudget';
 import { Badge } from '@/components/ui/badge';
 import { useLocale } from '@/lib/LocaleContext';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 interface ProjectDetailsModalProps {
   project: Project;
@@ -144,6 +146,7 @@ export default function ProjectDetailsModal({
   };
 
   return (
+    <TooltipProvider>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="glass-strong border border-white/20 max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -276,7 +279,10 @@ export default function ProjectDetailsModal({
               </div>
 
               <div className="glass-card p-4 space-y-2">
-                <h3 className="text-sm font-semibold text-muted-foreground">Margem</h3>
+                <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-1">
+                  Margem
+                  <InfoTooltip content="Diferença entre o valor cobrado ao cliente e o custo total do projeto." />
+                </h3>
                 <p className="text-2xl font-bold text-purple-400">
                   {formatCurrency(project.margin)}
                 </p>
@@ -340,5 +346,6 @@ export default function ProjectDetailsModal({
         </Tabs>
       </DialogContent>
     </Dialog>
+    </TooltipProvider>
   );
 }

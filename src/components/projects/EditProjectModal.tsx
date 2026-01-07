@@ -15,6 +15,8 @@ import { categoriesApi } from '@/lib/api';
 import TaskDetailsModal from '@/components/projects/TaskDetailsModal';
 import { useLocale } from '@/lib/LocaleContext';
 import { useToast } from '@/components/ui/toast';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 interface EditProjectModalProps {
   project: Project;
@@ -109,6 +111,7 @@ export default function EditProjectModal({ project }: EditProjectModalProps) {
   };
 
   return (
+    <TooltipProvider>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm" className="w-full justify-start">
@@ -141,18 +144,39 @@ export default function EditProjectModal({ project }: EditProjectModalProps) {
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div className="space-y-2">
-              <Label>Preço ({config.currencySymbol})</Label>
+              <Label className="flex items-center gap-1">
+                Preço ({config.currencySymbol})
+              </Label>
               <Input type="number" step="0.01" value={formData.clientPrice} onChange={(e) => setFormData(p => ({...p, clientPrice: e.target.value}))} className="glass border-white/20" />
             </div>
             <div className="space-y-2">
-              <Label>Captação ({config.currencySymbol})</Label>
+              <Label className="flex items-center gap-1">
+                Captação ({config.currencySymbol})
+              </Label>
               <Input type="number" step="0.01" value={formData.captationCost} onChange={(e) => setFormData(p => ({...p, captationCost: e.target.value}))} className="glass border-white/20" />
             </div>
             <div className="space-y-2">
-              <Label>Edição ({config.currencySymbol})</Label>
+              <Label className="flex items-center gap-1">
+                Edição ({config.currencySymbol})
+              </Label>
               <Input type="number" step="0.01" value={formData.editionCost} onChange={(e) => setFormData(p => ({...p, editionCost: e.target.value}))} className="glass border-white/20" />
             </div>
           </div>
+
+          {/* Margem Preview */}
+          {formData.clientPrice && (
+            <div className="glass rounded-lg p-4 bg-purple-500/10 border border-purple-500/30">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-purple-300">Margem</span>
+                  <InfoTooltip content="Diferença entre o valor cobrado ao cliente e o custo total do projeto." iconClassName="text-purple-300" />
+                </div>
+                <span className="text-lg font-bold text-purple-400">
+                  {config.currencySymbol} {(parseFloat(formData.clientPrice || '0') - parseFloat(formData.captationCost || '0') - parseFloat(formData.editionCost || '0')).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* NOVA SEÇÃO: Subtasks */}
           <div className="space-y-3 pt-4 border-t border-white/10">
@@ -262,5 +286,6 @@ export default function EditProjectModal({ project }: EditProjectModalProps) {
         />
       )}
     </Dialog>
+    </TooltipProvider>
   );
 }
