@@ -98,20 +98,14 @@ import EditProjectModal from '@/components/projects/EditProjectModal';
 import CreateProjectModal from '@/components/projects/CreateProjectModal';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import TaskDrawer from '@/components/projects/TaskDrawer';
+import { KANBAN_CONSTANTS, PHASE_LABELS } from '@/lib/kanban-constants';
+import { getStatusKeyFromColumn, isDeliveredColumn, type KanbanColumnData } from '@/lib/kanban-utils';
+import type { DraggableAttributes } from '@dnd-kit/core';
+import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities';
 
 interface KanbanBoardProps {
   phase?: ProjectPhase;
 }
-
-// Default statuses for each phase - NEW STRUCTURE
-const DEFAULT_STATUSES: Record<string, string[]> = {
-  captacao: ['a-agendar', 'agendado', 'em-execucao', 'entregue'],
-  edicao: ['a-iniciar', 'em-edicao', 'em-revisao', 'entregue'],
-  finalizados: ['entregue'],
-};
-
-// System key for the locked "Entregue" column
-const DELIVERED_SYSTEM_KEY = 'DELIVERED';
 
 export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
   const { formatCurrency } = useLocale();
@@ -136,17 +130,6 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
   const [draggedColumnId, setDraggedColumnId] = useState<string | null>(null);
 
   // Column state - NEW STRUCTURE
-  interface KanbanColumnData {
-    id: string;
-    title: string;
-    statusKey: string | null;
-    position: number;
-    isLocked: boolean;
-    systemKey: string | null;
-    color: string | null;
-    isActive: boolean;
-  }
-
   const [columns, setColumns] = useState<KanbanColumnData[]>([]);
   const [columnsLoading, setColumnsLoading] = useState(true);
   const [editingColumn, setEditingColumn] = useState<string | null>(null);
@@ -156,7 +139,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
   const [showNewColumnDialog, setShowNewColumnDialog] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
 
-  const organizationId = 'default'; // TODO: Get from context/auth when multi-tenant
+  const organizationId = KANBAN_CONSTANTS.DEFAULT_ORGANIZATION;
 
   // Load columns from API (with bootstrap if needed)
   useEffect(() => {
@@ -267,7 +250,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
 
   const isColumnLocked = (columnId: string) => {
     const column = columns.find(c => c.id === columnId);
-    return column?.isLocked || column?.systemKey === DELIVERED_SYSTEM_KEY || false;
+    return column ? isDeliveredColumn(column) : false;
   };
 
   const handleSaveColumnName = async (columnId: string, newName: string) => {
@@ -275,10 +258,10 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     if (!column) return;
 
     // Block renaming of locked/DELIVERED columns
-    if (column.isLocked || column.systemKey === DELIVERED_SYSTEM_KEY) {
+    if (isDeliveredColumn(column)) {
       toast({
         title: 'Operação não permitida',
-        description: 'A coluna "Entregue" não pode ser renomeada',
+        description: `A coluna "${KANBAN_CONSTANTS.DELIVERED_COLUMN_TITLE}" não pode ser renomeada`,
         variant: 'error'
       });
       setEditingColumn(null);
@@ -367,7 +350,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     if (!newColumnName.trim()) return;
 
     // Find DELIVERED column to insert before it
-    const deliveredColumn = columns.find(c => c.systemKey === DELIVERED_SYSTEM_KEY);
+    const deliveredColumn = columns.find(c => isDeliveredColumn(c));
     const newPosition = deliveredColumn ? deliveredColumn.position : columns.length;
 
     try {
@@ -420,10 +403,10 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     if (!column) return;
 
     // Block deletion of locked columns
-    if (column.isLocked || column.systemKey === DELIVERED_SYSTEM_KEY) {
+    if (isDeliveredColumn(column)) {
       toast({
         title: 'Operação não permitida',
-        description: 'A coluna "Entregue" não pode ser removida',
+        description: `A coluna "${KANBAN_CONSTANTS.DELIVERED_COLUMN_TITLE}" não pode ser removida`,
         variant: 'error'
       });
       return;
@@ -517,15 +500,15 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     : (projectsByPhase[phase] || []);
 
   // Get reorderable columns (exclude locked columns)
-  const reorderableColumns = columns.filter(c => !c.isLocked && c.systemKey !== DELIVERED_SYSTEM_KEY);
-  const lockedColumns = columns.filter(c => c.isLocked || c.systemKey === DELIVERED_SYSTEM_KEY);
+  const reorderableColumns = columns.filter(c => !isDeliveredColumn(c));
+  const lockedColumns = columns.filter(c => isDeliveredColumn(c));
 
   const getProjectsByColumnId = (columnId: string) => {
     const column = columns.find(c => c.id === columnId);
     if (!column) return [];
     
     // Use statusKey if available, otherwise fall back to title-based matching
-    const statusToMatch = column.statusKey || column.title.toLowerCase().replace(/\s+/g, '-');
+    const statusToMatch = getStatusKeyFromColumn(column);
     
     return projects.filter(project => {
       const currentStatus = phase === 'captacao' ? project.statusCaptacao : project.statusEdicao;
@@ -540,11 +523,11 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     // Check if dragging a column or a card
     const column = columns.find(c => c.id === id);
     if (column) {
-      if (column.isLocked || column.systemKey === DELIVERED_SYSTEM_KEY) {
+      if (isDeliveredColumn(column)) {
         // Block dragging locked columns
         toast({
           title: 'Operação não permitida',
-          description: 'A coluna "Entregue" está bloqueada e não pode ser movida',
+          description: `A coluna "${KANBAN_CONSTANTS.DELIVERED_COLUMN_TITLE}" está bloqueada e não pode ser movida`,
           variant: 'error'
         });
         return;
@@ -610,7 +593,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     }
 
     // Use statusKey if available, otherwise fall back to title-based matching
-    const newStatus = targetColumn.statusKey || targetColumn.title.toLowerCase().replace(/\s+/g, '-');
+    const newStatus = getStatusKeyFromColumn(targetColumn);
     const currentStatus = phase === 'captacao' ? project.statusCaptacao : project.statusEdicao;
 
     if (currentStatus === newStatus) {
@@ -633,7 +616,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
       });
 
       // If moving to "Entregue", handle automatic phase transition
-      if (targetColumn.systemKey === DELIVERED_SYSTEM_KEY) {
+      if (isDeliveredColumn(targetColumn)) {
         const needsEditing = project.responsavelEdicaoId ||
           ['hotel', 'experiencia', 'reels'].includes(project.videoType);
 
@@ -697,19 +680,14 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
         // Create notification for phase change
         await createMoveNotification(project, phase, targetPhase);
         
-        const phaseLabels: Record<string, string> = {
-          captacao: 'Captação',
-          edicao: 'Edição',
-          finalizados: 'Finalizados'
-        };
-        
         toast({
           title: 'Projeto alterado ✅',
-          description: `"${project.title}" foi movido para ${phaseLabels[targetPhase]}`,
+          description: `"${project.title}" foi movido para ${PHASE_LABELS[targetPhase as keyof typeof PHASE_LABELS]}`,
           variant: 'success'
         });
         
-        window.location.reload();
+        // Reload columns to update the board state instead of full page reload
+        await loadColumns();
       } else {
         const data = await response.json();
         toast({
@@ -737,12 +715,6 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     );
   }
 
-  const phaseLabels = {
-    captacao: 'Captação',
-    edicao: 'Edição',
-    finalizados: 'Finalizados'
-  };
-
   // Check if there are NO projects in any column
   // Note: columns.length > 0 ensures Kanban columns have been initialized
   const hasNoProjects = projects.length === 0 && columns.length > 0;
@@ -751,7 +723,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     <TooltipProvider>
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <Breadcrumbs items={[{ label: 'Projetos' }, { label: phaseLabels[phase] }]} />
+          <Breadcrumbs items={[{ label: 'Projetos' }, { label: PHASE_LABELS[phase as keyof typeof PHASE_LABELS] }]} />
 
           <div className="flex items-center gap-2">
             {/* Vista Detalhada button - Only for captacao and edicao */}
@@ -812,7 +784,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
                   Ainda não há projetos aqui
                 </h3>
                 <p className="text-muted-foreground">
-                  Comece criando o seu primeiro projeto em {phaseLabels[phase].toLowerCase()}
+                  Comece criando o seu primeiro projeto em {PHASE_LABELS[phase as keyof typeof PHASE_LABELS].toLowerCase()}
                 </p>
               </div>
 
@@ -847,8 +819,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
               >
               {columns.map((column, index) => {
                 const columnProjects = getProjectsByColumnId(column.id);
-                const isDeliveredColumn = column.systemKey === DELIVERED_SYSTEM_KEY;
-                const isLocked = column.isLocked || isDeliveredColumn;
+                const isLockedColumn = isDeliveredColumn(column);
 
                 return (
                   <DroppableColumn
@@ -860,10 +831,10 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
                     isEditing={editingColumn === column.id}
                     editingName={editingColumnName}
                     onStartEdit={() => {
-                      if (isLocked) {
+                      if (isLockedColumn) {
                         toast({
                           title: 'Operação não permitida',
-                          description: 'A coluna "Entregue" não pode ser renomeada',
+                          description: `A coluna "${KANBAN_CONSTANTS.DELIVERED_COLUMN_TITLE}" não pode ser renomeada`,
                           variant: 'error'
                         });
                         return;
@@ -874,11 +845,11 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
                     onEditChange={setEditingColumnName}
                     onSaveEdit={() => handleSaveColumnName(column.id, editingColumnName)}
                     onCancelEdit={() => setEditingColumn(null)}
-                    isDeliveredColumn={isDeliveredColumn}
-                    isLocked={isLocked}
-                    canDelete={!isLocked && columnProjects.length === 0}
+                    isDeliveredColumn={isLockedColumn}
+                    isLocked={isLockedColumn}
+                    canDelete={!isLockedColumn && columnProjects.length === 0}
                     onDelete={() => handleDeleteColumn(column.id)}
-                    isDraggable={!isLocked}
+                    isDraggable={!isLockedColumn}
                   >
                     <SortableContext
                       items={columnProjects.map(p => p.id)}
@@ -941,7 +912,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
                 Criar Nova Coluna
               </DialogTitle>
               <DialogDescription>
-                Adicione uma nova coluna personalizada ao Kanban de {phaseLabels[phase]}.
+                Adicione uma nova coluna personalizada ao Kanban de {PHASE_LABELS[phase as keyof typeof PHASE_LABELS]}.
               </DialogDescription>
             </DialogHeader>
 
@@ -1273,8 +1244,8 @@ function ProjectCard({
   onCardClick?: (project: Project) => void;
   onMoveToPhase?: (projectId: string, phase: ProjectPhase) => void;
   columns?: Array<{ id: string; title: string; systemKey: string | null }>;
-  dragAttributes?: any;
-  dragListeners?: any;
+  dragAttributes?: DraggableAttributes;
+  dragListeners?: SyntheticListenerMap;
 }) {
   const { userPermissions, updateProjectStatus } = useAppStore();
   const { formatCurrency } = useLocale();
@@ -1293,8 +1264,8 @@ function ProjectCard({
     const column = columns?.find(c => c.id === columnId);
     if (!column) return;
     
-    // Convert column title to status key (temporary until projects use column IDs)
-    const newStatus = column.title.toLowerCase().replace(/\s+/g, '-');
+    // Use the utility function to get status key
+    const newStatus = getStatusKeyFromColumn(column as KanbanColumnData);
     
     try {
       await updateProjectStatus(project.id, phase, newStatus);
