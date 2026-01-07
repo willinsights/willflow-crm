@@ -26,15 +26,16 @@ export default function Home() {
 
   // Listen for custom navigation events from dashboard
   useEffect(() => {
-    const handleNavigate = (event: CustomEvent<{ view: string }>) => {
-      if (event.detail?.view) {
-        setActiveView(event.detail.view);
+    const handleNavigate = (event: Event) => {
+      const customEvent = event as CustomEvent<{ view: string }>;
+      if (customEvent.detail?.view) {
+        setActiveView(customEvent.detail.view);
       }
     };
 
-    window.addEventListener('navigate-to-view', handleNavigate as EventListener);
+    window.addEventListener('navigate-to-view', handleNavigate);
     return () => {
-      window.removeEventListener('navigate-to-view', handleNavigate as EventListener);
+      window.removeEventListener('navigate-to-view', handleNavigate);
     };
   }, []);
 

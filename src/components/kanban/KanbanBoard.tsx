@@ -709,7 +709,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
           variant: 'success'
         });
         
-        window.location.reload();
+        await loadColumns();
       } else {
         const data = await response.json();
         toast({
