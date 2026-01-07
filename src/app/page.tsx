@@ -103,9 +103,6 @@ export default function Home() {
         onChangePassword={async (currentPassword, newPassword) => {
           return await changePassword(currentPassword, newPassword);
         }}
-        onClose={() => {
-          // Modal is mandatory, so this should not close it
-        }}
       />
       <AppLayout activeView={activeView} onViewChange={setActiveView} onLogout={logout}>
       {renderContent()}
