@@ -315,7 +315,20 @@ async function main() {
       },
     })
 
-    console.log('✅ Criados 5 clientes com perfis variados')
+    const fashionClient = await prisma.client.create({
+      data: {
+        name: 'Moda Lisboa Boutique',
+        email: 'social@modalisboa.pt',
+        phone: '+351 917 890 123',
+        company: 'Moda Lisboa Lda',
+        totalRevenue: 9000,
+        totalCosts: 4500,
+        totalMargin: 4500,
+        projectCount: 3,
+      },
+    })
+
+    console.log('✅ Criados 6 clientes com perfis variados')
 
     // ========================================
     // CRIAR CATEGORIAS
@@ -377,13 +390,13 @@ async function main() {
     // ========================================
     console.log('🎬 Criando projetos...')
     
-    // Projeto 1: Em andamento - mês atual
+    // Projeto 1: A agendar - CAPTACAO
     const project1 = await prisma.project.create({
       data: {
         title: 'Campanha Ano Novo 2026',
         description: 'Campanha de vídeo marketing para lançamento de novos produtos no início do ano',
         phase: 'captacao',
-        statusCaptacao: 'em-captacao',
+        statusCaptacao: 'a-agendar',
         statusEdicao: null,
         clientId: premiumClient.id,
         categoryId: catMarketing.id,
@@ -405,13 +418,13 @@ async function main() {
       },
     })
 
-    // Projeto 2: Planejamento - próximo mês
+    // Projeto 2: Agendado - CAPTACAO
     const project2 = await prisma.project.create({
       data: {
         title: 'Documentário História de Lisboa',
         description: 'Documentário sobre a evolução histórica da cidade de Lisboa nos últimos 100 anos',
-        phase: 'planejamento',
-        statusCaptacao: null,
+        phase: 'captacao',
+        statusCaptacao: 'agendado',
         statusEdicao: null,
         clientId: corporateClient.id,
         categoryId: catDocumentary.id,
@@ -431,14 +444,14 @@ async function main() {
       },
     })
 
-    // Projeto 3: Em edição - atrasado
+    // Projeto 3: Em execução - CAPTACAO
     const project3 = await prisma.project.create({
       data: {
         title: 'Comercial TV Restaurante',
         description: 'Spot publicitário de 30 segundos para TV e redes sociais',
-        phase: 'edicao',
-        statusCaptacao: 'concluida',
-        statusEdicao: 'em-edicao',
+        phase: 'captacao',
+        statusCaptacao: 'em-execucao',
+        statusEdicao: null,
         clientId: regularClient1.id,
         categoryId: catAdvertising.id,
         videoType: 'publicidade',
@@ -460,14 +473,14 @@ async function main() {
       },
     })
 
-    // Projeto 4: Concluído recentemente
+    // Projeto 4: Entregue - CAPTACAO (sem edição necessária)
     const project4 = await prisma.project.create({
       data: {
         title: 'Vídeo Corporativo Clínica',
         description: 'Vídeo institucional apresentando os serviços da clínica',
-        phase: 'concluido',
-        statusCaptacao: 'concluida',
-        statusEdicao: 'concluida',
+        phase: 'captacao',
+        statusCaptacao: 'entregue',
+        statusEdicao: null,
         clientId: regularClient2.id,
         categoryId: catCorporate.id,
         videoType: 'corporativo',
@@ -475,8 +488,8 @@ async function main() {
         customId: 'PROJ-2025-078',
         clientPrice: 5500,
         captationCost: 1500,
-        editionCost: 1200,
-        margin: 2800,
+        editionCost: 0,
+        margin: 4000,
         paymentStatus: 'paid',
         freelancerPaymentStatus: 'paid',
         captacaoDate: getDateOffset(-25),
@@ -485,22 +498,22 @@ async function main() {
         freelancerDueDate: getDateOffset(-10),
         freelancerPaidDate: getDateOffset(-5),
         responsavelCaptacaoId: filmmaker1.id,
-        responsavelEdicaoId: editor2.id,
+        responsavelEdicaoId: null,
         frameIoLink: 'https://frameio.example.com/project4',
       },
     })
 
-    // Projeto 5: Em produção - próxima semana
+    // Projeto 5: Entregue - CAPTACAO (vai para edição)
     const project5 = await prisma.project.create({
       data: {
         title: 'Série Redes Sociais GreenEnergy',
         description: 'Série de 10 vídeos curtos para Instagram e TikTok sobre energia sustentável',
         phase: 'captacao',
-        statusCaptacao: 'em-captacao',
+        statusCaptacao: 'entregue',
         statusEdicao: null,
         clientId: startupClient.id,
         categoryId: catSocial.id,
-        videoType: 'social_media',
+        videoType: 'reels',
         location: 'Remote/Estúdio',
         customId: 'PROJ-2026-003',
         clientPrice: 6000,
@@ -516,14 +529,14 @@ async function main() {
       },
     })
 
-    // Projeto 6: Cobertura de Evento - mês atual
+    // Projeto 6: A iniciar - EDICAO
     const project6 = await prisma.project.create({
       data: {
         title: 'Conferência Tech Summit 2026',
         description: 'Cobertura completa do evento de tecnologia com entrevistas e highlights',
-        phase: 'planejamento',
-        statusCaptacao: null,
-        statusEdicao: null,
+        phase: 'edicao',
+        statusCaptacao: 'entregue',
+        statusEdicao: 'a-iniciar',
         clientId: premiumClient.id,
         categoryId: catEvent.id,
         videoType: 'evento',
@@ -542,14 +555,14 @@ async function main() {
       },
     })
 
-    // Projeto 7: Campanha BankCorp - próximo mês
+    // Projeto 7: Em edição - EDICAO
     const project7 = await prisma.project.create({
       data: {
         title: 'Campanha Poupança BankCorp',
         description: 'Campanha publicitária multi-canal para produto de poupança',
         phase: 'edicao',
-        statusCaptacao: 'concluida',
-        statusEdicao: 'revisao',
+        statusCaptacao: 'entregue',
+        statusEdicao: 'em-edicao',
         clientId: corporateClient.id,
         categoryId: catAdvertising.id,
         videoType: 'publicidade',
@@ -572,14 +585,14 @@ async function main() {
       },
     })
 
-    // Projeto 8: Vídeo redes sociais - esta semana
+    // Projeto 8: Em revisão - EDICAO
     const project8 = await prisma.project.create({
       data: {
         title: 'Behind the Scenes Tech Innovations',
         description: 'Série de vídeos mostrando os bastidores da empresa',
-        phase: 'captacao',
-        statusCaptacao: 'em-captacao',
-        statusEdicao: null,
+        phase: 'edicao',
+        statusCaptacao: 'entregue',
+        statusEdicao: 'em-revisao',
         clientId: premiumClient.id,
         categoryId: catSocial.id,
         videoType: 'social_media',
@@ -598,7 +611,64 @@ async function main() {
       },
     })
 
-    console.log('✅ Criados 8 projetos com diferentes status e prazos')
+    // Projeto 9: Entregue - EDICAO
+    const project9 = await prisma.project.create({
+      data: {
+        title: 'Tutorial Produto Startup',
+        description: 'Série de tutoriais explicando o uso do produto da startup',
+        phase: 'edicao',
+        statusCaptacao: 'entregue',
+        statusEdicao: 'entregue',
+        clientId: startupClient.id,
+        categoryId: catMarketing.id,
+        videoType: 'marketing',
+        location: 'Estúdio',
+        customId: 'PROJ-2026-007',
+        clientPrice: 4500,
+        captationCost: 1200,
+        editionCost: 1000,
+        margin: 2300,
+        paymentStatus: 'paid',
+        freelancerPaymentStatus: 'paid',
+        captacaoDate: getDateOffset(-20),
+        clientDueDate: getDateOffset(-5),
+        clientReceivedDate: getDateOffset(-3),
+        freelancerDueDate: getDateOffset(-10),
+        freelancerPaidDate: getDateOffset(-8),
+        responsavelCaptacaoId: bothCreator.id,
+        responsavelEdicaoId: editor2.id,
+        nasLink: 'nas://projetos/2026/tutorial-startup',
+        frameIoLink: 'https://frameio.example.com/project9',
+      },
+    })
+
+    // Projeto 10: A iniciar - EDICAO
+    const project10 = await prisma.project.create({
+      data: {
+        title: 'Campanha Redes Sociais Clínica',
+        description: 'Conteúdo mensal para Instagram e Facebook da clínica',
+        phase: 'edicao',
+        statusCaptacao: 'entregue',
+        statusEdicao: 'a-iniciar',
+        clientId: regularClient2.id,
+        categoryId: catSocial.id,
+        videoType: 'reels',
+        location: 'Clínica Saúde Plus',
+        customId: 'PROJ-2026-008',
+        clientPrice: 3000,
+        captationCost: 800,
+        editionCost: 900,
+        margin: 1300,
+        paymentStatus: 'pending',
+        freelancerPaymentStatus: 'pending',
+        captacaoDate: getDateOffset(-5),
+        clientDueDate: getDateOffset(15),
+        responsavelCaptacaoId: photographer1.id,
+        responsavelEdicaoId: editor1.id,
+      },
+    })
+
+    console.log('✅ Criados 10 projetos: 5 em CAPTACAO, 5 em EDICAO')
 
     // ========================================
     // CRIAR SUBTASKS PARA PROJETOS
