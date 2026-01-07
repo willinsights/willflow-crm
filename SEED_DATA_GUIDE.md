@@ -7,11 +7,46 @@ Este documento descreve os dados fictícios disponíveis no sistema para testes 
 O sistema inclui dados de teste abrangentes que simulam cenários reais de produção audiovisual, incluindo:
 - Múltiplos usuários com diferentes perfis
 - Clientes premium e regulares
-- Projetos em diversas fases (planejamento, captação, edição, concluído)
+- Projetos em diversas fases (captação, edição)
 - Projetos para o mês atual e próximos meses
 - Dados financeiros realistas
 - Notificações, comentários, e atividades
 - Subtasks, checklists e arquivos
+- **Colunas do Kanban pré-configuradas para CAPTACAO e EDICAO**
+
+## ✨ Novo: Modo Idempotente
+
+O seed agora é **idempotente** - pode ser executado várias vezes sem duplicar dados!
+
+### Variáveis de Ambiente
+
+- `SEED_WITH_SAMPLE_DATA=true` - Criar dados de teste completos (6 clientes, 10 projetos)
+- `SEED_CLEAN_DATABASE=true` - Limpar banco antes de criar dados (use com cuidado!)
+
+### Modos de Operação
+
+#### 1. Primeira Execução com Dados Completos
+```bash
+export SEED_WITH_SAMPLE_DATA=true
+export SEED_CLEAN_DATABASE=true
+npm run db:seed
+```
+
+#### 2. Modo Idempotente (Seguro - Recomendado)
+```bash
+# Verifica dados existentes e só cria o que está faltando
+export SEED_WITH_SAMPLE_DATA=true
+npm run db:seed
+```
+Resultado: 
+- ✅ Se dados já existem: "Dados de exemplo já existem (X projetos encontrados)"
+- 📦 Se não existem: Cria todos os dados
+
+#### 3. Apenas Configuração Básica
+```bash
+# Cria apenas admin e colunas do Kanban
+npm run db:seed
+```
 
 ## 🚀 Como Usar
 
@@ -31,21 +66,41 @@ bun run db:seed
 
 ### Limpar Banco (Apenas Admin)
 
-Para criar apenas o usuário administrador sem dados de teste:
+Para limpar e recriar todos os dados:
 
 ```bash
-# Não definir a variável ou definir como false
-export SEED_WITH_SAMPLE_DATA=false
+# ⚠️ ATENÇÃO: Apaga todos os dados do banco!
+export SEED_CLEAN_DATABASE=true
+export SEED_WITH_SAMPLE_DATA=true
 
 # Executar seed
 npm run db:seed
 ```
 
+## 📊 Dados Criados
+
+### Colunas do Kanban (Sempre Criadas)
+
+#### Fase: CAPTACAO
+1. **A agendar** (statusKey: `a-agendar`)
+2. **Agendado** (statusKey: `agendado`)
+3. **Em execução** (statusKey: `em-execucao`)
+4. **Entregue** 🔒 (statusKey: `entregue`, systemKey: `DELIVERED`)
+
+#### Fase: EDICAO
+1. **A iniciar** (statusKey: `a-iniciar`)
+2. **Em edição** (statusKey: `em-edicao`)
+3. **Em revisão** (statusKey: `em-revisao`)
+4. **Entregue** 🔒 (statusKey: `entregue`, systemKey: `DELIVERED`)
+
+> 🔒 Colunas "Entregue" são bloqueadas e não podem ser movidas ou removidas.
+
 ## 👥 Usuários Criados
 
-### Administrador
+### Administrador (Sempre Criado)
 - **Nome**: Administrador
 - **Email**: admin@in-sights.pt
+- **Senha**: admin123
 - **Role**: admin
 - **Permissões**: Acesso total ao sistema
 
