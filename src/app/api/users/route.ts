@@ -118,9 +118,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Normalizar email
+    const normalizedEmail = body.email.toLowerCase().trim();
+
     // Verificar se email já existe
     const existingUser = await prisma.user.findUnique({
-      where: { email: body.email }
+      where: { email: normalizedEmail }
     });
 
     if (existingUser) {
@@ -158,7 +161,7 @@ export async function POST(request: NextRequest) {
     const newUser = await prisma.user.create({
       data: {
         name: body.name,
-        email: body.email,
+        email: normalizedEmail,
         password: hashedPassword,
         role: body.role,
         avatar: body.avatar || null,
@@ -197,7 +200,7 @@ export async function POST(request: NextRequest) {
     // Enviar email de boas-vindas com a senha
     const emailResult = await sendWelcomeEmail(
       body.name,
-      body.email,
+      normalizedEmail,
       plainPassword
     );
 

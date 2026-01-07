@@ -64,7 +64,9 @@ export default function ChangePasswordModal({
 
     setIsLoading(true);
 
-    const result = await onChangePassword(currentPassword, newPassword);
+    // For mandatory password change (first login), current password is not verified on the backend
+    // because the user is already authenticated with the generated password
+    const result = await onChangePassword(isMandatory ? '' : currentPassword, newPassword);
 
     if (result.success) {
       setSuccess(true);

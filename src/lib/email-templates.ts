@@ -113,7 +113,7 @@ function emailHeader(subtitle?: string): string {
       <tr>
         <td align="center">
           <img src="${LOGO_URL}" alt="WillFlow" height="70" style="display: block; margin: 0 auto 20px; height: 70px; width: auto;" />
-          <h1 style="color: white; margin: 0; font-size: 36px; font-weight: 800; letter-spacing: -1px; text-shadow: 0 2px 10px rgba(0,0,0,0.3);">WillFlow</h1>
+          <p style="color: rgba(255,255,255,0.85); margin: 10px 0 0; font-size: 14px; letter-spacing: 0.5px; font-style: italic;">Porque criar deve ser simples</p>
           ${subtitle ? `<p style="color: rgba(255,255,255,0.75); margin: 10px 0 0; font-size: 14px; letter-spacing: 0.5px;">${subtitle}</p>` : ''}
         </td>
       </tr>
@@ -214,14 +214,14 @@ export const WillFlowEmailTemplates = {
    */
   welcome: (name: string, email: string, password: string) => {
     const html = emailWrapper(`
-      ${emailHeader('Sistema de Gestão Audiovisual')}
+      ${emailHeader()}
       <tr>
         <td style="${LIQUID_GLASS.card} background: ${COLORS.bgCard}; padding: 45px 35px; border-radius: 0 0 24px 24px;">
           <h2 style="color: ${COLORS.purple}; margin: 0 0 16px; font-size: 26px; font-weight: 700;">
-            Bem-vindo, ${name}! 👋
+            Bem-vindo ao WillFlow, ${name}! 👋
           </h2>
           <p style="color: ${COLORS.textPrimary}; font-size: 15px; line-height: 1.7; margin: 0 0 28px;">
-            A sua conta foi criada com sucesso no WillFlow CRM. Agora pode gerir os seus projetos audiovisuais de forma simples e eficiente.
+            A sua conta foi criada com sucesso. Agora pode gerir os seus projetos audiovisuais de forma simples e eficiente.
           </p>
 
           ${infoBox(`
