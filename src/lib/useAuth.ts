@@ -50,6 +50,8 @@ const DEMO_CREDENTIALS = [
   }
 ];
 
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 const AUTH_STORAGE_KEY = 'audiovisual-crm-auth';
 
 export function useAuth() {
@@ -117,27 +119,30 @@ export function useAuth() {
       console.log('Erro ao conectar com API, usando credenciais demo...');
     }
 
-    // Fallback: verificar credenciais demo
-    const demoCredential = DEMO_CREDENTIALS.find(
-      cred => cred.email.toLowerCase() === email.toLowerCase() && cred.password === password
-    );
+    // Fallback para credenciais demo APENAS em desenvolvimento
+    if (isDevelopment) {
+      const demoCredential = DEMO_CREDENTIALS.find(
+        cred => cred.email.toLowerCase() === email.toLowerCase() && cred.password === password
+      );
 
-    if (demoCredential) {
-      const authData = {
-        user: demoCredential.user,
-        mustChangePassword: false,
-        timestamp: new Date().toISOString()
-      };
+      if (demoCredential) {
+        const authData = {
+          user: demoCredential.user,
+          mustChangePassword: false,
+          timestamp: new Date().toISOString()
+        };
 
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
-      setCurrentUser(demoCredential.user);
-      setIsAuthenticated(true);
-      setMustChangePassword(false);
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
+        setCurrentUser(demoCredential.user);
+        setIsAuthenticated(true);
+        setMustChangePassword(false);
 
-      return { success: true };
+        return { success: true };
+      }
     }
 
-    return { success: false, error: 'Email ou senha incorretos' };
+    // Em produção, retornar erro
+    return { success: false, error: 'Erro de conexão com o servidor. Tente novamente.' };
   };
 
   const changePassword = async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
