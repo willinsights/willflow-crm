@@ -91,6 +91,7 @@ import { statusLabels, videoTypeLabels } from '@/lib/data';
 import { useLocale } from '@/lib/LocaleContext';
 import { useView } from '@/lib/ViewContext';
 import { cn } from '@/lib/utils';
+import { normalizeToStatusKey } from '@/lib/string-utils';
 import { useToast } from '@/components/ui/toast';
 import { toast as sonnerToast } from 'sonner';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
@@ -519,14 +520,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     }
     
     // Use statusKey if available, otherwise fall back to normalized title
-    // Normalize by removing accents and converting to ASCII
-    const statusToMatch = column.statusKey || 
-      column.title
-        .toLowerCase()
-        .normalize('NFD') // Decompose accented characters
-        .replace(/[\u0300-\u036f]/g, '') // Remove diacritical marks
-        .replace(/\s+/g, '-') // Replace spaces with hyphens
-        .replace(/[^a-z0-9-]/g, ''); // Remove special characters
+    const statusToMatch = column.statusKey || normalizeToStatusKey(column.title);
     
     const matchedProjects = projects.filter(project => {
       const currentStatus = phase === 'captacao' ? project.statusCaptacao : project.statusEdicao;

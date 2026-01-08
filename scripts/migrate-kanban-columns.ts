@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { normalizeToStatusKey } from '../src/lib/string-utils';
 
 const prisma = new PrismaClient();
 
@@ -10,19 +11,6 @@ const prisma = new PrismaClient();
  * 2. Popula statusKey baseado no título (normalizado para ASCII sem acentos)
  * 3. Log detalhado das correções
  */
-
-/**
- * Normaliza texto removendo acentos e convertendo para lowercase com hífens
- * Mantém compatibilidade com os status usados nos projetos
- */
-function normalizeToStatusKey(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD') // Decompor caracteres acentuados
-    .replace(/[\u0300-\u036f]/g, '') // Remover marcas diacríticas (acentos)
-    .replace(/\s+/g, '-') // Substituir espaços por hífens
-    .replace(/[^a-z0-9-]/g, ''); // Remover caracteres especiais
-}
 
 async function main() {
   console.log('🔧 Iniciando migração de statusKey das colunas do Kanban...\n');
