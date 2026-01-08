@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 /**
  * POST /api/debug/seed-demo
  * 
- * Seed the database with demo/test data
+ * Seed the database with demo/test data via API
  * ONLY available in development or staging environments
  * 
  * This endpoint:
@@ -16,6 +16,12 @@ const prisma = new PrismaClient();
  * - Creates users, clients, categories
  * - Creates 10 projects (5 CAPTACAO, 5 EDICAO) with complete data
  * - Creates subtasks, comments, checklists, activities, notifications, etc.
+ * 
+ * NOTE: For more comprehensive seed data (12 users, 16 clients, 12 categories, 
+ * 30+ subtasks with all fields, expanded notifications, communications, etc.), 
+ * use the command line: npm run seed:full
+ * 
+ * The main prisma/seed.ts file contains a much more comprehensive dataset.
  */
 export async function POST(request: NextRequest) {
   try {
