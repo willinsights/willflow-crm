@@ -1,3 +1,40 @@
+/**
+ * ========================================
+ * SEED SCRIPT - WILLFLOW CRM
+ * ========================================
+ * 
+ * Este script popula o banco de dados com dados de teste completos e realistas.
+ * 
+ * DADOS CRIADOS:
+ * - 12 Usuários (vários roles: admin, filmmaker, photographer, editor, viewer)
+ * - 16 Clientes (premium, regulares, novos, inativos)
+ * - 12 Categorias (Hotel, Experiência, Drone, Reels, Casamento, Imobiliário, etc.)
+ * - 30 Projetos (distribuídos em todas as fases: CAPTACAO e EDICAO)
+ * - 30+ Subtasks (com todos os campos: priority, status, dueDate, estimatedHours, tags, etc.)
+ * - Checklists de Subtasks (itens completos e pendentes)
+ * - Comentários (em projetos e subtasks)
+ * - Anexos de Subtasks (arquivos de exemplo)
+ * - Atividades (logs completos de histórico)
+ * - 17+ Notificações (todos os tipos: deadline, payment, project, comment, system)
+ * - Comunicações com Clientes (email, phone, meeting, message - todos os status)
+ * - Notas de Clientes (informações internas)
+ * - Itens de Orçamento (budget items por projeto)
+ * - Arquivos de Projeto (documentos, imagens, vídeos)
+ * - Links de Media (Frame.io, Vimeo, NAS)
+ * 
+ * CARACTERÍSTICAS:
+ * ✅ Datas dinâmicas (relativas ao mês atual)
+ * ✅ Dados realistas para produção audiovisual em Portugal
+ * ✅ Todos os campos de todas as entidades preenchidos
+ * ✅ Variação para testar diferentes cenários
+ * ✅ Relacionamentos corretos entre entidades
+ * 
+ * USO:
+ * - npm run db:seed (seed básico - apenas admin e colunas)
+ * - npm run seed:full (seed completo com SEED_WITH_SAMPLE_DATA=true)
+ * - SEED_CLEAN_DATABASE=true para limpar dados antes
+ */
+
 import { PrismaClient } from '@prisma/client'
 // Note: Using relative import as seed.ts is in prisma/ directory, not src/
 // The @/ alias only works within the src/ directory
@@ -2869,6 +2906,33 @@ async function main() {
     console.log('✅ Criados logs de atividade para subtasks')
 
     console.log('✨ Seed completado com dados completos e realistas!')
+    console.log('')
+    console.log('📊 RESUMO DOS DADOS CRIADOS:')
+    console.log('  👥 Usuários: 12 (incluindo 1 inativo)')
+    console.log('     - 2 Administradores')
+    console.log('     - 4 Filmmakers/Photographers')
+    console.log('     - 3 Editores')
+    console.log('     - 1 Viewer')
+    console.log('  🏢 Clientes: 16 (incluindo novos e inativos)')
+    console.log('  📁 Categorias: 12 (Hotel, Experiência, Drone, Reels, Casamento, Imobiliário, etc.)')
+    console.log('  🎬 Projetos: 30 (distribuídos em todas as fases e status)')
+    console.log('     - CAPTACAO: ~18 projetos')
+    console.log('     - EDICAO: ~12 projetos')
+    console.log('  ✅ Subtasks: 30+ (com todos os campos: priority, status, tags, hours, etc.)')
+    console.log('  ☑️  Checklists de Subtasks: múltiplos itens')
+    console.log('  💬 Comentários: projetos e subtasks')
+    console.log('  📎 Anexos de Subtasks: exemplos de arquivos')
+    console.log('  📝 Atividades: logs completos de histórico')
+    console.log('  🔔 Notificações: 17+ (todos os tipos e prioridades)')
+    console.log('  💰 Itens de Orçamento: múltiplos por projeto')
+    console.log('  📞 Comunicações: 12+ (email, phone, meeting, message)')
+    console.log('  📝 Notas de Clientes: 7+')
+    console.log('  📄 Arquivos de Projeto: exemplos variados')
+    console.log('  🎥 Links de Media: Frame.io, Vimeo, NAS')
+    console.log('')
+    console.log('✅ Todos os campos foram populados com dados realistas!')
+    console.log('✅ Datas são dinâmicas (relativas ao mês atual)')
+    console.log('✅ Dados variados para testar todos os cenários do sistema')
     }
   } else {
     console.log('✨ Seed completado - Sistema básico configurado!')
