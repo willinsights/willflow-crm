@@ -368,7 +368,59 @@ async function main() {
       },
     })
 
-    console.log('✅ Criados 6 clientes com perfis variados')
+    const realEstateClient = await prisma.client.create({
+      data: {
+        name: 'Imobiliária Prime Properties',
+        email: 'geral@primeproperties.pt',
+        phone: '+351 918 901 234',
+        company: 'Prime Properties SA',
+        totalRevenue: 18000,
+        totalCosts: 8000,
+        totalMargin: 10000,
+        projectCount: 4,
+      },
+    })
+
+    const fitnessClient = await prisma.client.create({
+      data: {
+        name: 'FitZone Academia',
+        email: 'marketing@fitzone.pt',
+        phone: '+351 919 012 345',
+        company: 'FitZone Lda',
+        totalRevenue: 7500,
+        totalCosts: 3500,
+        totalMargin: 4000,
+        projectCount: 2,
+      },
+    })
+
+    const touristicClient = await prisma.client.create({
+      data: {
+        name: 'Viagens Portugal Tours',
+        email: 'comercial@viagensportugal.pt',
+        phone: '+351 920 123 456',
+        company: 'Viagens Portugal SA',
+        totalRevenue: 22000,
+        totalCosts: 10000,
+        totalMargin: 12000,
+        projectCount: 5,
+      },
+    })
+
+    const educationClient = await prisma.client.create({
+      data: {
+        name: 'Academia Digital Cursos',
+        email: 'info@academiadigital.pt',
+        phone: '+351 921 234 567',
+        company: 'Academia Digital Lda',
+        totalRevenue: 11000,
+        totalCosts: 5000,
+        totalMargin: 6000,
+        projectCount: 3,
+      },
+    })
+
+    console.log('✅ Criados 10 clientes com perfis variados')
 
     // ========================================
     // CRIAR CATEGORIAS
@@ -708,7 +760,564 @@ async function main() {
       },
     })
 
-    console.log('✅ Criados 10 projetos: 5 em CAPTACAO, 5 em EDICAO')
+    // ========================================
+    // ADICIONAR MAIS PROJETOS PARA COBERTURA COMPLETA DO KANBAN
+    // ========================================
+    
+    // CAPTACAO - A agendar
+    await prisma.project.create({
+      data: {
+        title: 'Tour Virtual Apartamentos Prime',
+        description: 'Tour virtual 360° para novos empreendimentos imobiliários',
+        phase: 'captacao',
+        statusCaptacao: 'a-agendar',
+        statusEdicao: null,
+        clientId: realEstateClient.id,
+        categoryId: catCorporate.id,
+        videoType: 'corporativo',
+        location: 'Lisboa, Novos Empreendimentos',
+        customId: 'PROJ-2026-011',
+        clientPrice: 7000,
+        captationCost: 2200,
+        editionCost: 1800,
+        margin: 3000,
+        paymentStatus: 'pending',
+        freelancerPaymentStatus: 'pending',
+        captacaoDate: getDateOffset(8),
+        clientDueDate: getDateOffset(25),
+        responsavelCaptacaoId: filmmaker1.id,
+        responsavelEdicaoId: editor1.id,
+      },
+    })
+
+    await prisma.project.create({
+      data: {
+        title: 'Campanha Fitness 2026',
+        description: 'Vídeos promocionais para nova temporada de treinos',
+        phase: 'captacao',
+        statusCaptacao: 'a-agendar',
+        statusEdicao: null,
+        clientId: fitnessClient.id,
+        categoryId: catMarketing.id,
+        videoType: 'marketing',
+        location: 'FitZone Academia',
+        customId: 'PROJ-2026-012',
+        clientPrice: 3500,
+        captationCost: 1000,
+        editionCost: 800,
+        margin: 1700,
+        paymentStatus: 'pending',
+        freelancerPaymentStatus: 'pending',
+        captacaoDate: getDateOffset(12),
+        clientDueDate: getDateOffset(22),
+        responsavelCaptacaoId: photographer1.id,
+        responsavelEdicaoId: editor2.id,
+      },
+    })
+
+    // CAPTACAO - Agendado
+    await prisma.project.create({
+      data: {
+        title: 'Destinos Portugal 2026',
+        description: 'Série de vídeos promocionais sobre destinos turísticos portugueses',
+        phase: 'captacao',
+        statusCaptacao: 'agendado',
+        statusEdicao: null,
+        clientId: touristicClient.id,
+        categoryId: catMarketing.id,
+        videoType: 'marketing',
+        location: 'Algarve, Porto, Madeira',
+        customId: 'PROJ-2026-013',
+        clientPrice: 15000,
+        captationCost: 5000,
+        editionCost: 3500,
+        margin: 6500,
+        paymentStatus: 'partial',
+        freelancerPaymentStatus: 'pending',
+        captacaoDate: getDateOffset(18),
+        clientDueDate: getDateOffset(45),
+        responsavelCaptacaoId: bothCreator.id,
+        responsavelEdicaoId: editor1.id,
+      },
+    })
+
+    await prisma.project.create({
+      data: {
+        title: 'Webinar Academia Digital',
+        description: 'Gravação e edição de webinar sobre marketing digital',
+        phase: 'captacao',
+        statusCaptacao: 'agendado',
+        statusEdicao: null,
+        clientId: educationClient.id,
+        categoryId: catEvent.id,
+        videoType: 'evento',
+        location: 'Online/Remoto',
+        customId: 'PROJ-2026-014',
+        clientPrice: 2500,
+        captationCost: 600,
+        editionCost: 700,
+        margin: 1200,
+        paymentStatus: 'pending',
+        freelancerPaymentStatus: 'not_applicable',
+        captacaoDate: getDateOffset(10),
+        clientDueDate: getDateOffset(17),
+        responsavelCaptacaoId: filmmaker1.id,
+        responsavelEdicaoId: editor2.id,
+      },
+    })
+
+    await prisma.project.create({
+      data: {
+        title: 'Lançamento Nova Coleção Fashion',
+        description: 'Fashion film para lançamento da coleção primavera/verão',
+        phase: 'captacao',
+        statusCaptacao: 'agendado',
+        statusEdicao: null,
+        clientId: fashionClient.id,
+        categoryId: catMarketing.id,
+        videoType: 'marketing',
+        location: 'Lisboa, Estúdio de Moda',
+        customId: 'PROJ-2026-015',
+        clientPrice: 5500,
+        captationCost: 1800,
+        editionCost: 1200,
+        margin: 2500,
+        paymentStatus: 'pending',
+        freelancerPaymentStatus: 'pending',
+        captacaoDate: getDateOffset(14),
+        clientDueDate: getDateOffset(28),
+        responsavelCaptacaoId: photographer1.id,
+        responsavelEdicaoId: editor1.id,
+      },
+    })
+
+    // CAPTACAO - Em execução
+    await prisma.project.create({
+      data: {
+        title: 'Imóveis Destaque Prime',
+        description: 'Vídeos de apresentação de imóveis de luxo',
+        phase: 'captacao',
+        statusCaptacao: 'em-execucao',
+        statusEdicao: null,
+        clientId: realEstateClient.id,
+        categoryId: catMarketing.id,
+        videoType: 'marketing',
+        location: 'Cascais, Sintra',
+        customId: 'PROJ-2026-016',
+        clientPrice: 8500,
+        captationCost: 2800,
+        editionCost: 2000,
+        margin: 3700,
+        paymentStatus: 'partial',
+        freelancerPaymentStatus: 'pending',
+        captacaoDate: getDateOffset(-2),
+        clientDueDate: getDateOffset(18),
+        responsavelCaptacaoId: filmmaker1.id,
+        responsavelEdicaoId: editor2.id,
+      },
+    })
+
+    await prisma.project.create({
+      data: {
+        title: 'Testemunhos Alunos FitZone',
+        description: 'Série de vídeos com testemunhos de alunos satisfeitos',
+        phase: 'captacao',
+        statusCaptacao: 'em-execucao',
+        statusEdicao: null,
+        clientId: fitnessClient.id,
+        categoryId: catSocial.id,
+        videoType: 'reels',
+        location: 'FitZone Academia',
+        customId: 'PROJ-2026-017',
+        clientPrice: 2200,
+        captationCost: 700,
+        editionCost: 500,
+        margin: 1000,
+        paymentStatus: 'pending',
+        freelancerPaymentStatus: 'pending',
+        captacaoDate: getDateOffset(-1),
+        clientDueDate: getDateOffset(7),
+        responsavelCaptacaoId: bothCreator.id,
+        responsavelEdicaoId: editor1.id,
+      },
+    })
+
+    await prisma.project.create({
+      data: {
+        title: 'Experiências Autênticas Portugal',
+        description: 'Documentário sobre experiências turísticas genuínas',
+        phase: 'captacao',
+        statusCaptacao: 'em-execucao',
+        statusEdicao: null,
+        clientId: touristicClient.id,
+        categoryId: catDocumentary.id,
+        videoType: 'documentario',
+        location: 'Norte de Portugal',
+        customId: 'PROJ-2026-018',
+        clientPrice: 12000,
+        captationCost: 4000,
+        editionCost: 3000,
+        margin: 5000,
+        paymentStatus: 'pending',
+        freelancerPaymentStatus: 'pending',
+        captacaoDate: getDateOffset(0),
+        clientDueDate: getDateOffset(30),
+        responsavelCaptacaoId: photographer1.id,
+        responsavelEdicaoId: editor2.id,
+      },
+    })
+
+    // CAPTACAO - Entregue (irão para edição)
+    await prisma.project.create({
+      data: {
+        title: 'Aulas Online Academia Digital',
+        description: 'Gravação de conteúdo educativo para plataforma online',
+        phase: 'captacao',
+        statusCaptacao: 'entregue',
+        statusEdicao: null,
+        clientId: educationClient.id,
+        categoryId: catCorporate.id,
+        videoType: 'corporativo',
+        location: 'Estúdio Academia Digital',
+        customId: 'PROJ-2026-019',
+        clientPrice: 6000,
+        captationCost: 1500,
+        editionCost: 1500,
+        margin: 3000,
+        paymentStatus: 'paid',
+        freelancerPaymentStatus: 'paid',
+        captacaoDate: getDateOffset(-8),
+        clientDueDate: getDateOffset(12),
+        freelancerDueDate: getDateOffset(-3),
+        freelancerPaidDate: getDateOffset(-1),
+        responsavelCaptacaoId: filmmaker1.id,
+        responsavelEdicaoId: editor1.id,
+      },
+    })
+
+    await prisma.project.create({
+      data: {
+        title: 'Editorial Fashion Boutique',
+        description: 'Editorial de moda para revista e redes sociais',
+        phase: 'captacao',
+        statusCaptacao: 'entregue',
+        statusEdicao: null,
+        clientId: fashionClient.id,
+        categoryId: catSocial.id,
+        videoType: 'reels',
+        location: 'Porto Fashion District',
+        customId: 'PROJ-2026-020',
+        clientPrice: 4000,
+        captationCost: 1200,
+        editionCost: 1000,
+        margin: 1800,
+        paymentStatus: 'partial',
+        freelancerPaymentStatus: 'paid',
+        captacaoDate: getDateOffset(-12),
+        clientDueDate: getDateOffset(8),
+        freelancerDueDate: getDateOffset(-7),
+        freelancerPaidDate: getDateOffset(-5),
+        responsavelCaptacaoId: photographer1.id,
+        responsavelEdicaoId: editor2.id,
+      },
+    })
+
+    // EDICAO - A iniciar
+    await prisma.project.create({
+      data: {
+        title: 'Showcase Propriedades Luxo',
+        description: 'Montagem de vídeo showcase para portfólio de imóveis de luxo',
+        phase: 'edicao',
+        statusCaptacao: 'entregue',
+        statusEdicao: 'a-iniciar',
+        clientId: realEstateClient.id,
+        categoryId: catMarketing.id,
+        videoType: 'marketing',
+        location: 'Lisboa, Cascais',
+        customId: 'PROJ-2026-021',
+        clientPrice: 5500,
+        captationCost: 1800,
+        editionCost: 1500,
+        margin: 2200,
+        paymentStatus: 'partial',
+        freelancerPaymentStatus: 'paid',
+        captacaoDate: getDateOffset(-5),
+        clientDueDate: getDateOffset(20),
+        freelancerDueDate: getDateOffset(-2),
+        freelancerPaidDate: getDateOffset(0),
+        responsavelCaptacaoId: filmmaker1.id,
+        responsavelEdicaoId: editor1.id,
+        nasLink: 'nas://projetos/2026/showcase-prime',
+      },
+    })
+
+    await prisma.project.create({
+      data: {
+        title: 'Rotinas Treino FitZone',
+        description: 'Vídeos de rotinas de treino para YouTube',
+        phase: 'edicao',
+        statusCaptacao: 'entregue',
+        statusEdicao: 'a-iniciar',
+        clientId: fitnessClient.id,
+        categoryId: catSocial.id,
+        videoType: 'reels',
+        location: 'FitZone Academia',
+        customId: 'PROJ-2026-022',
+        clientPrice: 3200,
+        captationCost: 900,
+        editionCost: 1000,
+        margin: 1300,
+        paymentStatus: 'pending',
+        freelancerPaymentStatus: 'paid',
+        captacaoDate: getDateOffset(-3),
+        clientDueDate: getDateOffset(14),
+        freelancerDueDate: getDateOffset(-1),
+        freelancerPaidDate: getDateOffset(1),
+        responsavelCaptacaoId: bothCreator.id,
+        responsavelEdicaoId: editor2.id,
+      },
+    })
+
+    // EDICAO - Em edição
+    await prisma.project.create({
+      data: {
+        title: 'Guias Turísticos Viagens Portugal',
+        description: 'Série de guias em vídeo para destinos portugueses',
+        phase: 'edicao',
+        statusCaptacao: 'entregue',
+        statusEdicao: 'em-edicao',
+        clientId: touristicClient.id,
+        categoryId: catMarketing.id,
+        videoType: 'marketing',
+        location: 'Vários destinos',
+        customId: 'PROJ-2026-023',
+        clientPrice: 9000,
+        captationCost: 3000,
+        editionCost: 2500,
+        margin: 3500,
+        paymentStatus: 'partial',
+        freelancerPaymentStatus: 'paid',
+        captacaoDate: getDateOffset(-15),
+        clientDueDate: getDateOffset(10),
+        freelancerDueDate: getDateOffset(-10),
+        freelancerPaidDate: getDateOffset(-8),
+        responsavelCaptacaoId: filmmaker1.id,
+        responsavelEdicaoId: editor1.id,
+        nasLink: 'nas://projetos/2026/guias-viagens',
+        frameIoLink: 'https://frameio.example.com/guias-viagens',
+      },
+    })
+
+    await prisma.project.create({
+      data: {
+        title: 'Tutorial Cursos Online',
+        description: 'Edição de módulos de curso online completo',
+        phase: 'edicao',
+        statusCaptacao: 'entregue',
+        statusEdicao: 'em-edicao',
+        clientId: educationClient.id,
+        categoryId: catCorporate.id,
+        videoType: 'corporativo',
+        location: 'Estúdio',
+        customId: 'PROJ-2026-024',
+        clientPrice: 7500,
+        captationCost: 2000,
+        editionCost: 2000,
+        margin: 3500,
+        paymentStatus: 'pending',
+        freelancerPaymentStatus: 'paid',
+        captacaoDate: getDateOffset(-10),
+        clientDueDate: getDateOffset(15),
+        freelancerDueDate: getDateOffset(-5),
+        freelancerPaidDate: getDateOffset(-3),
+        responsavelCaptacaoId: bothCreator.id,
+        responsavelEdicaoId: editor2.id,
+        nasLink: 'nas://projetos/2026/tutorial-academia',
+      },
+    })
+
+    await prisma.project.create({
+      data: {
+        title: 'Lookbook Digital Moda Lisboa',
+        description: 'Lookbook digital para coleção de inverno',
+        phase: 'edicao',
+        statusCaptacao: 'entregue',
+        statusEdicao: 'em-edicao',
+        clientId: fashionClient.id,
+        categoryId: catMarketing.id,
+        videoType: 'marketing',
+        location: 'Lisboa',
+        customId: 'PROJ-2026-025',
+        clientPrice: 4200,
+        captationCost: 1300,
+        editionCost: 1100,
+        margin: 1800,
+        paymentStatus: 'pending',
+        freelancerPaymentStatus: 'paid',
+        captacaoDate: getDateOffset(-7),
+        clientDueDate: getDateOffset(8),
+        freelancerDueDate: getDateOffset(-4),
+        freelancerPaidDate: getDateOffset(-2),
+        responsavelCaptacaoId: photographer1.id,
+        responsavelEdicaoId: editor1.id,
+      },
+    })
+
+    // EDICAO - Em revisão
+    await prisma.project.create({
+      data: {
+        title: 'Apresentação Corporativa Prime',
+        description: 'Vídeo de apresentação corporativa para investidores',
+        phase: 'edicao',
+        statusCaptacao: 'entregue',
+        statusEdicao: 'em-revisao',
+        clientId: realEstateClient.id,
+        categoryId: catCorporate.id,
+        videoType: 'corporativo',
+        location: 'Escritórios Prime',
+        customId: 'PROJ-2026-026',
+        clientPrice: 6500,
+        captationCost: 2000,
+        editionCost: 1800,
+        margin: 2700,
+        paymentStatus: 'partial',
+        freelancerPaymentStatus: 'paid',
+        captacaoDate: getDateOffset(-20),
+        clientDueDate: getDateOffset(5),
+        freelancerDueDate: getDateOffset(-15),
+        freelancerPaidDate: getDateOffset(-13),
+        responsavelCaptacaoId: filmmaker1.id,
+        responsavelEdicaoId: editor2.id,
+        frameIoLink: 'https://frameio.example.com/prime-corporate',
+      },
+    })
+
+    await prisma.project.create({
+      data: {
+        title: 'Transformações FitZone',
+        description: 'Vídeo com histórias de transformação de alunos',
+        phase: 'edicao',
+        statusCaptacao: 'entregue',
+        statusEdicao: 'em-revisao',
+        clientId: fitnessClient.id,
+        categoryId: catMarketing.id,
+        videoType: 'marketing',
+        location: 'FitZone Academia',
+        customId: 'PROJ-2026-027',
+        clientPrice: 3800,
+        captationCost: 1100,
+        editionCost: 1000,
+        margin: 1700,
+        paymentStatus: 'pending',
+        freelancerPaymentStatus: 'paid',
+        captacaoDate: getDateOffset(-18),
+        clientDueDate: getDateOffset(6),
+        freelancerDueDate: getDateOffset(-12),
+        freelancerPaidDate: getDateOffset(-10),
+        responsavelCaptacaoId: bothCreator.id,
+        responsavelEdicaoId: editor1.id,
+        frameIoLink: 'https://frameio.example.com/transformacoes-fitzone',
+      },
+    })
+
+    await prisma.project.create({
+      data: {
+        title: 'Pacotes Turísticos 2026',
+        description: 'Vídeo promocional de novos pacotes turísticos',
+        phase: 'edicao',
+        statusCaptacao: 'entregue',
+        statusEdicao: 'em-revisao',
+        clientId: touristicClient.id,
+        categoryId: catAdvertising.id,
+        videoType: 'publicidade',
+        location: 'Vários destinos',
+        customId: 'PROJ-2026-028',
+        clientPrice: 8000,
+        captationCost: 2500,
+        editionCost: 2000,
+        margin: 3500,
+        paymentStatus: 'partial',
+        freelancerPaymentStatus: 'paid',
+        captacaoDate: getDateOffset(-14),
+        clientDueDate: getDateOffset(7),
+        freelancerDueDate: getDateOffset(-9),
+        freelancerPaidDate: getDateOffset(-7),
+        responsavelCaptacaoId: photographer1.id,
+        responsavelEdicaoId: editor2.id,
+        frameIoLink: 'https://frameio.example.com/pacotes-2026',
+      },
+    })
+
+    // EDICAO - Entregue (concluído)
+    await prisma.project.create({
+      data: {
+        title: 'Curso Completo Marketing Digital',
+        description: 'Série completa de vídeo-aulas sobre marketing digital',
+        phase: 'edicao',
+        statusCaptacao: 'entregue',
+        statusEdicao: 'entregue',
+        clientId: educationClient.id,
+        categoryId: catCorporate.id,
+        videoType: 'corporativo',
+        location: 'Estúdio',
+        customId: 'PROJ-2026-029',
+        clientPrice: 10000,
+        captationCost: 2500,
+        editionCost: 2500,
+        margin: 5000,
+        paymentStatus: 'paid',
+        freelancerPaymentStatus: 'paid',
+        captacaoDate: getDateOffset(-30),
+        clientDueDate: getDateOffset(-5),
+        clientReceivedDate: getDateOffset(-3),
+        freelancerDueDate: getDateOffset(-20),
+        freelancerPaidDate: getDateOffset(-18),
+        responsavelCaptacaoId: filmmaker1.id,
+        responsavelEdicaoId: editor1.id,
+        nasLink: 'nas://projetos/2026/curso-marketing',
+        frameIoLink: 'https://frameio.example.com/curso-marketing',
+      },
+    })
+
+    await prisma.project.create({
+      data: {
+        title: 'Campanha Inverno Moda Lisboa',
+        description: 'Campanha completa de moda para inverno',
+        phase: 'edicao',
+        statusCaptacao: 'entregue',
+        statusEdicao: 'entregue',
+        clientId: fashionClient.id,
+        categoryId: catAdvertising.id,
+        videoType: 'publicidade',
+        location: 'Lisboa',
+        customId: 'PROJ-2026-030',
+        clientPrice: 6200,
+        captationCost: 2000,
+        editionCost: 1500,
+        margin: 2700,
+        paymentStatus: 'paid',
+        freelancerPaymentStatus: 'paid',
+        captacaoDate: getDateOffset(-25),
+        clientDueDate: getDateOffset(-7),
+        clientReceivedDate: getDateOffset(-5),
+        freelancerDueDate: getDateOffset(-18),
+        freelancerPaidDate: getDateOffset(-16),
+        responsavelCaptacaoId: photographer1.id,
+        responsavelEdicaoId: editor2.id,
+        nasLink: 'nas://projetos/2026/inverno-moda',
+        frameIoLink: 'https://frameio.example.com/inverno-moda',
+      },
+    })
+
+    console.log('✅ Criados 30 projetos distribuídos em todas as colunas do Kanban')
+    console.log('   - CAPTACAO (a-agendar): 3 projetos')
+    console.log('   - CAPTACAO (agendado): 5 projetos')
+    console.log('   - CAPTACAO (em-execucao): 6 projetos')
+    console.log('   - CAPTACAO (entregue): 4 projetos')
+    console.log('   - EDICAO (a-iniciar): 4 projetos')
+    console.log('   - EDICAO (em-edicao): 5 projetos')
+    console.log('   - EDICAO (em-revisao): 5 projetos')
+    console.log('   - EDICAO (entregue): 4 projetos')
 
     // ========================================
     // CRIAR SUBTASKS PARA PROJETOS
