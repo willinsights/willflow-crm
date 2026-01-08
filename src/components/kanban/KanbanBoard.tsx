@@ -98,6 +98,7 @@ import EditProjectModal from '@/components/projects/EditProjectModal';
 import CreateProjectModal from '@/components/projects/CreateProjectModal';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import TaskDrawer from '@/components/projects/TaskDrawer';
+import { KANBAN_CONSTANTS } from '@/lib/kanban-constants';
 
 interface KanbanBoardProps {
   phase?: ProjectPhase;
@@ -109,9 +110,6 @@ const DEFAULT_STATUSES: Record<string, string[]> = {
   edicao: ['a-iniciar', 'em-edicao', 'em-revisao', 'entregue'],
   finalizados: ['entregue'],
 };
-
-// System key for the locked "Entregue" column
-const DELIVERED_SYSTEM_KEY = 'DELIVERED';
 
 export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
   const { formatCurrency } = useLocale();
@@ -267,7 +265,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
 
   const isColumnLocked = (columnId: string) => {
     const column = columns.find(c => c.id === columnId);
-    return column?.isLocked || column?.systemKey === DELIVERED_SYSTEM_KEY || false;
+    return column?.isLocked || column?.systemKey === KANBAN_CONSTANTS.DELIVERED_SYSTEM_KEY || false;
   };
 
   const handleSaveColumnName = async (columnId: string, newName: string) => {
@@ -275,7 +273,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     if (!column) return;
 
     // Block renaming of locked/DELIVERED columns
-    if (column.isLocked || column.systemKey === DELIVERED_SYSTEM_KEY) {
+    if (column.isLocked || column.systemKey === KANBAN_CONSTANTS.DELIVERED_SYSTEM_KEY) {
       toast({
         title: 'Operação não permitida',
         description: 'A coluna "Entregue" não pode ser renomeada',
@@ -367,7 +365,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     if (!newColumnName.trim()) return;
 
     // Find DELIVERED column to insert before it
-    const deliveredColumn = columns.find(c => c.systemKey === DELIVERED_SYSTEM_KEY);
+    const deliveredColumn = columns.find(c => c.systemKey === KANBAN_CONSTANTS.DELIVERED_SYSTEM_KEY);
     const newPosition = deliveredColumn ? deliveredColumn.position : columns.length;
 
     try {
@@ -420,7 +418,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     if (!column) return;
 
     // Block deletion of locked columns
-    if (column.isLocked || column.systemKey === DELIVERED_SYSTEM_KEY) {
+    if (column.isLocked || column.systemKey === KANBAN_CONSTANTS.DELIVERED_SYSTEM_KEY) {
       toast({
         title: 'Operação não permitida',
         description: 'A coluna "Entregue" não pode ser removida',
@@ -517,8 +515,8 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     : (projectsByPhase[phase] || []);
 
   // Get reorderable columns (exclude locked columns)
-  const reorderableColumns = columns.filter(c => !c.isLocked && c.systemKey !== DELIVERED_SYSTEM_KEY);
-  const lockedColumns = columns.filter(c => c.isLocked || c.systemKey === DELIVERED_SYSTEM_KEY);
+  const reorderableColumns = columns.filter(c => !c.isLocked && c.systemKey !== KANBAN_CONSTANTS.DELIVERED_SYSTEM_KEY);
+  const lockedColumns = columns.filter(c => c.isLocked || c.systemKey === KANBAN_CONSTANTS.DELIVERED_SYSTEM_KEY);
 
   const getProjectsByColumnId = (columnId: string) => {
     const column = columns.find(c => c.id === columnId);
@@ -540,7 +538,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     // Check if dragging a column or a card
     const column = columns.find(c => c.id === id);
     if (column) {
-      if (column.isLocked || column.systemKey === DELIVERED_SYSTEM_KEY) {
+      if (column.isLocked || column.systemKey === KANBAN_CONSTANTS.DELIVERED_SYSTEM_KEY) {
         // Block dragging locked columns
         toast({
           title: 'Operação não permitida',
@@ -633,7 +631,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
       });
 
       // If moving to "Entregue", handle automatic phase transition
-      if (targetColumn.systemKey === DELIVERED_SYSTEM_KEY) {
+      if (targetColumn.systemKey === KANBAN_CONSTANTS.DELIVERED_SYSTEM_KEY) {
         const needsEditing = project.responsavelEdicaoId ||
           ['hotel', 'experiencia', 'reels'].includes(project.videoType);
 
@@ -847,7 +845,7 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
               >
               {columns.map((column, index) => {
                 const columnProjects = getProjectsByColumnId(column.id);
-                const isDeliveredColumn = column.systemKey === DELIVERED_SYSTEM_KEY;
+                const isDeliveredColumn = column.systemKey === KANBAN_CONSTANTS.DELIVERED_SYSTEM_KEY;
                 const isLocked = column.isLocked || isDeliveredColumn;
 
                 return (
