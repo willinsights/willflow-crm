@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     if (!phase) {
       return NextResponse.json(
-        { success: false, error: 'Phase parameter is required' },
+        { success: false, error: 'Parâmetro "phase" é obrigatório' },
         { status: 400 }
       );
     }
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const phaseUpper = phase.toUpperCase();
     if (!validPhases.includes(phaseUpper)) {
       return NextResponse.json(
-        { success: false, error: `Invalid phase. Must be one of: ${validPhases.join(', ')}` },
+        { success: false, error: `Fase inválida. Deve ser: ${validPhases.join(', ')}` },
         { status: 400 }
       );
     }
@@ -38,8 +38,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Database connection failed',
-          details: dbError instanceof Error ? dbError.message : 'Unknown database error'
+          error: 'Falha na conexão com banco de dados',
+          details: dbError instanceof Error ? dbError.message : 'Erro desconhecido no banco de dados'
         },
         { status: 503 }
       );
@@ -71,8 +71,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       { 
         success: false, 
-        error: 'Failed to fetch columns',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Falha ao buscar colunas',
+        details: error instanceof Error ? error.message : 'Erro desconhecido'
       },
       { status: 500 }
     );
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     if (!phase || !title) {
       return NextResponse.json(
-        { success: false, error: 'Phase and title are required' },
+        { success: false, error: 'Fase e título são obrigatórios' },
         { status: 400 }
       );
     }
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
 
       if (!existingColumn) {
         return NextResponse.json(
-          { success: false, error: 'Column not found' },
+          { success: false, error: 'Coluna não encontrada' },
           { status: 404 }
         );
       }
@@ -226,8 +226,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         success: false, 
-        error: 'Failed to create/update column',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Falha ao criar/atualizar coluna',
+        details: error instanceof Error ? error.message : 'Erro desconhecido'
       },
       { status: 500 }
     );
@@ -245,7 +245,7 @@ export async function PUT(request: NextRequest) {
 
     if (!phase || !columnIds || !Array.isArray(columnIds)) {
       return NextResponse.json(
-        { success: false, error: 'Phase and columnIds array are required' },
+        { success: false, error: 'Fase e array de IDs de colunas são obrigatórios' },
         { status: 400 }
       );
     }
@@ -296,8 +296,8 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(
       { 
         success: false, 
-        error: 'Failed to reorder columns',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Falha ao reordenar colunas',
+        details: error instanceof Error ? error.message : 'Erro desconhecido'
       },
       { status: 500 }
     );
@@ -315,7 +315,7 @@ export async function DELETE(request: NextRequest) {
 
     if (!columnId) {
       return NextResponse.json(
-        { success: false, error: 'Column ID is required' },
+        { success: false, error: 'ID da coluna é obrigatório' },
         { status: 400 }
       );
     }
@@ -326,7 +326,7 @@ export async function DELETE(request: NextRequest) {
 
     if (!column) {
       return NextResponse.json(
-        { success: false, error: 'Column not found' },
+        { success: false, error: 'Coluna não encontrada' },
         { status: 404 }
       );
     }
@@ -354,8 +354,8 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json(
       { 
         success: false, 
-        error: 'Failed to delete column',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Falha ao deletar coluna',
+        details: error instanceof Error ? error.message : 'Erro desconhecido'
       },
       { status: 500 }
     );

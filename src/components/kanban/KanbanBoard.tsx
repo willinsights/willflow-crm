@@ -104,13 +104,6 @@ interface KanbanBoardProps {
   phase?: ProjectPhase;
 }
 
-// Default statuses for each phase - NEW STRUCTURE
-const DEFAULT_STATUSES: Record<string, string[]> = {
-  captacao: ['a-agendar', 'agendado', 'em-execucao', 'entregue'],
-  edicao: ['a-iniciar', 'em-edicao', 'em-revisao', 'entregue'],
-  finalizados: ['entregue'],
-};
-
 export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
   const { formatCurrency } = useLocale();
   const { toast } = useToast();
