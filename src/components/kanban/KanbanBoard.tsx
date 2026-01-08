@@ -520,15 +520,35 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
 
   const getProjectsByColumnId = (columnId: string) => {
     const column = columns.find(c => c.id === columnId);
-    if (!column) return [];
+    if (!column) {
+      console.warn(`[KanbanBoard] Column not found: ${columnId}`);
+      return [];
+    }
     
-    // Use statusKey if available, otherwise fall back to title-based matching
-    const statusToMatch = column.statusKey || column.title.toLowerCase().replace(/\s+/g, '-');
+    // Use statusKey if available, otherwise fall back to normalized title
+    // Normalize by removing accents and converting to ASCII
+    const statusToMatch = column.statusKey || 
+      column.title
+        .toLowerCase()
+        .normalize('NFD') // Decompose accented characters
+        .replace(/[\u0300-\u036f]/g, '') // Remove diacritical marks
+        .replace(/\s+/g, '-') // Replace spaces with hyphens
+        .replace(/[^a-z0-9-]/g, ''); // Remove special characters
     
-    return projects.filter(project => {
+    const matchedProjects = projects.filter(project => {
       const currentStatus = phase === 'captacao' ? project.statusCaptacao : project.statusEdicao;
       return currentStatus === statusToMatch;
     });
+    
+    // Log for debugging (only in development)
+    if (matchedProjects.length === 0 && projects.length > 0 && process.env.NODE_ENV === 'development') {
+      console.log(`[KanbanBoard] No projects matched for column "${column.title}" (statusKey: ${statusToMatch})`);
+      console.log(`[KanbanBoard] Available statuses in projects:`, 
+        Array.from(new Set(projects.map(p => phase === 'captacao' ? p.statusCaptacao : p.statusEdicao)))
+      );
+    }
+    
+    return matchedProjects;
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -740,6 +760,34 @@ export default function KanbanBoard({ phase = 'edicao' }: KanbanBoardProps) {
     edicao: 'Edição',
     finalizados: 'Finalizados'
   };
+
+  // Check if there are NO columns (Kanban not initialized)
+  if (columns.length === 0) {
+    return (
+      <div className="glass-card p-12 text-center">
+        <div className="max-w-md mx-auto space-y-6">
+          <div className="flex justify-center">
+            <FolderKanban className="w-20 h-20 text-muted-foreground opacity-40" />
+          </div>
+          
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold text-foreground">
+              Kanban não inicializado
+            </h3>
+            <p className="text-muted-foreground">
+              As colunas do Kanban ainda não foram criadas para {phaseLabels[phase].toLowerCase()}.
+            </p>
+          </div>
+
+          <div className="pt-4 border-t border-white/10">
+            <p className="text-xs text-muted-foreground">
+              Recarregue a página ou entre em contato com o administrador do sistema.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Check if there are NO projects in any column
   // Note: columns.length > 0 ensures Kanban columns have been initialized
