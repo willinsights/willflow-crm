@@ -22,6 +22,8 @@
     "db:check-railway": "tsx scripts/check-railway-db.ts",
     "db:init-kanban": "tsx scripts/init-kanban-columns.ts",
     "db:generate-test-data": "tsx scripts/generate-kanban-test-data.ts",
+    "db:migrate-kanban": "tsx scripts/migrate-kanban-columns.ts",
+    "seed:full": "SEED_CLEAN_DATABASE=true SEED_WITH_SAMPLE_DATA=true tsx prisma/seed.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {

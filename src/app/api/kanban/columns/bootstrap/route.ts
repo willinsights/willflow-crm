@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Database connection failed',
-          details: dbError instanceof Error ? dbError.message : 'Unknown database error'
+          error: 'Falha na conexão com banco de dados',
+          details: dbError instanceof Error ? dbError.message : 'Erro desconhecido no banco de dados'
         },
         { status: 503 }
       );
@@ -111,8 +111,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         success: false, 
-        error: 'Failed to bootstrap columns',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Falha ao inicializar colunas',
+        details: error instanceof Error ? error.message : 'Erro desconhecido'
       },
       { status: 500 }
     );

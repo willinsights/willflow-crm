@@ -108,6 +108,138 @@ npm run db:reset
 railway run npm run db:reset
 ```
 
+## 🔧 Manutenção e Troubleshooting
+
+### Seed Completo com 30+ Projetos
+
+Para popular o banco com dados completos de teste (recomendado para desenvolvimento):
+
+```bash
+# Limpar e popular com dados completos
+npm run seed:full
+
+# Ou usando variáveis de ambiente
+SEED_CLEAN_DATABASE=true SEED_WITH_SAMPLE_DATA=true npm run db:seed
+```
+
+Isso criará:
+- ✅ 10 clientes com perfis variados
+- ✅ 30 projetos distribuídos em todas as colunas do Kanban
+- ✅ 7 usuários com diferentes perfis e permissões
+- ✅ 6 categorias de projetos
+- ✅ Colunas do Kanban para Captação e Edição
+- ✅ Subtasks, comentários e checklists
+
+### Migração de Colunas do Kanban
+
+Se as colunas do Kanban não estão renderizando projetos corretamente, execute o script de migração:
+
+```bash
+# Popula statusKey em colunas existentes
+npm run db:migrate-kanban
+```
+
+Este script:
+- Verifica colunas sem `statusKey` definido
+- Normaliza títulos para ASCII (remove acentos)
+- Atualiza colunas automaticamente
+- Exibe log detalhado das mudanças
+
+### Troubleshooting Comum
+
+#### Kanban não mostra projetos nas colunas
+
+**Problema**: Projetos criados mas não aparecem nas colunas do Kanban.
+
+**Solução**:
+```bash
+# 1. Execute a migração das colunas
+npm run db:migrate-kanban
+
+# 2. Verifique se as colunas têm statusKey
+npx prisma studio
+# Acesse kanban_columns e verifique campo statusKey
+
+# 3. Se necessário, recarregue os dados
+npm run seed:full
+```
+
+#### Erro "Database connection failed"
+
+**Problema**: Aplicação não consegue conectar ao banco de dados.
+
+**Solução**:
+```bash
+# 1. Verifique a variável DATABASE_URL
+echo $DATABASE_URL
+
+# 2. Teste a conexão
+npm run db:check-railway
+
+# 3. Regenere o Prisma Client
+npx prisma generate
+
+# 4. Sincronize o schema
+npx prisma db push
+```
+
+#### Colunas do Kanban não inicializadas
+
+**Problema**: Página do Kanban mostra "Kanban não inicializado".
+
+**Solução**:
+```bash
+# 1. Execute o seed básico (cria colunas)
+npm run db:seed
+
+# 2. Ou inicialize apenas as colunas
+npm run db:init-kanban
+
+# 3. Recarregue a página
+```
+
+#### Build falha com erro de Prisma
+
+**Problema**: `npm run build` falha com erro relacionado ao Prisma.
+
+**Solução**:
+```bash
+# 1. Regenere o cliente Prisma
+npx prisma generate
+
+# 2. Limpe o cache do Next.js
+rm -rf .next
+
+# 3. Tente novamente
+npm run build
+```
+
+### Scripts Disponíveis
+
+```bash
+# Desenvolvimento
+npm run dev              # Inicia servidor de desenvolvimento
+
+# Build e Deploy
+npm run build            # Build de produção
+npm start                # Inicia servidor de produção
+
+# Database
+npm run db:seed          # Seed básico (admin + colunas)
+npm run seed:full        # Seed completo (30+ projetos)
+npm run db:push          # Sincroniza schema com banco
+npm run db:studio        # Abre Prisma Studio
+npm run db:reset         # Reset completo do banco
+
+# Kanban
+npm run db:init-kanban   # Inicializa colunas do Kanban
+npm run db:migrate-kanban # Migra statusKey das colunas
+
+# Testes
+npm test                 # Executa testes
+npm run test:ui          # Interface de testes
+```
+
 ## 📚 Documentação
 
 - `DEPLOY_GUIDE.md` - 🆕 **Guia completo de deploy e troubleshooting**
