@@ -277,13 +277,109 @@ async function main() {
       },
     })
 
-    console.log('✅ Criados 7 usuários com diferentes perfis')
+    // Adicionar mais usuários para expandir o sistema
+    const filmmaker2 = await prisma.user.create({
+      data: {
+        name: 'Ricardo Almeida',
+        email: 'ricardo.almeida@exemplo.com',
+        password: hashPassword('filmmaker456'),
+        role: 'freelancer_captacao',
+        collaboratorType: 'filmmaker',
+        canViewFinance: false,
+        canEditProjects: false,
+        canViewAllProjects: false,
+        isActive: true,
+        mustChangePassword: true,
+        iban: 'PT50000201231234567890159',
+        bankName: 'CGD',
+        nif: '234567890',
+        contributorType: 'freelancer',
+      },
+    })
+
+    const photographer2 = await prisma.user.create({
+      data: {
+        name: 'Luísa Rodrigues',
+        email: 'luisa.rodrigues@exemplo.com',
+        password: hashPassword('photographer456'),
+        role: 'freelancer_captacao',
+        collaboratorType: 'photographer',
+        canViewFinance: false,
+        canEditProjects: false,
+        canViewAllProjects: false,
+        isActive: true,
+        mustChangePassword: true,
+        iban: 'PT50000201231234567890160',
+        bankName: 'Millennium BCP',
+        nif: '345678901',
+        contributorType: 'receipts',
+      },
+    })
+
+    const editor3 = await prisma.user.create({
+      data: {
+        name: 'Bruno Martins',
+        email: 'bruno.martins@exemplo.com',
+        password: hashPassword('editor789'),
+        role: 'editor_edicao',
+        canViewFinance: false,
+        canEditProjects: true,
+        canViewAllProjects: false,
+        isActive: true,
+        mustChangePassword: true,
+        iban: 'PT50000201231234567890161',
+        bankName: 'Santander',
+        nif: '456789012',
+        contributorType: 'company',
+      },
+    })
+
+    const inactiveUser = await prisma.user.create({
+      data: {
+        name: 'Teresa Cardoso (Inativa)',
+        email: 'teresa.cardoso@exemplo.com',
+        password: hashPassword('inactive123'),
+        role: 'freelancer_captacao',
+        collaboratorType: 'photographer',
+        canViewFinance: false,
+        canEditProjects: false,
+        canViewAllProjects: false,
+        isActive: false, // Usuário inativo
+        mustChangePassword: true,
+        iban: 'PT50000201231234567890162',
+        bankName: 'BPI',
+        nif: '567890123',
+        contributorType: 'freelancer',
+      },
+    })
+
+    const admin2 = await prisma.user.create({
+      data: {
+        name: 'Miguel Santos',
+        email: 'miguel.santos@in-sights.pt',
+        password: hashPassword('admin456'),
+        role: 'admin',
+        canViewFinance: true,
+        canEditProjects: true,
+        canViewAllProjects: true,
+        isActive: true,
+        mustChangePassword: false,
+        lastLogin: getDateOffset(-2),
+      },
+    })
+
+    console.log('✅ Criados 12 usuários com diferentes perfis')
     console.log('   João Silva (filmmaker): filmmaker123')
     console.log('   Maria Santos (photographer): photographer123')
     console.log('   Pedro Costa (both): creator123')
     console.log('   Ana Ferreira (editor): editor123')
     console.log('   Carlos Mendes (editor): editor456')
     console.log('   Sofia Oliveira (viewer): viewer123')
+    console.log('   Ricardo Almeida (filmmaker): filmmaker456')
+    console.log('   Luísa Rodrigues (photographer): photographer456')
+    console.log('   Bruno Martins (editor): editor789')
+    console.log('   Teresa Cardoso (INATIVO): inactive123')
+    console.log('   Miguel Santos (admin): admin456')
 
     // ========================================
     // CRIAR CLIENTES DIVERSOS
@@ -420,7 +516,86 @@ async function main() {
       },
     })
 
-    console.log('✅ Criados 10 clientes com perfis variados')
+    // Adicionar mais clientes para expandir o sistema
+    const hotelClient = await prisma.client.create({
+      data: {
+        name: 'Hotel Estrela do Mar',
+        email: 'marketing@hotelestrelmar.pt',
+        phone: '+351 922 345 678',
+        company: 'Estrela do Mar Hotéis SA',
+        totalRevenue: 32000,
+        totalCosts: 14000,
+        totalMargin: 18000,
+        projectCount: 6,
+      },
+    })
+
+    const eventClient = await prisma.client.create({
+      data: {
+        name: 'EventPro Organizadores',
+        email: 'geral@eventpro.pt',
+        phone: '+351 923 456 789',
+        company: 'EventPro Lda',
+        totalRevenue: 19000,
+        totalCosts: 8500,
+        totalMargin: 10500,
+        projectCount: 4,
+      },
+    })
+
+    const constructionClient = await prisma.client.create({
+      data: {
+        name: 'Construções Silva & Filhos',
+        email: 'comercial@silvafilhos.pt',
+        phone: '+351 924 567 890',
+        company: 'Silva & Filhos SA',
+        totalRevenue: 13500,
+        totalCosts: 6000,
+        totalMargin: 7500,
+        projectCount: 3,
+      },
+    })
+
+    const newClient = await prisma.client.create({
+      data: {
+        name: 'Startup InnovaTech',
+        email: 'hello@innovatech.pt',
+        phone: '+351 925 678 901',
+        company: 'InnovaTech Portugal Lda',
+        totalRevenue: 0, // Cliente novo sem projetos ainda
+        totalCosts: 0,
+        totalMargin: 0,
+        projectCount: 0,
+      },
+    })
+
+    const inactiveClient = await prisma.client.create({
+      data: {
+        name: 'Antiga Parceria Comércio',
+        email: 'antigo@parceria.pt',
+        phone: '+351 926 789 012',
+        company: 'Parceria Comércio Lda',
+        totalRevenue: 5000, // Cliente inativo com histórico
+        totalCosts: 2500,
+        totalMargin: 2500,
+        projectCount: 1,
+      },
+    })
+
+    const retailClient = await prisma.client.create({
+      data: {
+        name: 'Supermercado Central',
+        email: 'marketing@supercentral.pt',
+        phone: '+351 927 890 123',
+        company: 'Supermercado Central SA',
+        totalRevenue: 16000,
+        totalCosts: 7000,
+        totalMargin: 9000,
+        projectCount: 4,
+      },
+    })
+
+    console.log('✅ Criados 16 clientes com perfis variados (incluindo premium, regulares, novos e inativos)')
 
     // ========================================
     // CRIAR CATEGORIAS
@@ -475,7 +650,56 @@ async function main() {
       },
     })
 
-    console.log('✅ Criadas 6 categorias')
+    // Adicionar mais categorias
+    const catHotel = await prisma.category.create({
+      data: {
+        name: 'Hotel',
+        description: 'Vídeos promocionais para hotéis e resorts',
+        color: '#06B6D4',
+      },
+    })
+
+    const catExperiencia = await prisma.category.create({
+      data: {
+        name: 'Experiência',
+        description: 'Vídeos de experiências turísticas e atividades',
+        color: '#F97316',
+      },
+    })
+
+    const catDrone = await prisma.category.create({
+      data: {
+        name: 'Drone',
+        description: 'Filmagens aéreas com drone',
+        color: '#6366F1',
+      },
+    })
+
+    const catReels = await prisma.category.create({
+      data: {
+        name: 'Reels',
+        description: 'Vídeos curtos para redes sociais',
+        color: '#EC4899',
+      },
+    })
+
+    const catWedding = await prisma.category.create({
+      data: {
+        name: 'Casamento',
+        description: 'Cobertura de casamentos e eventos especiais',
+        color: '#DB2777',
+      },
+    })
+
+    const catRealEstate = await prisma.category.create({
+      data: {
+        name: 'Imobiliário',
+        description: 'Tours virtuais e apresentações de imóveis',
+        color: '#0891B2',
+      },
+    })
+
+    console.log('✅ Criadas 12 categorias com descrições e cores variadas')
 
     // ========================================
     // CRIAR PROJETOS COM DIFERENTES STATUS
@@ -1452,7 +1676,302 @@ async function main() {
       },
     })
 
-    console.log('✅ Criadas subtasks para os projetos')
+    // Mais subtasks para projeto 2
+    await prisma.subtask.create({
+      data: {
+        projectId: project2.id,
+        title: 'Pesquisa histórica',
+        description: 'Levantar dados históricos e preparar linha temporal',
+        status: 'done',
+        priority: 'high',
+        completed: true,
+        completedAt: getDateOffset(-8),
+        estimatedHours: 12,
+        actualHours: 14,
+        assignedTo: bothCreator.id,
+        dueDate: getDateOffset(-5),
+        order: 0,
+        tags: '["pesquisa", "documentário", "histórico"]',
+      },
+    })
+
+    await prisma.subtask.create({
+      data: {
+        projectId: project2.id,
+        title: 'Agendar entrevistas',
+        description: 'Contactar e agendar entrevistas com historiadores',
+        status: 'in_progress',
+        priority: 'urgent',
+        completed: false,
+        estimatedHours: 6,
+        assignedTo: admin.id,
+        dueDate: getDateOffset(3),
+        order: 1,
+        tags: '["logística", "entrevistas"]',
+      },
+    })
+
+    // Subtasks para projeto 6
+    await prisma.subtask.create({
+      data: {
+        projectId: project6.id,
+        title: 'Organizar material bruto',
+        description: 'Importar e organizar todo material capturado do evento',
+        status: 'in_progress',
+        priority: 'high',
+        completed: false,
+        estimatedHours: 8,
+        actualHours: 5,
+        assignedTo: editor2.id,
+        dueDate: getDateOffset(2),
+        order: 0,
+        tags: '["organização", "material bruto"]',
+      },
+    })
+
+    await prisma.subtask.create({
+      data: {
+        projectId: project6.id,
+        title: 'Selecionar melhores momentos',
+        description: 'Revisar todo material e marcar highlights',
+        status: 'todo',
+        priority: 'medium',
+        completed: false,
+        estimatedHours: 10,
+        assignedTo: editor2.id,
+        dueDate: getDateOffset(5),
+        order: 1,
+        tags: '["seleção", "highlights"]',
+      },
+    })
+
+    // Subtasks para projeto 7
+    await prisma.subtask.create({
+      data: {
+        projectId: project7.id,
+        title: 'Montagem inicial',
+        description: 'Primeira montagem seguindo o roteiro aprovado',
+        status: 'done',
+        priority: 'high',
+        completed: true,
+        completedAt: getDateOffset(-4),
+        estimatedHours: 15,
+        actualHours: 18,
+        assignedTo: editor1.id,
+        dueDate: getDateOffset(-3),
+        order: 0,
+        tags: '["montagem", "edição"]',
+      },
+    })
+
+    await prisma.subtask.create({
+      data: {
+        projectId: project7.id,
+        title: 'Correção de cor',
+        description: 'Color grading e harmonização de todas as cenas',
+        status: 'in_progress',
+        priority: 'high',
+        completed: false,
+        estimatedHours: 8,
+        actualHours: 4,
+        assignedTo: editor1.id,
+        dueDate: getDateOffset(4),
+        order: 1,
+        tags: '["color grading", "pós-produção"]',
+      },
+    })
+
+    await prisma.subtask.create({
+      data: {
+        projectId: project7.id,
+        title: 'Mixagem de áudio',
+        description: 'Ajustar níveis de áudio e adicionar música',
+        status: 'todo',
+        priority: 'medium',
+        completed: false,
+        estimatedHours: 6,
+        assignedTo: editor1.id,
+        dueDate: getDateOffset(6),
+        order: 2,
+        tags: '["áudio", "mixagem"]',
+      },
+    })
+
+    // Subtasks para projeto 8
+    await prisma.subtask.create({
+      data: {
+        projectId: project8.id,
+        title: 'Feedback do cliente',
+        description: 'Aguardar e processar feedback da primeira versão',
+        status: 'review',
+        priority: 'urgent',
+        completed: false,
+        estimatedHours: 2,
+        assignedTo: editor2.id,
+        dueDate: getDateOffset(1),
+        order: 0,
+        tags: '["revisão", "feedback"]',
+      },
+    })
+
+    await prisma.subtask.create({
+      data: {
+        projectId: project8.id,
+        title: 'Ajustes finais',
+        description: 'Implementar alterações solicitadas pelo cliente',
+        status: 'todo',
+        priority: 'high',
+        completed: false,
+        estimatedHours: 4,
+        assignedTo: editor2.id,
+        dueDate: getDateOffset(3),
+        order: 1,
+        tags: '["ajustes", "finalização"]',
+      },
+    })
+
+    // Subtasks para projeto 9 (concluído)
+    await prisma.subtask.create({
+      data: {
+        projectId: project9.id,
+        title: 'Roteiro e planejamento',
+        description: 'Criar roteiros para todos os tutoriais',
+        status: 'done',
+        priority: 'high',
+        completed: true,
+        completedAt: getDateOffset(-25),
+        estimatedHours: 12,
+        actualHours: 10,
+        assignedTo: bothCreator.id,
+        dueDate: getDateOffset(-24),
+        order: 0,
+        tags: '["roteiro", "planejamento"]',
+      },
+    })
+
+    await prisma.subtask.create({
+      data: {
+        projectId: project9.id,
+        title: 'Gravação de screencasts',
+        description: 'Gravar demonstrações do produto',
+        status: 'done',
+        priority: 'high',
+        completed: true,
+        completedAt: getDateOffset(-18),
+        estimatedHours: 8,
+        actualHours: 9,
+        assignedTo: bothCreator.id,
+        dueDate: getDateOffset(-17),
+        order: 1,
+        tags: '["gravação", "screencast"]',
+      },
+    })
+
+    await prisma.subtask.create({
+      data: {
+        projectId: project9.id,
+        title: 'Edição completa',
+        description: 'Editar todos os vídeos com legendas e gráficos',
+        status: 'done',
+        priority: 'high',
+        completed: true,
+        completedAt: getDateOffset(-8),
+        estimatedHours: 20,
+        actualHours: 22,
+        assignedTo: editor2.id,
+        dueDate: getDateOffset(-7),
+        order: 2,
+        tags: '["edição", "legendas", "gráficos"]',
+      },
+    })
+
+    await prisma.subtask.create({
+      data: {
+        projectId: project9.id,
+        title: 'Revisão final e entrega',
+        description: 'Revisão completa e preparação para entrega',
+        status: 'done',
+        priority: 'medium',
+        completed: true,
+        completedAt: getDateOffset(-4),
+        estimatedHours: 4,
+        actualHours: 3,
+        assignedTo: editor2.id,
+        dueDate: getDateOffset(-3),
+        order: 3,
+        tags: '["revisão", "entrega"]',
+      },
+    })
+
+    // Subtasks para projeto 10
+    await prisma.subtask.create({
+      data: {
+        projectId: project10.id,
+        title: 'Briefing com cliente',
+        description: 'Reunião para entender necessidades e objetivos',
+        status: 'done',
+        priority: 'high',
+        completed: true,
+        completedAt: getDateOffset(-7),
+        estimatedHours: 2,
+        actualHours: 2,
+        assignedTo: admin.id,
+        dueDate: getDateOffset(-6),
+        order: 0,
+        tags: '["briefing", "planejamento"]',
+      },
+    })
+
+    await prisma.subtask.create({
+      data: {
+        projectId: project10.id,
+        title: 'Captar conteúdo',
+        description: 'Gravar material para posts do mês',
+        status: 'todo',
+        priority: 'urgent',
+        completed: false,
+        estimatedHours: 6,
+        assignedTo: photographer1.id,
+        dueDate: getDateOffset(2),
+        order: 1,
+        tags: '["captação", "social media"]',
+      },
+    })
+
+    // Adicionar mais subtasks variadas com baixa prioridade
+    await prisma.subtask.create({
+      data: {
+        projectId: project1.id,
+        title: 'Backup de material',
+        description: 'Fazer backup de segurança de todo material',
+        status: 'todo',
+        priority: 'low',
+        completed: false,
+        estimatedHours: 2,
+        assignedTo: filmmaker1.id,
+        dueDate: getDateOffset(20),
+        order: 3,
+        tags: '["backup", "segurança"]',
+      },
+    })
+
+    await prisma.subtask.create({
+      data: {
+        projectId: project3.id,
+        title: 'Exportar versões finais',
+        description: 'Exportar em múltiplos formatos conforme especificado',
+        status: 'todo',
+        priority: 'medium',
+        completed: false,
+        estimatedHours: 3,
+        assignedTo: editor1.id,
+        dueDate: getDateOffset(5),
+        order: 2,
+        tags: '["export", "entrega"]',
+      },
+    })
+
+    console.log('✅ Criadas 30+ subtasks distribuídas pelos projetos com todos os campos preenchidos')
 
     // ========================================
     // CRIAR COMENTÁRIOS EM PROJETOS
@@ -1692,7 +2211,147 @@ async function main() {
       },
     })
 
-    console.log('✅ Criadas notificações variadas')
+    // Expandir notificações com mais variedade
+    await prisma.notification.create({
+      data: {
+        userId: editor2.id,
+        type: 'deadline',
+        priority: 'urgent',
+        title: 'Prazo urgente!',
+        message: 'O projeto "Conferência Tech Summit 2026" vence amanhã',
+        projectId: project6.id,
+        actionUrl: `/projects/${project6.id}`,
+        isRead: false,
+        createdAt: getDateOffset(-1),
+      },
+    })
+
+    await prisma.notification.create({
+      data: {
+        userId: bothCreator.id,
+        type: 'comment',
+        priority: 'medium',
+        title: 'Mencionado em comentário',
+        message: 'Você foi mencionado em um comentário do projeto "Série Redes Sociais GreenEnergy"',
+        projectId: project5.id,
+        actionUrl: `/projects/${project5.id}`,
+        isRead: false,
+        createdAt: getDateOffset(0),
+      },
+    })
+
+    await prisma.notification.create({
+      data: {
+        userId: editor1.id,
+        type: 'project',
+        priority: 'high',
+        title: 'Material disponível para edição',
+        message: 'Material de captação do projeto "Campanha Ano Novo 2026" já está disponível no NAS',
+        projectId: project1.id,
+        actionUrl: `/projects/${project1.id}`,
+        isRead: false,
+        createdAt: getDateOffset(-1),
+      },
+    })
+
+    await prisma.notification.create({
+      data: {
+        userId: admin.id,
+        type: 'payment',
+        priority: 'medium',
+        title: 'Pagamento recebido',
+        message: 'Cliente GreenEnergy Startup efetuou pagamento de €6.000',
+        projectId: project5.id,
+        actionUrl: `/finance`,
+        isRead: true,
+        readAt: getDateOffset(-2),
+        createdAt: getDateOffset(-3),
+      },
+    })
+
+    await prisma.notification.create({
+      data: {
+        userId: filmmaker1.id,
+        type: 'deadline',
+        priority: 'high',
+        title: 'Captação próxima',
+        message: 'Lembrete: captação agendada para daqui a 2 dias',
+        projectId: project2.id,
+        actionUrl: `/projects/${project2.id}`,
+        isRead: false,
+        createdAt: getDateOffset(0),
+      },
+    })
+
+    await prisma.notification.create({
+      data: {
+        userId: photographer1.id,
+        type: 'project',
+        priority: 'low',
+        title: 'Novo projeto atribuído',
+        message: 'Você foi designado para o projeto "Testemunhos Alunos FitZone"',
+        actionUrl: `/projects`,
+        isRead: true,
+        readAt: getDateOffset(-5),
+        createdAt: getDateOffset(-6),
+      },
+    })
+
+    await prisma.notification.create({
+      data: {
+        userId: admin.id,
+        type: 'system',
+        priority: 'low',
+        title: 'Backup concluído',
+        message: 'Backup automático do NAS concluído com sucesso',
+        actionUrl: `/settings`,
+        isRead: true,
+        readAt: getDateOffset(-1),
+        createdAt: getDateOffset(-1),
+      },
+    })
+
+    await prisma.notification.create({
+      data: {
+        userId: editor2.id,
+        type: 'comment',
+        priority: 'medium',
+        title: 'Cliente respondeu feedback',
+        message: 'Cliente adicionou resposta ao seu comentário no projeto "Behind the Scenes"',
+        projectId: project8.id,
+        actionUrl: `/projects/${project8.id}`,
+        isRead: false,
+        createdAt: getDateOffset(-1),
+      },
+    })
+
+    await prisma.notification.create({
+      data: {
+        userId: filmmaker2.id,
+        type: 'project',
+        priority: 'medium',
+        title: 'Oportunidade de projeto',
+        message: 'Novo projeto disponível: Tour Virtual Apartamentos Prime',
+        actionUrl: `/projects`,
+        isRead: false,
+        createdAt: getDateOffset(-2),
+      },
+    })
+
+    await prisma.notification.create({
+      data: {
+        userId: admin.id,
+        type: 'deadline',
+        priority: 'high',
+        title: 'Múltiplos prazos próximos',
+        message: '5 projetos com entrega prevista para esta semana',
+        actionUrl: `/dashboard`,
+        isRead: false,
+        createdAt: getDateOffset(0),
+      },
+    })
+
+    console.log('✅ Criadas notificações variadas (todos os tipos e prioridades, lidas e não lidas)')
 
     // ========================================
     // CRIAR ARQUIVOS DE PROJETO
@@ -1926,7 +2585,142 @@ async function main() {
       },
     })
 
-    console.log('✅ Criadas notas e comunicações de clientes')
+    // Expandir comunicações com mais tipos e status
+    await prisma.clientNote.create({
+      data: {
+        clientId: corporateClient.id,
+        content: 'Cliente corporativo de grande porte. Processos de aprovação lentos - incluir buffer no timeline.',
+        createdBy: admin.id,
+        createdAt: getDateOffset(-45),
+      },
+    })
+
+    await prisma.clientNote.create({
+      data: {
+        clientId: startupClient.id,
+        content: 'Startup em crescimento. Orçamento limitado mas projetos frequentes. Boa parceria de longo prazo.',
+        createdBy: admin.id,
+        createdAt: getDateOffset(-35),
+      },
+    })
+
+    await prisma.clientNote.create({
+      data: {
+        clientId: fashionClient.id,
+        content: 'Muito exigente com estética. Sempre solicita múltiplas revisões. Prever tempo extra.',
+        createdBy: editor1.id,
+        createdAt: getDateOffset(-15),
+      },
+    })
+
+    await prisma.clientNote.create({
+      data: {
+        clientId: hotelClient.id,
+        content: 'Excelente cliente! Pagamentos sempre adiantados. Trabalho recorrente garantido.',
+        createdBy: admin.id,
+        createdAt: getDateOffset(-50),
+      },
+    })
+
+    // Comunicações variadas
+    await prisma.communication.create({
+      data: {
+        clientId: regularClient1.id,
+        type: 'email',
+        subject: 'Envio de primeira versão',
+        content: 'Primeira versão do comercial enviada para aprovação',
+        status: 'sent',
+        sentBy: editor1.id,
+        sentAt: getDateOffset(-5),
+      },
+    })
+
+    await prisma.communication.create({
+      data: {
+        clientId: regularClient2.id,
+        type: 'meeting',
+        subject: 'Reunião de Planejamento',
+        content: 'Reunião para discutir próximos projetos do trimestre',
+        status: 'completed',
+        sentBy: admin.id,
+        sentAt: getDateOffset(-10),
+        notes: 'Cliente interessado em 3 projetos adicionais. Enviar propostas.',
+      },
+    })
+
+    await prisma.communication.create({
+      data: {
+        clientId: startupClient.id,
+        type: 'message',
+        subject: 'Alteração no cronograma',
+        content: 'Cliente solicitou adiantamento da data de entrega',
+        status: 'received',
+        sentAt: getDateOffset(-2),
+        notes: 'Verificar viabilidade com a equipe',
+      },
+    })
+
+    await prisma.communication.create({
+      data: {
+        clientId: fashionClient.id,
+        type: 'phone',
+        subject: 'Aprovação final',
+        content: 'Cliente ligou para aprovar versão final',
+        status: 'completed',
+        sentAt: getDateOffset(-8),
+        notes: 'Aprovado sem alterações. Proceder com entrega.',
+      },
+    })
+
+    await prisma.communication.create({
+      data: {
+        clientId: touristicClient.id,
+        type: 'email',
+        subject: 'Proposta de Parceria Anual',
+        content: 'Enviada proposta para pacote anual de vídeos',
+        status: 'sent',
+        sentBy: admin.id,
+        sentAt: getDateOffset(-15),
+      },
+    })
+
+    await prisma.communication.create({
+      data: {
+        clientId: hotelClient.id,
+        type: 'meeting',
+        subject: 'Visita às instalações',
+        content: 'Reunião presencial no hotel para scout de locações',
+        status: 'pending',
+        sentBy: filmmaker1.id,
+        sentAt: getDateOffset(5),
+      },
+    })
+
+    await prisma.communication.create({
+      data: {
+        clientId: eventClient.id,
+        type: 'phone',
+        subject: 'Detalhes técnicos do evento',
+        content: 'Discussão sobre requisitos técnicos e logística',
+        status: 'completed',
+        sentAt: getDateOffset(-7),
+        notes: 'Necessário equipamento de som adicional. Confirmar com equipe.',
+      },
+    })
+
+    await prisma.communication.create({
+      data: {
+        clientId: realEstateClient.id,
+        type: 'email',
+        subject: 'Agendamento de filmagem',
+        content: 'Confirmar disponibilidade para filmagem dos imóveis',
+        status: 'pending',
+        sentBy: photographer1.id,
+        sentAt: getDateOffset(3),
+      },
+    })
+
+    console.log('✅ Criadas notas e comunicações expandidas de clientes (todos os tipos e status)')
 
     // ========================================
     // CRIAR COMENTÁRIOS EM SUBTASKS
@@ -1952,6 +2746,127 @@ async function main() {
     })
 
     console.log('✅ Criados comentários em subtasks')
+
+    // ========================================
+    // CRIAR CHECKLISTS DE SUBTASKS
+    // ========================================
+    console.log('☑️  Criando checklists de subtasks...')
+    
+    // Checklist para subtask1_1
+    await prisma.subtaskChecklist.create({
+      data: {
+        subtaskId: subtask1_1.id,
+        title: 'Criar sinopse inicial',
+        completed: true,
+        completedAt: getDateOffset(-6),
+        completedBy: filmmaker1.id,
+        order: 0,
+      },
+    })
+
+    await prisma.subtaskChecklist.create({
+      data: {
+        subtaskId: subtask1_1.id,
+        title: 'Desenvolver storyboard',
+        completed: true,
+        completedAt: getDateOffset(-5),
+        completedBy: filmmaker1.id,
+        order: 1,
+      },
+    })
+
+    await prisma.subtaskChecklist.create({
+      data: {
+        subtaskId: subtask1_1.id,
+        title: 'Aprovar com cliente',
+        completed: true,
+        completedAt: getDateOffset(-4),
+        completedBy: admin.id,
+        order: 2,
+      },
+    })
+
+    console.log('✅ Criados itens de checklist para subtasks')
+
+    // ========================================
+    // CRIAR ATTACHMENTS DE SUBTASKS
+    // ========================================
+    console.log('📎 Criando anexos de subtasks...')
+    
+    await prisma.subtaskAttachment.create({
+      data: {
+        subtaskId: subtask1_1.id,
+        fileName: 'roteiro-v1.pdf',
+        fileSize: 245760,
+        fileType: 'application/pdf',
+        fileUrl: '/uploads/subtasks/roteiro-v1.pdf',
+        uploadedBy: filmmaker1.id,
+        uploadedAt: getDateOffset(-6),
+      },
+    })
+
+    await prisma.subtaskAttachment.create({
+      data: {
+        subtaskId: subtask1_1.id,
+        fileName: 'storyboard-sketches.jpg',
+        fileSize: 1048576,
+        fileType: 'image/jpeg',
+        fileUrl: '/uploads/subtasks/storyboard-sketches.jpg',
+        uploadedBy: filmmaker1.id,
+        uploadedAt: getDateOffset(-5),
+      },
+    })
+
+    console.log('✅ Criados anexos para subtasks')
+
+    // ========================================
+    // CRIAR ATIVIDADES DE SUBTASKS
+    // ========================================
+    console.log('📝 Criando log de atividades de subtasks...')
+    
+    await prisma.subtaskActivity.create({
+      data: {
+        subtaskId: subtask1_1.id,
+        action: 'created',
+        userId: filmmaker1.id,
+        createdAt: getDateOffset(-10),
+      },
+    })
+
+    await prisma.subtaskActivity.create({
+      data: {
+        subtaskId: subtask1_1.id,
+        action: 'status_changed',
+        field: 'status',
+        oldValue: 'todo',
+        newValue: 'in_progress',
+        userId: filmmaker1.id,
+        createdAt: getDateOffset(-8),
+      },
+    })
+
+    await prisma.subtaskActivity.create({
+      data: {
+        subtaskId: subtask1_1.id,
+        action: 'status_changed',
+        field: 'status',
+        oldValue: 'in_progress',
+        newValue: 'done',
+        userId: filmmaker1.id,
+        createdAt: getDateOffset(-5),
+      },
+    })
+
+    await prisma.subtaskActivity.create({
+      data: {
+        subtaskId: subtask1_1.id,
+        action: 'comment_added',
+        userId: admin.id,
+        createdAt: getDateOffset(-4),
+      },
+    })
+
+    console.log('✅ Criados logs de atividade para subtasks')
 
     console.log('✨ Seed completado com dados completos e realistas!')
     }
